@@ -1,0 +1,67 @@
+* Weave Demo Examples
+
+This directory contains several example applications demonstrating Weave's capabilities.
+
+** Running the Examples
+
+You can run any of the example applications using the Clojure CLI with
+the provided aliases.
+
+
+*** Counter Example
+
+The counter example demonstrates simple state management with atomic
+updates:
+
+#+begin_src shell
+clj -M:server
+#+end_src
+
+*** Todo List Example
+
+The todo list example demonstrates form handling and dynamic content:
+
+#+begin_src shell
+clj -M:server :view :todo
+#+end_src
+
+*** Navigation Example
+
+The navigation example demonstrates client-side routing with
+hash-based URLs:
+
+#+begin_src shell
+clj -M:server :view :navigation
+#+end_src
+
+*** Authentication Example
+
+The authentication example demonstrates session management with
+login/logout:
+
+#+begin_src shell
+clj -M:server :view :session
+#+end_src
+
+** Building an Uberjar
+
+You can build a standalone JAR file that includes all dependencies:
+
+#+begin_src shell
+clj -X:uberjar
+#+end_src
+
+Then run it with:
+
+#+begin_src shell
+java -jar target/demo.jar [view-name]
+#+end_src
+
+Where `[view-name]` is one of: `click-count`, `todo`, `navigation`, or
+`session`.
+
+** Accessing the Examples
+
+After starting any example, open your browser to:
+
+http://localhost:8080

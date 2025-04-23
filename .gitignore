@@ -1,0 +1,15 @@
+/target
+/classes
+/checkouts
+/codox
+pom.xml
+pom.xml.asc
+*.jar
+*.class
+/.lein-*
+/.nrepl-port
+/.cpcache
+/.clj-kondo
+.aider*
+.lsp/
+examples/hello-world/.nrepl-port
