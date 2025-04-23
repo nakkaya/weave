@@ -2,7 +2,6 @@
   (:require
    [weave.core :as core]))
 
-;;TODO: Fix in mobile view, should be vertical
 #_:clj-kondo/ignore
 (defmacro navbar [& items]
   `((fn toggle# [& [is-open#]]
@@ -26,10 +25,11 @@
                [:path {:fill-rule "evenodd"
                        :d "M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"}])]]]]
          [:nav.px-2.pt-2.pb-4.sm:flex.sm:p-0 {:class (if @is-open# "block" "hidden")}
-          ~@(for [[name# handler#] (partition 2 items)]
-              `[:a.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.px-3.py-2.text-sm.font-medium.cursor-pointer
-                {:data-on-click ~handler#}
-                ~name#])]]))))
+          [:div.flex.flex-col.sm:flex-row
+           ~@(for [[name# handler#] (partition 2 items)]
+               `[:a.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.px-3.py-2.text-sm.font-medium.cursor-pointer.block.mb-1.sm:mb-0.sm:inline-block
+                 {:data-on-click ~handler#}
+                 ~name#])]]]))))
 
 #_:clj-kondo/ignore
 (defmacro button
