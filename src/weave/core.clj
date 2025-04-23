@@ -1,5 +1,3 @@
-;;TODO: Improved routing
-;;TODO: Signin passthrough
 (ns weave.core
   (:require
    [charred.api :as charred]
