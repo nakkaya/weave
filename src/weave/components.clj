@@ -1,35 +1,28 @@
-(ns weave.components
-  (:require
-   [weave.core :as core]))
+(ns weave.components)
 
 #_:clj-kondo/ignore
 (defmacro navbar [& items]
-  `((fn toggle# [& [is-open#]]
-      (let [is-open# (or is-open# (atom false))]
-        [:header#app-header.bg-gray-800.sm:flex.sm:justify-between.sm:items-center.sm:px-4.sm:py-3
-         [:div.flex.items-center.justify-between.px-4.py-3.sm:p-0
-          [:div
-           [:img.h-8
-            {:src "https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"}]]
-          [:div.sm:hidden
-           [:button.block.text-gray-500.hover:text-white.focus:text-white.focus:outline-none
-            {:data-on-click
-             (core/handler
-              (swap! is-open# not)
-              (core/push-html! (toggle# is-open#)))
-             :type "button"}
-            [:svg.h-6.w-6.fill-current {:viewBox "0 0 24 24"}
-             (if @is-open#
-               [:path {:fill-rule "evenodd"
-                       :d "M18.278 16.864a1 1 0 0 1-1.414 1.414l-4.829-4.828-4.828 4.828a1 1 0 0 1-1.414-1.414l4.828-4.829-4.828-4.828a1 1 0 0 1 1.414-1.414l4.829 4.828 4.828-4.828a1 1 0 1 1 1.414 1.414l-4.828 4.829 4.828 4.828z"}]
-               [:path {:fill-rule "evenodd"
-                       :d "M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"}])]]]]
-         [:nav.px-2.pt-2.pb-4.sm:flex.sm:p-0 {:class (if @is-open# "block" "hidden")}
-          [:div.flex.flex-col.sm:flex-row
-           ~@(for [[name# handler#] (partition 2 items)]
-               `[:a.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.px-3.py-2.text-sm.font-medium.cursor-pointer.block.mb-1.sm:mb-0.sm:inline-block
-                 {:data-on-click ~handler#}
-                 ~name#])]]]))))
+  `[:header#app-header.bg-gray-800.sm:flex.sm:justify-between.sm:items-center.sm:px-4.sm:py-3
+    {:data-signals-navbar-open "false"}
+    [:div.flex.items-center.justify-between.px-4.py-3.sm:p-0
+     [:div
+      [:img.h-8
+       {:src "https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"}]]
+     [:div.sm:hidden
+      [:button.block.text-gray-500.hover:text-white.focus:text-white.focus:outline-none
+       {:data-on-click "$navbarOpen = !$navbarOpen"
+        :type "button"}
+       [:svg.h-6.w-6.fill-current {:viewBox "0 0 24 24"}
+        [:path {:fill-rule "evenodd"
+                :data-attr-d "$navbarOpen ? 'M18.278 16.864a1 1 0 0 1-1.414 1.414l-4.829-4.828-4.828 4.828a1 1 0 0 1-1.414-1.414l4.828-4.829-4.828-4.828a1 1 0 0 1 1.414-1.414l4.829 4.828 4.828-4.828a1 1 0 1 1 1.414 1.414l-4.828 4.829 4.828 4.828z' : 'M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z'"}]]]]]
+    [:nav.px-2.pt-2.pb-4.bg-gray-800.sm:flex.sm:p-0
+     {:data-class-hidden "!$navbarOpen"
+      :class "sm:block"}
+     [:div.flex.flex-col.sm:flex-row
+      ~@(for [[name# handler#] (partition 2 items)]
+          `[:a.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.px-3.py-2.text-sm.font-medium.cursor-pointer.block.mb-1.sm:mb-0.sm:inline-block
+            {:data-on-click ~handler#}
+            ~name#])]]])
 
 #_:clj-kondo/ignore
 (defmacro button
