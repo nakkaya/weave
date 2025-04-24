@@ -44,6 +44,11 @@
    including headers, parameters, and the authenticated user identity."
   nil)
 
+(def ^:dynamic *secure-handlers*
+  "When true, all handlers require authentication by default
+   unless :auth-required? is explicitly set to false."
+  false)
+
 (defmacro bind-vars
   "Bind the dynamic variables *session-id*, *instance-id*,
    *app-path*, and *request* to values extracted from the request map
@@ -205,6 +210,18 @@
           (session/remove-connection!
            *session-id* *instance-id*)))))
 
+(defn authenticated?
+  "Return `true` if the `request` is an authenticated request."
+  [request]
+  (boolean (:identity request)))
+
+(defn throw-unauthorized
+  "Throw unauthorized exception."
+  ([] (throw-unauthorized {}))
+  ([errordata]
+   (throw (ex-info "Unauthorized." {::type ::unauthorized
+                                    ::payload errordata}))))
+
 (def ^{:private true} event-routes
   "Contains all dynamically registered event handler routes.
 
@@ -240,7 +257,7 @@
 
    Parameters:
      opts - Optional map of handler options:
-            :auth-required? - Whether authentication is required
+            :auth-required? - Whether authentication is required (defaults to true if :secure-handlers is enabled)
             :type - Request content type (:form for form submissions)
             :keep-alive - Whether to keep the connection alive when tab is hidden
             :selector - CSS selector for the form to submit (e.g. \"#myform\")
@@ -261,11 +278,14 @@
                    req# (assoc req# :body body#)]
                (bind-vars
                 req#
-                (if (and (:auth-required? ~opts)
-                         (not (:identity *request*)))
-                  {:status 403, :headers {}, :body nil}
-                  (do ~@body
-                      {:status 200, :headers {}, :body nil})))))]
+                (let [auth-required?# (if (contains? ~opts :auth-required?)
+                                        (:auth-required? ~opts)
+                                        *secure-handlers*)]
+                  (if (and auth-required?#
+                           (not (authenticated? *request*)))
+                    {:status 403, :headers {}, :body nil}
+                    (do ~@body
+                        {:status 200, :headers {}, :body nil}))))))]
        (#'add-route! handler-fn# ~opts))))
 
 (defn push-html!
@@ -368,18 +388,6 @@
       (d*/with-open-sse sse
          (d*/execute-script! sse "null;")))}))
 
-(defn authenticated?
-  "Return `true` if the `request` is an authenticated request."
-  [request]
-  (boolean (:identity request)))
-
-(defn throw-unauthorized
-  "Throw unauthorized exception."
-  ([] (throw-unauthorized {}))
-  ([errordata]
-   (throw (ex-info "Unauthorized." {::type ::unauthorized
-                                    ::payload errordata}))))
-
 #_:clj-kondo/ignore
 (defn make-router []
   (fn [router]
@@ -413,6 +421,8 @@
                           will be included in the application's routing system
               :csrf-secret - Secret for CSRF token generation
               :jwt-secret - Secret for JWT token generation/validation
+              :secure-handlers - When true, all handlers require authentication by default
+                                 unless :auth-required? is explicitly set to false
 
    Returns:
      A function that stops the server when called"
@@ -447,7 +457,8 @@
                                    (apply routes @event-routes)
                                    (apply routes custom-handlers)
                                    (route/not-found "Not Found"))]
-            (binding [session/*csrf-keyspec* csrf-keyspec]
+            (binding [session/*csrf-keyspec* csrf-keyspec
+                      *secure-handlers* (:secure-handlers options)]
               (-> all-routes
                   (session/wrap-session jwt-secret)
                   (def/wrap-defaults site-defaults)

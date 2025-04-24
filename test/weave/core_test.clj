@@ -594,3 +594,87 @@
           (is (= "Unauthorized." (.getMessage e)))
           (is (= :weave.core/unauthorized (-> (ex-data e) :weave.core/type)))
           (is (= custom-data (-> (ex-data e) :weave.core/payload))))))))
+
+(defn secure-handlers-view []
+  [:div {:id "view"}
+   [:div#auth-status
+    (if (:identity core/*request*)
+      (str "Authenticated as " (get-in core/*request* [:identity :name]))
+      "Not authenticated")]
+   [:button
+    {:id "sign-in-button"
+     :data-on-click
+     (core/handler
+      {:auth-required? false}
+      (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
+      (core/push-reload!))}
+    "Sign In"]
+   [:button
+    {:id "sign-out-button"
+     :data-on-click
+     (core/handler
+      {:auth-required? false}  ;; Explicitly allow unauthenticated access
+      (core/set-cookie! (session/sign-out))
+      (core/push-reload!))}
+    "Sign Out"]
+   [:button
+    {:id "secure-action-button"
+     :data-on-click
+     (core/handler
+      (core/push-script! "document.getElementById('secure-result').textContent = 'Secure action executed!';"))}
+    "Execute Secure Action"]
+   [:button
+    {:id "public-action-button"
+     :data-on-click
+     (core/handler
+      {:auth-required? false}
+      (core/push-script! "document.getElementById('public-result').textContent = 'Public action executed!';"))}
+    "Execute Public Action"]
+   [:div#secure-result "Secure action not executed"]
+   [:div#public-result "Public action not executed"]])
+
+(deftest secure-handlers-test
+  (let [server (core/run secure-handlers-view
+                         (assoc test-options
+                                :jwt-secret "test-jwt-secret"
+                                :secure-handlers true))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test secure-handlers functionality"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :secure-action-button})
+        (is (e/visible? driver {:id :secure-action-button}))
+        (is (= "Not authenticated"
+               (e/get-element-text driver {:id :auth-status})))
+
+        ;; Try secure action while not authenticated - should fail
+        (e/click driver {:id :secure-action-button})
+        (Thread/sleep 100)
+        (is (= "Secure action not executed"
+               (e/get-element-text driver {:id :secure-result})))
+
+        ;; Try public action while not authenticated - should work
+        (e/click driver {:id :public-action-button})
+        (e/wait-predicate
+         #(= "Public action executed!"
+             (e/get-element-text driver {:id :public-result})))
+        (is (= "Public action executed!"
+               (e/get-element-text driver {:id :public-result})))
+
+        ;; Sign in
+        (e/click driver {:id :sign-in-button})
+        (e/wait-visible driver {:id :sign-out-button})
+        (e/wait-predicate
+         #(= "Authenticated as TestUser"
+             (e/get-element-text driver {:id :auth-status})))
+
+        ;; Try secure action while authenticated - should work
+        (e/click driver {:id :secure-action-button})
+        (e/wait-predicate
+         #(= "Secure action executed!"
+             (e/get-element-text driver {:id :secure-result})))
+        (is (= "Secure action executed!"
+               (e/get-element-text driver {:id :secure-result}))))
+      (finally
+        (e/quit driver)
+        (server)))))
