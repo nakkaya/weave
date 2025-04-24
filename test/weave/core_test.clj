@@ -37,6 +37,12 @@
            (clean-string
             (#'core/request-options {:type :form :keep-alive true :selector "#myform"}))))))
 
+(def driver-options {:path-driver "chromedriver"
+                     :args [(str "--user-data-dir="
+                                 (str "/tmp/chrome-data-"
+                                      (System/currentTimeMillis)))
+                            "--no-sandbox"]})
+
 (def test-port 3333)
 (def test-url (str "http://localhost:" test-port))
 (def test-options {:http-kit {:port test-port}
@@ -48,7 +54,7 @@
 
 (deftest page-load-test
   (let [server (core/run simple-view test-options)
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "Simple view renders h1 element correctly"
         (e/go driver test-url)
@@ -75,7 +81,7 @@
   (let [counter (atom 41)
         view (fn [] (push-click-count-view counter))
         server (core/run view test-options)
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "push-html! updates the view correctly"
         (e/go driver test-url)
@@ -105,7 +111,7 @@
   (let [counter (atom 0)
         view (fn [] (broadcast-click-count-view counter))
         server (core/run view test-options)
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "broadcast-html! updates all connected tabs"
         ;; Open first tab
@@ -173,7 +179,7 @@
 
 (deftest push-path-test
   (let [server (core/run push-path-view test-options)
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "Test push-path! functionality"
         (e/go driver test-url)
@@ -212,7 +218,7 @@
 
 (deftest broadcast-path-test
   (let [server (core/run broadcast-path-view test-options)
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "Test broadcast-path! functionality across multiple tabs"
         ;; Open first tab
@@ -271,7 +277,7 @@
 
 (deftest manual-hash-change-test
   (let [server (core/run manual-hash-change-view test-options)
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "Test manual hash change detection"
         (e/go driver test-url)
@@ -300,7 +306,7 @@
 
 (deftest push-script-test
   (let [server (core/run push-script-view test-options)
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "Test push-script! functionality"
         (e/go driver test-url)
@@ -328,7 +334,7 @@
 
 (deftest broadcast-script-test
   (let [server (core/run broadcast-script-view test-options)
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "Test broadcast-script! functionality across multiple tabs"
         (e/go driver test-url)
@@ -381,7 +387,7 @@
 
 (deftest push-signal-test
   (let [server (core/run push-signal-view test-options)
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "Test push-signal! functionality"
         (e/go driver test-url)
@@ -410,7 +416,7 @@
 
 (deftest set-cookie-test
   (let [server (core/run set-cookie-view test-options)
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "Test set-cookie! functionality"
         (e/go driver test-url)
@@ -456,7 +462,7 @@
 (deftest session-management-test
   (let [server (core/run session-management-view
                          (assoc test-options :jwt-secret "test-jwt-secret"))
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "Test session management functionality"
         (e/go driver test-url)
@@ -515,7 +521,7 @@
 (deftest auth-required-handler-test
   (let [server (core/run auth-required-view
                          (assoc test-options :jwt-secret "test-jwt-secret"))
-        driver (e/chrome-headless)]
+        driver (e/chrome-headless driver-options)]
     (try
       (testing "Test auth-required handler functionality"
         (e/go driver test-url)
