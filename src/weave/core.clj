@@ -175,47 +175,69 @@
                  opts (request-options opts)]
              [:div {:id "main"
                     :data-on-load
-                    (str "@get('/app-inner', " opts ")")}])]]]))
+                    (str "@get('/app-loader', " opts ")")}])]]]))
       (resp/content-type "text/html")
       (resp/charset "UTF-8")))
 
-(defn- app-inner
-  "Renders the inner application content and establishes an SSE connection.
+(defmulti app-inner
+  "Renders the inner application content based on SSE configuration.
 
-   - Verifie the server ID and CSRF token from client signals
-   - Create an SSE response that renders the view
-   - Register the connection for future updates
-   - Handle connection cleanup on close
+   Dispatches based on whether SSE is enabled in the options."
+  (fn [_req _server-id _view options]
+    (get-in options [:sse :enabled])))
 
-   If verification fails (stale session), it forces a page reload."
-  [req server-id view]
-  (let [signals (get-signals req)]
-    (if (and (= server-id (-> signals :app :server))
-             (session/verify-csrf
-              *session-id* (-> signals :app :csrf)))
-      (->sse-response
-       {:on-open
-        (fn [sse-gen]
-          (d*/merge-fragment!
-           sse-gen
-           (c/html
-            [:div {:id "main"}
-             (view)]))
-          (session/add-connection!
-           *session-id* *instance-id* sse-gen))
+(defn- app-loader
+  "Checks for stale connections and triggers a reload if necessary.
 
-        :on-close
-        (fn [_sse-gen _status]
-          (session/remove-connection!
-           *session-id* *instance-id*))})
-       ;; stale session reload
-      (do (->sse-response
-           {:on-open
-            (fn [sse-gen]
-              (d*/execute-script!
-               sse-gen "window.location.reload();"))})
-          (session/remove-connection!
-           *session-id* *instance-id*)))))
+   - Verify the server ID and CSRF token from client signals
+   - If valid, passes to app-inner for rendering
+   - If stale, forces a page reload and removes the connection
+
+   This is the entry point for all app content rendering."
+  [req server-id view options]
+  (let [signals (get-signals req)
+        valid-session? (and (= server-id (-> signals :app :server))
+                            (session/verify-csrf
+                             *session-id* (-> signals :app :csrf)))]
+    (if valid-session?
+      (app-inner req server-id view options)
+      (do
+        (session/remove-connection! *session-id* *instance-id*)
+        (->sse-response
+         {:on-open
+          (fn [sse-gen]
+            (d*/execute-script!
+             sse-gen "window.location.reload();"))})))))
+
+(defmethod app-inner true
+  [_req _server-id view _options]
+  (->sse-response
+   {:on-open
+    (fn [sse-gen]
+      (d*/merge-fragment!
+       sse-gen
+       (c/html
+        [:div {:id "main"}
+         (view)]))
+      (session/add-connection!
+       *session-id* *instance-id* sse-gen))
+
+    :on-close
+    (fn [_sse-gen _status]
+      (session/remove-connection!
+       *session-id* *instance-id*))}))
+
+(defmethod app-inner false
+  [_req _server-id view _options]
+  (->sse-response
+   {:on-open
+    (fn [sse-gen]
+      (d*/merge-fragment!
+       sse-gen
+       (c/html
+        [:div {:id "main"}
+         (view)]))
+      (d*/close-sse! sse-gen))}))
 
 (defn authenticated?
   "Return `true` if the `request` is an authenticated request."
@@ -550,7 +572,6 @@
         site-defaults (-> def/site-defaults
                           (assoc :session false)
                           (assoc-in [:security :anti-forgery] false)
-
                           (assoc-in [:static :resources] false)
                           (assoc-in [:static :files] false))
         http-kit-opts (merge {:bind "0.0.0.0" :port 8080}
@@ -569,9 +590,9 @@
           (let [base-routes (compojure.core/routes
                              (GET "/" _req
                                (app-outer server-id options))
-                             (GET "/app-inner" req
+                             (GET "/app-loader" req
                                (bind-vars
-                                req (app-inner req server-id view)))
+                                req (app-loader req server-id view options)))
                              (route/resources "/"))
                 all-routes (routes base-routes
                                    (apply routes @event-routes)
