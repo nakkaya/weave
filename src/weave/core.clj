@@ -21,14 +21,6 @@
    [java.io ByteArrayOutputStream]
    [javax.imageio ImageIO]))
 
-(defmethod resp/resource-data :resource
-  [^java.net.URL url]
-  ;; GraalVM resource scheme
-  (let [resource     (.openConnection url)]
-    {:content        (.getInputStream resource)
-     :content-length (#'resp/connection-content-length resource)
-     :last-modified  (#'resp/connection-last-modified resource)}))
-
 (def ^:dynamic *session-id*
   "The current user's session ID, extracted from the session cookie.
    Available in handler functions and view rendering code."
@@ -481,6 +473,20 @@
            :theme_color "#ffffff"}))
         (resp/content-type "application/json")
         (resp/charset "UTF-8"))))
+
+;; This method is needed to handle resources from GraalVM-compiled
+;; JARs.  When running in a GraalVM native image, resources are
+;; accessed via the 'resource:' URL scheme instead of the standard
+;; 'jar:' or 'file:' schemes. Without this method, Ring's resource
+;; handling would fail to serve static resources from the classpath in
+;; GraalVM environments.
+(defmethod resp/resource-data :resource
+  [^java.net.URL url]
+  ;; GraalVM resource scheme
+  (let [resource     (.openConnection url)]
+    {:content        (.getInputStream resource)
+     :content-length (#'resp/connection-content-length resource)
+     :last-modified  (#'resp/connection-last-modified resource)}))
 
 (defn run
   "Starts the Weave application server.
