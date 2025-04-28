@@ -35,12 +35,12 @@ Add Weave to your `deps.edn` file:
 
 (defn view []
   [:div.p-6
-   [:h1.text-2xl.font-bold "Hello Weave!"]
+   [:h1#label.text-2xl.font-bold "Hello Weave!"]
    [:button.bg-blue-500.text-white.px-4.py-2.rounded
     {:data-on-click
      (weave/handler
       (weave/push-html!
-       [:div.mt-4.text-green-600 "Button was clicked!"]))}
+       [:h1#label.text-2xl.font-bold "Button was clicked!"]))}
     "CLICK ME"]])
 
 (defn -main []
