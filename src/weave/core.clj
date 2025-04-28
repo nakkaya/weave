@@ -119,6 +119,7 @@
      server-id - A unique identifier for this server instance
      opts - A map of options:
             :title - The page title (defaults to \"Weave\")
+            :favicon - 	Relative filepath, absolute URL to a favicon
             :head - Additional HTML to include in the head section
             :keep-alive - Whether to keep SSE connections alive when tab is hidden"
   [server-id opts]
@@ -131,7 +132,7 @@
            [:meta {:name "viewport"
                    :content "width=device-width, initial-scale=1.0"}]
            ;;
-           [:link {:rel "icon" :href "data:image/png;base64,iVBORw0KGgo="}]
+           [:link {:rel "icon" :href (or (:favicon opts) "/weave.svg")}]
            [:title (or (:title opts) "Weave")]
            ;;
            [:link {:href "/tailwind@2.2.19.css" :rel "stylesheet"}]
