@@ -5,7 +5,8 @@
            weave/weave {:local/root "../../weave"}}
 
  :aliases {:server {:exec-fn app.core/run
-                    :exec-args {:view :click-count}}
+                    :exec-args {:view :click-count
+                                :icon "public/weave.png"}}
 
            :uberjar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
                      :exec-fn hf.depstar/uberjar

@@ -1,6 +1,7 @@
 (ns weave.core
   (:require
    [charred.api :as charred]
+   [clojure.java.io :as io]
    [clojure.tools.logging :as log]
    [compojure.core :refer [GET POST routes]]
    [compojure.route :as route]
@@ -13,7 +14,12 @@
    [ring.util.response :as resp]
    [starfederation.datastar.clojure.adapter.http-kit :as hk-gen]
    [starfederation.datastar.clojure.api :as d*]
-   [weave.session :as session]))
+   [weave.session :as session])
+  (:import
+   [java.awt.image BufferedImage]
+   [java.awt RenderingHints]
+   [java.io ByteArrayOutputStream]
+   [javax.imageio ImageIO]))
 
 (defmethod resp/resource-data :resource
   [^java.net.URL url]
@@ -119,7 +125,7 @@
      server-id - A unique identifier for this server instance
      opts - A map of options:
             :title - The page title (defaults to \"Weave\")
-            :favicon - 	Relative filepath, absolute URL to a favicon
+            :icon - Path to an icon file in the classpath (PNG format)
             :head - Additional HTML to include in the head section
             :keep-alive - Whether to keep SSE connections alive when tab is hidden"
   [server-id opts]
@@ -132,7 +138,10 @@
            [:meta {:name "viewport"
                    :content "width=device-width, initial-scale=1.0"}]
            ;;
-           [:link {:rel "icon" :href (or (:favicon opts) "/weave.svg")}]
+           (when (:icon opts)
+             [[:link {:rel "icon" :href "/favicon.png"}]
+              [:link {:rel "apple-touch-icon" :href "/icon-180.png"}]
+              [:link {:rel "manifest" :href "/manifest.json"}]])
            [:title (or (:title opts) "Weave")]
            ;;
            [:link {:href "/tailwind@2.2.19.css" :rel "stylesheet"}]
@@ -403,6 +412,76 @@
             :sign-in
             (-> route-data :name)))))))
 
+(defn- load-icon
+  "Load an icon from the classpath."
+  [icon-path]
+  (when icon-path
+    (try
+      (-> (io/resource icon-path)
+          (ImageIO/read))
+      (catch Exception e
+        (log/warn "Failed to load icon resource:" icon-path e)
+        nil))))
+
+(defn- resize-icon
+  "Resize an icon to the specified dimensions."
+  [^BufferedImage icon width height]
+  (when icon
+    (let [resized (BufferedImage. width height BufferedImage/TYPE_INT_ARGB)
+          g (.createGraphics resized)]
+      (try
+        (.setRenderingHint g RenderingHints/KEY_INTERPOLATION
+                          RenderingHints/VALUE_INTERPOLATION_BILINEAR)
+        (.setRenderingHint g RenderingHints/KEY_RENDERING
+                          RenderingHints/VALUE_RENDER_QUALITY)
+        (.setRenderingHint g RenderingHints/KEY_ANTIALIASING
+                          RenderingHints/VALUE_ANTIALIAS_ON)
+        (.drawImage g icon 0 0 width height nil)
+        resized
+        (finally
+          (.dispose g))))))
+
+(defn- icon->bytes
+  "Convert a BufferedImage to a byte array in PNG format."
+  [^BufferedImage icon]
+  (when icon
+    (let [baos (ByteArrayOutputStream.)]
+      (ImageIO/write icon "png" baos)
+      (.toByteArray baos))))
+
+(defn- icon-handler
+  "Create a handler that serves an icon at the specified size."
+  [icon-path width height]
+  (fn [_req]
+    (if-let [icon (load-icon icon-path)]
+      (let [resized (resize-icon icon width height)
+            bytes (icon->bytes resized)]
+        (-> (resp/response bytes)
+            (resp/content-type "image/png")
+            (resp/header "Cache-Control" "public, max-age=86400")))
+      (resp/not-found "Icon not found"))))
+
+(defn- manifest-handler
+  "Create a handler that serves the web app manifest."
+  [title]
+  (fn [_req]
+    (-> (resp/response
+         (charred/write-json-str
+          {:name title
+           :short_name title
+           :icons [{:src "/icon-192.png"
+                    :sizes "192x192"
+                    :type "image/png"}
+                   {:src "/icon-512.png"
+                    :sizes "512x512"
+                    :type "image/png"}]
+           :start_url "/"
+           :display "standalone"
+           :background_color "#ffffff"
+           :theme_color "#ffffff"}))
+        (resp/content-type "application/json")
+        (resp/charset "UTF-8"))))
+
 (defn run
   "Starts the Weave application server.
 
@@ -424,6 +503,7 @@
               :jwt-secret - Secret for JWT token generation/validation
               :secure-handlers - When true, all handlers require authentication by default
                                  unless :auth-required? is explicitly set to false
+              :icon - Path to an icon file in the classpath (PNG format)
 
    Returns:
      A function that stops the server when called"
@@ -444,7 +524,15 @@
                           (assoc-in [:static :files] false))
         http-kit-opts (merge {:bind "0.0.0.0" :port 8080}
                              (:http-kit options))
-        custom-handlers (or (:handlers options) [])
+        icon-path (:icon options)
+        icon-handlers (when icon-path
+                        [(GET "/favicon.png" [] (icon-handler icon-path 32 32))
+                         (GET "/icon-180.png" [] (icon-handler icon-path 180 180))
+                         (GET "/icon-192.png" [] (icon-handler icon-path 192 192))
+                         (GET "/icon-512.png" [] (icon-handler icon-path 512 512))
+                         (GET "/manifest.json" [] (manifest-handler (or (:title options) "Weave")))])
+        custom-handlers (concat (or (:handlers options) [])
+                                (or icon-handlers []))
         handler
         (fn [request]
           (let [base-routes (compojure.core/routes
