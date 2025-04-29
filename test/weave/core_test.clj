@@ -5,7 +5,8 @@
    [compojure.core :refer [GET]]
    [etaoin.api :as e]
    [weave.core :as core]
-   [weave.session :as session]))
+   [weave.session :as session]
+   [charred.api :as charred]))
 
 (defn clean-string [s]
   (-> s
@@ -632,6 +633,72 @@
     "Execute Public Action"]
    [:div#secure-result "Secure action not executed"]
    [:div#public-result "Public action not executed"]])
+
+(def read-json
+  (charred/parse-json-fn
+   {:async? false :bufsize 1024 :key-fn keyword}))
+
+(deftest with-icon-options-test
+  (let [server (core/run (fn [] [:div "Icon Test"])
+                         (assoc test-options
+                                :icon "public/weave.png"
+                                :title "Icon Test App"))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test icon options in HTML when icon is provided"
+        (e/go driver test-url)
+
+        (is (= "Icon Test App" (e/get-title driver)))
+
+        (is (e/js-execute
+             driver
+             "return document.querySelector('link[rel=\"icon\"][href=\"/favicon.png\"]') !== null"))
+
+        (is (e/js-execute
+             driver
+             "return document.querySelector('link[rel=\"apple-touch-icon\"][href=\"/icon-180.png\"]') !== null"))
+
+        (is (e/js-execute
+             driver
+             "return document.querySelector('link[rel=\"manifest\"][href=\"/manifest.json\"]') !== null"))
+
+        (let [manifest-json (slurp (str test-url "/manifest.json"))
+              manifest (read-json manifest-json)]
+          (is (= "Icon Test App" (:name manifest)))
+          (is (= "Icon Test App" (:short_name manifest)))
+          (is (vector? (:icons manifest)))
+          (is (= 2 (count (:icons manifest))))
+          (is (= "/icon-192.png" (-> manifest :icons first :src)))
+          (is (= "/icon-512.png" (-> manifest :icons second :src)))))
+      (finally
+        (e/quit driver)
+        (server)))))
+
+(deftest without-icon-options-test
+  (let [server (core/run (fn [] [:div "No Icon Test"])
+                         (assoc test-options
+                                :title "No Icon Test App"))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test that icon elements are not generated when no icon is provided"
+        (e/go driver test-url)
+
+        (is (= "No Icon Test App" (e/get-title driver)))
+
+        (is (e/js-execute
+             driver
+             "return document.querySelector('link[rel=\"icon\"][href=\"/favicon.png\"]') === null"))
+
+        (is (e/js-execute
+             driver
+             "return document.querySelector('link[rel=\"apple-touch-icon\"][href=\"/icon-180.png\"]') === null"))
+
+        (is (e/js-execute
+             driver
+             "return document.querySelector('link[rel=\"manifest\"][href=\"/manifest.json\"]') === null")))
+      (finally
+        (e/quit driver)
+        (server)))))
 
 (deftest secure-handlers-test
   (let [server (core/run secure-handlers-view
