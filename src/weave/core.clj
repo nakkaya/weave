@@ -455,24 +455,32 @@
 
 (defn- manifest-handler
   "Create a handler that serves the web app manifest."
-  [title]
+  [options server-id]
   (fn [_req]
-    (-> (resp/response
-         (charred/write-json-str
-          {:name title
-           :short_name title
-           :icons [{:src "/icon-192.png"
-                    :sizes "192x192"
-                    :type "image/png"}
-                   {:src "/icon-512.png"
-                    :sizes "512x512"
-                    :type "image/png"}]
-           :start_url "/"
-           :display "standalone"
-           :background_color "#ffffff"
-           :theme_color "#ffffff"}))
-        (resp/content-type "application/json")
-        (resp/charset "UTF-8"))))
+    (let [pwa-opts (:pwa options)
+          name (or (:name pwa-opts)
+                   (:title options)
+                   "Weave")
+          short-name (or (:short-name pwa-opts) name)
+          manifest {:name name
+                    :short_name short-name
+                    :id server-id
+                    :icons [{:src "/icon-192.png"
+                             :sizes "192x192"
+                             :type "image/png"}
+                            {:src "/icon-512.png"
+                             :sizes "512x512"
+                             :type "image/png"}]
+                    :start_url (or (:start-url pwa-opts) "/")
+                    :display (or (:display pwa-opts) "standalone")
+                    :background_color (or (:background-color pwa-opts) "#f2f2f2")
+                    :theme_color (or (:theme-color pwa-opts) "#ffffff")}
+          manifest (if-let [desc (:description pwa-opts)]
+                     (assoc manifest :description desc)
+                     manifest)]
+      (-> (resp/response (charred/write-json-str manifest))
+          (resp/content-type "application/json")
+          (resp/charset "UTF-8")))))
 
 ;; This method is needed to handle resources from GraalVM-compiled
 ;; JARs.  When running in a GraalVM native image, resources are
@@ -510,6 +518,14 @@
               :secure-handlers - When true, all handlers require authentication by default
                                  unless :auth-required? is explicitly set to false
               :icon - Path to an icon file in the classpath (PNG format)
+              :pwa - A map of Progressive Web App manifest options:
+                      :name - Application name (defaults to :title)
+                      :short-name - Application shortname (defaults to :name)
+                      :description - Application description
+                      :display - Preferred display mode (default: \"standalone\")
+                      :background-color - Background color (default: \"#f2f2f2\")
+                      :theme-color - Theme color (default: \"#ffffff\")
+                      :start-url - Start URL when launched (default: \"/\")
 
    Returns:
      A function that stops the server when called"
@@ -536,7 +552,7 @@
                          (GET "/icon-180.png" [] (icon-handler icon-path 180 180))
                          (GET "/icon-192.png" [] (icon-handler icon-path 192 192))
                          (GET "/icon-512.png" [] (icon-handler icon-path 512 512))
-                         (GET "/manifest.json" [] (manifest-handler (or (:title options) "Weave")))])
+                         (GET "/manifest.json" [] (manifest-handler options server-id))])
         custom-handlers (concat (or (:handlers options) [])
                                 (or icon-handlers []))
         handler

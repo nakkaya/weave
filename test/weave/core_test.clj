@@ -700,6 +700,68 @@
         (e/quit driver)
         (server)))))
 
+(deftest with-pwa-options-test
+  (let [pwa-options {:name "PWA Test App"
+                     :short-name "PWA Test"
+                     :description "Testing PWA options"
+                     :display "fullscreen"
+                     :background-color "#ff0000"
+                     :theme-color "#00ff00"
+                     :start-url "/start"}
+        server (core/run (fn [] [:div "PWA Test"])
+                         (assoc test-options
+                                :icon "public/weave.png"
+                                :pwa pwa-options))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test PWA options in manifest when PWA options are provided"
+        (e/go driver test-url)
+
+        (is (e/js-execute
+             driver
+             "return document.querySelector('link[rel=\"manifest\"][href=\"/manifest.json\"]') !== null"))
+
+        (let [manifest-json (slurp (str test-url "/manifest.json"))
+              manifest (read-json manifest-json)]
+          (is (= "PWA Test App" (:name manifest)))
+          (is (= "PWA Test" (:short_name manifest)))
+          (is (= "Testing PWA options" (:description manifest)))
+          (is (= "fullscreen" (:display manifest)))
+          (is (= "#ff0000" (:background_color manifest)))
+          (is (= "#00ff00" (:theme_color manifest)))
+          (is (= "/start" (:start_url manifest)))))
+      (finally
+        (e/quit driver)
+        (server)))))
+
+(deftest without-pwa-options-test
+  (let [server (core/run (fn [] [:div "No PWA Test"])
+                         (assoc test-options
+                                :icon "public/weave.png"
+                                :title "No PWA Test App"))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test default PWA options in manifest when no PWA options are provided"
+        (e/go driver test-url)
+
+        (is (e/js-execute
+             driver
+             "return document.querySelector('link[rel=\"manifest\"][href=\"/manifest.json\"]') !== null"))
+
+        (let [manifest-json (slurp (str test-url "/manifest.json"))
+              manifest (read-json manifest-json)]
+          ;; Check default values are used
+          (is (= "No PWA Test App" (:name manifest)))
+          (is (= "No PWA Test App" (:short_name manifest)))
+          (is (nil? (:description manifest)))
+          (is (= "standalone" (:display manifest)))
+          (is (= "#f2f2f2" (:background_color manifest)))
+          (is (= "#ffffff" (:theme_color manifest)))
+          (is (= "/" (:start_url manifest)))))
+      (finally
+        (e/quit driver)
+        (server)))))
+
 (deftest secure-handlers-test
   (let [server (core/run secure-handlers-view
                          (assoc test-options
