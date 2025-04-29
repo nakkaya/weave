@@ -119,6 +119,7 @@
             :title - The page title (defaults to \"Weave\")
             :icon - Path to an icon file in the classpath (PNG format)
             :head - Additional HTML to include in the head section
+            :view-port - The viewport meta tag
             :keep-alive - Whether to keep SSE connections alive when tab is hidden"
   [server-id opts]
   (-> (resp/response
@@ -127,8 +128,12 @@
          [:html {:class "h-full bg-gray-100"}
           [:head
            [:meta {:charset "UTF-8"}]
-           [:meta {:name "viewport"
-                   :content "width=device-width, initial-scale=1.0"}]
+           (or (:viewport opts)
+               [:meta {:name "viewport"
+                       :content (str "width=device-width,"
+                                     "initial-scale=1.0,"
+                                     "maximum-scale=1.0,"
+                                     "user-scalable=no")}])
            ;;
            (when (:icon opts)
              [[:link {:rel "icon" :href "/favicon.png"}]
@@ -510,6 +515,7 @@
                          :port - Server port (default: 8888)
               :title - Page title
               :head - Additional HTML for the head section
+              :view-port - The viewport meta tag
               :sse-keep-alive - Whether to keep SSE connections alive when tab is hidden
               :handlers - A vector of custom route handlers (Compojure routes) that
                           will be included in the application's routing system
