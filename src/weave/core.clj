@@ -129,7 +129,7 @@
   (-> (resp/response
        (c/html
         [c/doctype-html5
-         [:html {:class "h-full bg-gray-100"}
+         [:html {:class "w-full h-full"}
           [:head
            [:meta {:charset "UTF-8"}]
            (or (:viewport opts)
@@ -168,7 +168,7 @@
              });"]
            (:head opts)]
           ;;
-          [:body {:class "h-full"}
+          [:body {:class "w-full h-full"}
            [:div {:data-signals-app.server "server();"}]
            [:div {:data-signals-app.path "path();"}]
            [:div {:data-signals-app.csrf "csrf();"}]
@@ -177,7 +177,8 @@
                         {:keep-alive true}
                         {})
                  opts (request-options opts)]
-             [:div {:id "main"
+             [:div {:id "weave-main"
+                    :class "w-full h-full"
                     :data-on-load
                     (str "@get('/app-loader', " opts ")")}])]]]))
       (resp/content-type "text/html")
@@ -221,7 +222,8 @@
       (d*/merge-fragment!
        sse-gen
        (c/html
-        [:div {:id "main"}
+        [:div {:id "weave-main"
+               :class "w-full h-full"}
          (view)]))
       (session/add-connection!
        *session-id* *instance-id* sse-gen))
@@ -239,7 +241,8 @@
       (d*/merge-fragment!
        sse-gen
        (c/html
-        [:div {:id "main"}
+        [:div {:id "weave-main"
+               :class "w-full h-full"}
          (view)]))
       (d*/close-sse! sse-gen))}))
 
