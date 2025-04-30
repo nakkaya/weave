@@ -47,6 +47,10 @@
    unless :auth-required? is explicitly set to false."
   false)
 
+(def ^:dynamic *sse-gen*
+  "Current Server-Sent Events (SSE) generator instance."
+  nil)
+
 (defmacro bind-vars
   "Bind the dynamic variables *session-id*, *instance-id*,
    *app-path*, and *request* to values extracted from the request map
@@ -313,17 +317,34 @@
                   (if (and auth-required?#
                            (not (authenticated? *request*)))
                     {:status 403, :headers {}, :body nil}
-                    (do ~@body
-                        {:status 200, :headers {}, :body nil}))))))]
+                    (hk-gen/->sse-response *request*
+                                           {:on-open
+                                            (fn [sse-gen#]
+                                              (binding [*sse-gen* sse-gen#]
+                                                ~@body)
+                                              (d*/close-sse! sse-gen#))}))))))]
        (#'add-route! handler-fn# ~opts))))
+
+(defn- sse-conn
+  "Returns the current Server-Sent Events (SSE) connection.
+
+   First checks if there's an active SSE generator in the dynamic *sse-gen* var.
+   If not found, attempts to retrieve the connection from the session store
+   using the current session ID and instance ID.
+
+   This function is used internally by push-html!, broadcast-html!, and other
+   functions that need to communicate with the client browser."
+  []
+  (if *sse-gen*
+    *sse-gen*
+    (session/instance-connection
+     *session-id* *instance-id*)))
 
 (defn push-html!
   "Push HTML to the specific browser tab/window that
    triggered the handler."
   [html]
-  (let [sse (session/instance-connection
-             *session-id* *instance-id*)]
-    (d*/merge-fragment! sse (c/html html))))
+  (d*/merge-fragment! (sse-conn) (c/html html)))
 
 (defn broadcast-html!
   "Pushes HTML to all browser tabs/windows that share the same
@@ -339,8 +360,7 @@
   ([url]
    (push-path! url nil))
   ([url view-fn]
-   (let [sse (session/instance-connection
-              *session-id* *instance-id*)
+   (let [sse (sse-conn)
          cmd (str "window.__pushHashChange = true;
                    history.pushState(null, null, \"#" url "\");
                    window.__pushHashChange = false;")]
@@ -376,17 +396,13 @@
   "Send JavaScript to the specific browser tab/window that
    triggered the current handler for execution."
   [script]
-  (let [sse (session/instance-connection
-             *session-id* *instance-id*)]
-    (d*/execute-script! sse script)))
+  (d*/execute-script! (sse-conn) script))
 
 (defn push-reload!
   "Send a reload command to the specific browser tab/window that
    triggered the current handler."
   []
-  (let [sse (session/instance-connection
-             *session-id* *instance-id*)]
-    (d*/execute-script! sse "window.location.reload();")))
+  (d*/execute-script! (sse-conn) "window.location.reload();"))
 
 (defn broadcast-script!
   "Send JavaScript to all browser tabs/windows that share the same
@@ -400,22 +416,16 @@
   "Send updated signal values to the specific browser tab/window that
    triggered the current handler."
   [signal]
-  (let [sse (session/instance-connection
-             *session-id* *instance-id*)]
-    (d*/merge-signals!
-     sse (charred/write-json-str signal))))
+  (d*/merge-signals!
+   (sse-conn) (charred/write-json-str signal)))
 
 (defn set-cookie!
   "Send a Set-Cookie header to the specific browser tab/window that
    triggered the current handler. It allows setting, updating, or
    deleting cookies."
   [cookie]
-  (->sse-response
-   {:headers {"Set-Cookie" cookie}
-    :on-open
-    (fn [sse]
-      (d*/with-open-sse sse
-         (d*/execute-script! sse "null;")))}))
+  (push-script!
+   (str "document.cookie = '" cookie "';")))
 
 #_:clj-kondo/ignore
 (defn make-router []
