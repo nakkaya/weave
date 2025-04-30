@@ -53,17 +53,31 @@
 
 (defn simple-view []
   [:div
-   [:h1#test-heading "Hello, Weave!"]])
+   [:h1#content "Hello, Weave!"]])
 
-(deftest page-load-test
+(deftest page-load-test-with-sse
   (let [server (core/run simple-view test-options)
         driver (e/chrome-headless (driver-options))]
     (try
-      (testing "Simple view renders h1 element correctly"
+      (testing "App renders with SSE enabled"
         (e/go driver test-url)
-        (e/wait-visible driver {:id :test-heading})
-        (is (e/visible? driver {:id :test-heading}))
-        (is (= "Hello, Weave!" (e/get-element-text driver {:id :test-heading}))))
+        (e/wait-visible driver {:id :content})
+        (is (e/visible? driver {:id :content}))
+        (is (= "Hello, Weave!" (e/get-element-text driver {:id :content}))))
+      (finally
+        (e/quit driver)
+        (server)))))
+
+(deftest page-load-test-without-sse
+  (let [server (core/run simple-view
+                 (assoc-in test-options [:sse :enabled] false))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "App renders with SSE disabled"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :content})
+        (is (e/visible? driver {:id :content}))
+        (is (= "Hello, Weave!" (e/get-element-text driver {:id :content}))))
       (finally
         (e/quit driver)
         (server)))))
@@ -80,13 +94,32 @@
        (push-click-count-view click-count)))}
     "Click Me"]])
 
-(deftest push-html-test
+(deftest push-html-test-with-sse
   (let [counter (atom 41)
         view (fn [] (push-click-count-view counter))
         server (core/run view test-options)
         driver (e/chrome-headless (driver-options))]
     (try
-      (testing "push-html! updates the view correctly"
+      (testing "push-html! updates the view with SSE enabled"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :increment-button})
+        (is (e/visible? driver {:id :increment-button}))
+        (is (= "41" (e/get-element-text driver {:id :count})))
+        (e/click driver {:id :increment-button})
+        (e/wait-predicate #(= "42" (e/get-element-text driver {:id :count})))
+        (is (= "42" (e/get-element-text driver {:id :count}))))
+      (finally
+        (e/quit driver)
+        (server)))))
+
+(deftest push-html-test-without-sse
+  (let [counter (atom 41)
+        view (fn [] (push-click-count-view counter))
+        server (core/run view
+                 (assoc-in test-options [:sse :enabled] false))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "push-html! updates the view with SSE disabled"
         (e/go driver test-url)
         (e/wait-visible driver {:id :increment-button})
         (is (e/visible? driver {:id :increment-button}))
@@ -180,11 +213,28 @@
       [:div#default-content
        "Select a page from the navigation above"])]])
 
-(deftest push-path-test
+(deftest push-path-test-with-sse
   (let [server (core/run push-path-view test-options)
         driver (e/chrome-headless (driver-options))]
     (try
-      (testing "Test push-path! functionality"
+      (testing "Test push-path! functionality with SSE enabled"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :default-content})
+        (is (e/visible? driver {:id :default-content}))
+        (e/click driver {:id :trigger-view-two})
+        (e/wait-predicate
+         #(= "Page Two Content" (e/get-element-text driver {:id :page-two-content})))
+        (is (= "Page Two Content" (e/get-element-text driver {:id :page-two-content}))))
+      (finally
+        (e/quit driver)
+        (server)))))
+
+(deftest push-path-test-without-sse
+  (let [server (core/run push-path-view
+                 (assoc-in test-options [:sse :enabled] false))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test push-path! functionality with SSE disabled"
         (e/go driver test-url)
         (e/wait-visible driver {:id :default-content})
         (is (e/visible? driver {:id :default-content}))
@@ -307,11 +357,29 @@
        "document.getElementById('content').textContent = 'Script executed!';"))}
     "Execute Script"]])
 
-(deftest push-script-test
+(deftest push-script-test-with-sse
   (let [server (core/run push-script-view test-options)
         driver (e/chrome-headless (driver-options))]
     (try
-      (testing "Test push-script! functionality"
+      (testing "Test push-script! functionality with SSE enabled"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :execute-script-button})
+        (is (e/visible? driver {:id :execute-script-button}))
+        (is (= "Initial content" (e/get-element-text driver {:id :content})))
+
+        (e/click driver {:id :execute-script-button})
+        (e/wait-predicate #(= "Script executed!" (e/get-element-text driver {:id :content})))
+        (is (= "Script executed!" (e/get-element-text driver {:id :content}))))
+      (finally
+        (e/quit driver)
+        (server)))))
+
+(deftest push-script-test-without-sse
+  (let [server (core/run push-script-view
+                 (assoc-in test-options [:sse :enabled] false))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test push-script! functionality with SSE disabled"
         (e/go driver test-url)
         (e/wait-visible driver {:id :execute-script-button})
         (is (e/visible? driver {:id :execute-script-button}))
@@ -388,11 +456,30 @@
    [:div {:data-signals-foo "0"}
     [:input#signal-value {:data-bind-foo true}]]])
 
-(deftest push-signal-test
+(deftest push-signal-test-with-sse
   (let [server (core/run push-signal-view test-options)
         driver (e/chrome-headless (driver-options))]
     (try
-      (testing "Test push-signal! functionality"
+      (testing "Test push-signal! functionality with SSE enabled"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :increment-button})
+        (is (e/visible? driver {:id :increment-button}))
+
+        (e/click driver {:id :increment-button})
+
+        (e/wait-predicate
+         #(= "42" (e/get-element-value driver {:id :signal-value})))
+        (is (= "42" (e/get-element-value driver {:id :signal-value}))))
+      (finally
+        (e/quit driver)
+        (server)))))
+
+(deftest push-signal-test-without-sse
+  (let [server (core/run push-signal-view
+                 (assoc-in test-options [:sse :enabled] false))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test push-signal! functionality with SSE disabled"
         (e/go driver test-url)
         (e/wait-visible driver {:id :increment-button})
         (is (e/visible? driver {:id :increment-button}))
