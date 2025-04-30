@@ -169,7 +169,7 @@
            [:div {:data-signals-app.path "path();"}]
            [:div {:data-signals-app.csrf "csrf();"}]
            [:div {:data-signals-app.instance "instance();"}]
-           (let [opts (if (:sse-keep-alive opts)
+           (let [opts (if (get-in opts [:sse :keep-alive])
                         {:keep-alive true}
                         {})
                  opts (request-options opts)]
@@ -516,7 +516,9 @@
               :title - Page title
               :head - Additional HTML for the head section
               :view-port - The viewport meta tag
-              :sse-keep-alive - Whether to keep SSE connections alive when tab is hidden
+              :sse - Server-Sent Events options map:
+                    :enabled - Whether to enable SSE (default: true)
+                    :keep-alive - Whether to keep SSE connections alive when tab is hidden (default: false)
               :handlers - A vector of custom route handlers (Compojure routes) that
                           will be included in the application's routing system
               :csrf-secret - Secret for CSRF token generation
@@ -537,6 +539,7 @@
      A function that stops the server when called"
   [view options]
   (let [server-id (str (random-uuid))
+        options (update options :sse #(merge {:enabled true :keep-alive false} %))
         csrf-secret (or (:csrf-secret options)
                         (str (random-uuid)))
         csrf-keyspec (session/secret-key->hmac-sha256-keyspec

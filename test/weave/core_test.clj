@@ -48,7 +48,8 @@
 (def test-port 3333)
 (def test-url (str "http://localhost:" test-port))
 (def test-options {:http-kit {:port test-port}
-                   :sse-keep-alive true})
+                   :sse {:enabled true
+                         :keep-alive true}})
 
 (defn simple-view []
   [:div
