@@ -62,7 +62,7 @@
     (catch Exception _ nil)))
 
 (defn auth-cookie [jwt]
-  (str "weave-auth=" jwt "; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400"))
+  (str "weave-auth=" jwt "; Path=/; SameSite=Lax; Max-Age=86400"))
 
 (defn verify-csrf
   "Verifies that the CSRF token is valid for the given session ID"
@@ -101,7 +101,7 @@
     (auth-cookie jwt)))
 
 (defn sign-out []
-  "weave-auth=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0")
+  "weave-auth=; Path=/; SameSite=Lax; Max-Age=0")
 
 ;; Maps {session-id -> {instance-id -> sse-generator}}
 (def ^{:private true} !connections (atom {}))

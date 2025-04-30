@@ -47,6 +47,10 @@
    unless :auth-required? is explicitly set to false."
   false)
 
+(def ^:dynamic *sse-gen*
+  "Current Server-Sent Events (SSE) generator instance."
+  nil)
+
 (defmacro bind-vars
   "Bind the dynamic variables *session-id*, *instance-id*,
    *app-path*, and *request* to values extracted from the request map
@@ -169,53 +173,75 @@
            [:div {:data-signals-app.path "path();"}]
            [:div {:data-signals-app.csrf "csrf();"}]
            [:div {:data-signals-app.instance "instance();"}]
-           (let [opts (if (:sse-keep-alive opts)
+           (let [opts (if (get-in opts [:sse :keep-alive])
                         {:keep-alive true}
                         {})
                  opts (request-options opts)]
              [:div {:id "main"
                     :data-on-load
-                    (str "@get('/app-inner', " opts ")")}])]]]))
+                    (str "@get('/app-loader', " opts ")")}])]]]))
       (resp/content-type "text/html")
       (resp/charset "UTF-8")))
 
-(defn- app-inner
-  "Renders the inner application content and establishes an SSE connection.
+(defmulti app-inner
+  "Renders the inner application content based on SSE configuration.
 
-   - Verifie the server ID and CSRF token from client signals
-   - Create an SSE response that renders the view
-   - Register the connection for future updates
-   - Handle connection cleanup on close
+   Dispatches based on whether SSE is enabled in the options."
+  (fn [_req _server-id _view options]
+    (get-in options [:sse :enabled])))
 
-   If verification fails (stale session), it forces a page reload."
-  [req server-id view]
-  (let [signals (get-signals req)]
-    (if (and (= server-id (-> signals :app :server))
-             (session/verify-csrf
-              *session-id* (-> signals :app :csrf)))
-      (->sse-response
-       {:on-open
-        (fn [sse-gen]
-          (d*/merge-fragment!
-           sse-gen
-           (c/html
-            [:div {:id "main"}
-             (view)]))
-          (session/add-connection!
-           *session-id* *instance-id* sse-gen))
+(defn- app-loader
+  "Checks for stale connections and triggers a reload if necessary.
 
-        :on-close
-        (fn [_sse-gen _status]
-          (session/remove-connection!
-           *session-id* *instance-id*))})
-       ;; stale session reload
-      (do (->sse-response
-           {:on-open
-            (fn [sse-gen]
-              (d*/execute-script!
-               sse-gen "window.location.reload();"))})
-          (session/remove-connection!
-           *session-id* *instance-id*)))))
+   - Verify the server ID and CSRF token from client signals
+   - If valid, passes to app-inner for rendering
+   - If stale, forces a page reload and removes the connection
+
+   This is the entry point for all app content rendering."
+  [req server-id view options]
+  (let [signals (get-signals req)
+        valid-session? (and (= server-id (-> signals :app :server))
+                            (session/verify-csrf
+                             *session-id* (-> signals :app :csrf)))]
+    (if valid-session?
+      (app-inner req server-id view options)
+      (do
+        (session/remove-connection! *session-id* *instance-id*)
+        (->sse-response
+         {:on-open
+          (fn [sse-gen]
+            (d*/execute-script!
+             sse-gen "window.location.reload();"))})))))
+
+(defmethod app-inner true
+  [_req _server-id view _options]
+  (->sse-response
+   {:on-open
+    (fn [sse-gen]
+      (d*/merge-fragment!
+       sse-gen
+       (c/html
+        [:div {:id "main"}
+         (view)]))
+      (session/add-connection!
+       *session-id* *instance-id* sse-gen))
+
+    :on-close
+    (fn [_sse-gen _status]
+      (session/remove-connection!
+       *session-id* *instance-id*))}))
+
+(defmethod app-inner false
+  [_req _server-id view _options]
+  (->sse-response
+   {:on-open
+    (fn [sse-gen]
+      (d*/merge-fragment!
+       sse-gen
+       (c/html
+        [:div {:id "main"}
+         (view)]))
+      (d*/close-sse! sse-gen))}))
 
 (defn authenticated?
   "Return `true` if the `request` is an authenticated request."
@@ -291,17 +317,34 @@
                   (if (and auth-required?#
                            (not (authenticated? *request*)))
                     {:status 403, :headers {}, :body nil}
-                    (do ~@body
-                        {:status 200, :headers {}, :body nil}))))))]
+                    (hk-gen/->sse-response *request*
+                                           {:on-open
+                                            (fn [sse-gen#]
+                                              (binding [*sse-gen* sse-gen#]
+                                                ~@body)
+                                              (d*/close-sse! sse-gen#))}))))))]
        (#'add-route! handler-fn# ~opts))))
+
+(defn- sse-conn
+  "Returns the current Server-Sent Events (SSE) connection.
+
+   First checks if there's an active SSE generator in the dynamic *sse-gen* var.
+   If not found, attempts to retrieve the connection from the session store
+   using the current session ID and instance ID.
+
+   This function is used internally by push-html!, broadcast-html!, and other
+   functions that need to communicate with the client browser."
+  []
+  (if *sse-gen*
+    *sse-gen*
+    (session/instance-connection
+     *session-id* *instance-id*)))
 
 (defn push-html!
   "Push HTML to the specific browser tab/window that
    triggered the handler."
   [html]
-  (let [sse (session/instance-connection
-             *session-id* *instance-id*)]
-    (d*/merge-fragment! sse (c/html html))))
+  (d*/merge-fragment! (sse-conn) (c/html html)))
 
 (defn broadcast-html!
   "Pushes HTML to all browser tabs/windows that share the same
@@ -317,8 +360,7 @@
   ([url]
    (push-path! url nil))
   ([url view-fn]
-   (let [sse (session/instance-connection
-              *session-id* *instance-id*)
+   (let [sse (sse-conn)
          cmd (str "window.__pushHashChange = true;
                    history.pushState(null, null, \"#" url "\");
                    window.__pushHashChange = false;")]
@@ -354,17 +396,13 @@
   "Send JavaScript to the specific browser tab/window that
    triggered the current handler for execution."
   [script]
-  (let [sse (session/instance-connection
-             *session-id* *instance-id*)]
-    (d*/execute-script! sse script)))
+  (d*/execute-script! (sse-conn) script))
 
 (defn push-reload!
   "Send a reload command to the specific browser tab/window that
    triggered the current handler."
   []
-  (let [sse (session/instance-connection
-             *session-id* *instance-id*)]
-    (d*/execute-script! sse "window.location.reload();")))
+  (d*/execute-script! (sse-conn) "window.location.reload();"))
 
 (defn broadcast-script!
   "Send JavaScript to all browser tabs/windows that share the same
@@ -378,22 +416,16 @@
   "Send updated signal values to the specific browser tab/window that
    triggered the current handler."
   [signal]
-  (let [sse (session/instance-connection
-             *session-id* *instance-id*)]
-    (d*/merge-signals!
-     sse (charred/write-json-str signal))))
+  (d*/merge-signals!
+   (sse-conn) (charred/write-json-str signal)))
 
 (defn set-cookie!
   "Send a Set-Cookie header to the specific browser tab/window that
    triggered the current handler. It allows setting, updating, or
    deleting cookies."
   [cookie]
-  (->sse-response
-   {:headers {"Set-Cookie" cookie}
-    :on-open
-    (fn [sse]
-      (d*/with-open-sse sse
-         (d*/execute-script! sse "null;")))}))
+  (push-script!
+   (str "document.cookie = '" cookie "';")))
 
 #_:clj-kondo/ignore
 (defn make-router []
@@ -516,7 +548,9 @@
               :title - Page title
               :head - Additional HTML for the head section
               :view-port - The viewport meta tag
-              :sse-keep-alive - Whether to keep SSE connections alive when tab is hidden
+              :sse - Server-Sent Events options map:
+                    :enabled - Whether to enable SSE (default: true)
+                    :keep-alive - Whether to keep SSE connections alive when tab is hidden (default: false)
               :handlers - A vector of custom route handlers (Compojure routes) that
                           will be included in the application's routing system
               :csrf-secret - Secret for CSRF token generation
@@ -537,6 +571,7 @@
      A function that stops the server when called"
   [view options]
   (let [server-id (str (random-uuid))
+        options (update options :sse #(merge {:enabled true :keep-alive false} %))
         csrf-secret (or (:csrf-secret options)
                         (str (random-uuid)))
         csrf-keyspec (session/secret-key->hmac-sha256-keyspec
@@ -547,7 +582,6 @@
         site-defaults (-> def/site-defaults
                           (assoc :session false)
                           (assoc-in [:security :anti-forgery] false)
-
                           (assoc-in [:static :resources] false)
                           (assoc-in [:static :files] false))
         http-kit-opts (merge {:bind "0.0.0.0" :port 8080}
@@ -566,9 +600,9 @@
           (let [base-routes (compojure.core/routes
                              (GET "/" _req
                                (app-outer server-id options))
-                             (GET "/app-inner" req
+                             (GET "/app-loader" req
                                (bind-vars
-                                req (app-inner req server-id view)))
+                                req (app-loader req server-id view options)))
                              (route/resources "/"))
                 all-routes (routes base-routes
                                    (apply routes @event-routes)
