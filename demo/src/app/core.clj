@@ -44,10 +44,10 @@
        [::c/button
         {:size :xl
          :type :primary
-         :on-click (weave/handler
-                    (swap! click-count inc)
-                    (weave/push-html!
-                     (click-count-view)))}
+         :data-on-click (weave/handler
+                         (swap! click-count inc)
+                         (weave/push-html!
+                          (click-count-view)))}
         "Increment Count"]]]]))
 
 
@@ -55,27 +55,28 @@
                    "Finish Project"])]
 
   (defn todo-view []
-    [:div {:id "view"
-           :class "w-full h-full bg-gray-200"}
+    [::c/view#app
      [::c/row.justify-center
       [::c/card.mt-3
        [:h1.text-2xl.font-bold.mb-4.text-gray-800
         "Todo List"]
        [:ul {:class "space-y-2 mb-6"}
-        (map-indexed (fn [idx x]
-                       [:li.flex.items-center.justify-between.p-3.bg-gray-50.rounded
-                        [:span.text-gray-700 x]
-                        [::c/button
-                         {:size :md
-                          :type :danger
-                          :on-click (weave/handler
-                                     (swap! todos (fn [items]
-                                                    (vec (concat
-                                                          (subvec items 0 idx)
-                                                          (subvec items (inc idx))))))
-                                     (weave/push-html!
-                                      (todo-view)))}
-                         "Delete"]]) @todos)]
+        (map-indexed
+         (fn [idx x]
+           [:li.flex.items-center.justify-between.p-3.bg-gray-50.rounded
+            [:span.text-gray-700 x]
+            [::c/button
+             {:size :md
+              :type :danger
+              :data-on-click (weave/handler
+                              (swap! todos (fn [items]
+                                             (vec (concat
+                                                   (subvec items 0 idx)
+                                                   (subvec items (inc idx))))))
+                              (weave/push-html!
+                               (todo-view)))}
+             "Delete"]])
+         @todos)]
        [:form
         {:class "mt-4 space-y-4"
          :data-on-submit (weave/handler
@@ -88,8 +89,10 @@
           {:name "bar"
            :placeholder "Add new todo item"
            :required true}]
-         [:button
-          {:class (tw button-primary-class button-size-normal button-base-class)}
+         [::c/button
+          {:button-type "submit"
+           :size :md
+           :type :primary}
           "Add"]]]]]]))
 
 (let [router (r/router

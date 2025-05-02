@@ -136,7 +136,6 @@
   (let [size (:size attrs)
         text (or (first content) (:title attrs))
         button-type (or (:type attrs) :primary)
-        handler (:on-click attrs)
         type-style {:bg (or (:bg-class attrs)
                             (get-theme-class :button button-type :bg))
                     :hover (or (:hover-class attrs)
@@ -187,9 +186,8 @@
                           " focus-visible:outline-2 focus-visible:outline-offset-2 "
                           (:focus type-style))}}
         style (get button-sizes size)
-        base-attrs {:type "button"
-                    :class (:class style)
-                    :data-on-click handler}
+        base-attrs {:type (or (:button-type attrs) "button")
+                    :class (:class style)}
         filtered-attrs (dissoc attrs :size :title :type :on-click)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:button merged-attrs text]))
