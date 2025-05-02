@@ -145,8 +145,14 @@
               [:link {:rel "manifest" :href "/manifest.json"}]])
            [:title (or (:title opts) "Weave")]
            ;;
-           [:link {:href "/tailwind@2.2.19.css" :rel "stylesheet"}]
            [:script {:type "module" :src "/datastar@v1.0.0-beta.11.js"}]
+           ;;
+           [:script {:src "/tailwind@3.4.16.js"}]
+           [:script
+            "tailwind.config = {
+               darkMode: 'class',
+             }"]
+           ;;
            [:script
             "window.__pushHashChange = false;
              function path() {
