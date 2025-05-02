@@ -4,7 +4,8 @@
    [clojure.string]
    [reitit.core :as r]
    [weave.core :as weave]
-   [weave.session :as session]))
+   [weave.session :as session]
+   [weave.components :as c]))
 
 (defn tw
   "Combines multiple Tailwind CSS classes into a single string.
@@ -32,63 +33,65 @@
 (def input-size-normal "px-4 py-2")
 (def input-full-width "w-full")
 
-
 (let [click-count (atom 0)]
 
   (defn click-count-view []
-    [:div {:id "view" :class (tw view-container-class "text-center")}
-     [:h1.text-2xl.font-bold.mb-4.text-gray-800
-      "Counter Example"]
-     [:div.text-6xl.font-bold.mb-6.text-blue-600
-      @click-count]
-     [:button
-      {:class (tw button-primary-class button-size-large button-base-class)
-       :data-on-click
-       (weave/handler
-        (swap! click-count inc)
-        (weave/push-html!
-         (click-count-view)))}
-      "Increment Count"]]))
+    [::c/view#app
+     [::c/center-hv
+      [::c/card
+       [:div.text-center.text-6xl.font-bold.mb-6.text-blue-600
+        @click-count]
+       [::c/button
+        {:size :xl
+         :type :primary
+         :on-click (weave/handler
+                    (swap! click-count inc)
+                    (weave/push-html!
+                     (click-count-view)))}
+        "Increment Count"]]]]))
 
 
 (let [todos (atom ["Pickup groceries"
                    "Finish Project"])]
 
   (defn todo-view []
-    [:div {:id "view" :class view-container-class}
-     [:h1.text-2xl.font-bold.mb-4.text-gray-800
-      "Todo List"]
-     [:ul {:class "space-y-2 mb-6"}
-      (map-indexed (fn [idx x]
-                     [:li.flex.items-center.justify-between.p-3.bg-gray-50.rounded
-                      [:span.text-gray-700 x]
-                      [:button
-                       {:class (tw button-danger-class button-base-class "px-3 py-1")
-                        :data-on-click
-                        (weave/handler
-                         (swap! todos (fn [items]
-                                        (vec (concat
-                                              (subvec items 0 idx)
-                                              (subvec items (inc idx))))))
-                         (weave/push-html!
-                          (todo-view)))}
-                       "Delete"]]) @todos)]
-     [:form
-      {:class "mt-4 space-y-4"
-       :data-on-submit (weave/handler
-                        {:type :form}
-                        (swap! todos conj (-> weave/*request* :params :bar))
-                        (weave/push-html!
-                         (todo-view)))}
-      [:div {:class "flex space-x-2 m-3"}
-       [:input
-        {:name "bar"
-         :placeholder "Add new todo item"
-         :required true
-         :class (tw input-base-class input-size-normal "flex-grow")}]
-       [:button
-        {:class (tw button-primary-class button-size-normal button-base-class)}
-        "Add"]]]]))
+    [:div {:id "view"
+           :class "w-full h-full bg-gray-200"}
+     [::c/row.justify-center
+      [::c/card.mt-3
+       [:h1.text-2xl.font-bold.mb-4.text-gray-800
+        "Todo List"]
+       [:ul {:class "space-y-2 mb-6"}
+        (map-indexed (fn [idx x]
+                       [:li.flex.items-center.justify-between.p-3.bg-gray-50.rounded
+                        [:span.text-gray-700 x]
+                        [::c/button
+                         {:size :md
+                          :type :danger
+                          :on-click (weave/handler
+                                     (swap! todos (fn [items]
+                                                    (vec (concat
+                                                          (subvec items 0 idx)
+                                                          (subvec items (inc idx))))))
+                                     (weave/push-html!
+                                      (todo-view)))}
+                         "Delete"]]) @todos)]
+       [:form
+        {:class "mt-4 space-y-4"
+         :data-on-submit (weave/handler
+                          {:type :form}
+                          (swap! todos conj (-> weave/*request* :params :bar))
+                          (weave/push-html!
+                           (todo-view)))}
+        [:div {:class "flex space-x-2 m-3"}
+         [:input
+          {:name "bar"
+           :placeholder "Add new todo item"
+           :required true
+           :class (tw input-base-class input-size-normal "flex-grow")}]
+         [:button
+          {:class (tw button-primary-class button-size-normal button-base-class)}
+          "Add"]]]]]]))
 
 (let [router (r/router
               [["/views/one" ::view-one]

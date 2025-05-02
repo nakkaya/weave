@@ -3,6 +3,44 @@
    [dev.onionpancakes.chassis.core :as c]
    [clojure.string :as str]))
 
+(def ^:dynamic *theme*
+  {:view {:bg "bg-white dark:bg-gray-900"}
+   :card {:bg "bg-white dark:bg-gray-800"
+          :border "border border-gray-300 dark:border-gray-700"
+          :shadow "shadow-sm"}
+   :card-with-header {:bg "bg-white dark:bg-gray-800"
+                      :border "divide-y divide-gray-300 dark:divide-gray-700"
+                      :shadow "shadow-sm"}
+   :button {:primary {:bg "bg-indigo-600 dark:bg-indigo-500"
+                      :hover "hover:bg-indigo-500 dark:hover:bg-indigo-400"
+                      :focus "focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-500"
+                      :text "text-white"}
+            :danger {:bg "bg-red-600 dark:bg-red-500"
+                     :hover "hover:bg-red-500 dark:hover:bg-red-400"
+                     :focus "focus-visible:outline-red-600 dark:focus-visible:outline-red-500"
+                     :text "text-white"}
+            :secondary {:bg "bg-gray-200 dark:bg-gray-700"
+                        :hover "hover:bg-gray-300 dark:hover:bg-gray-600"
+                        :focus "focus-visible:outline-gray-600 dark:focus-visible:outline-gray-400"
+                        :text "text-gray-900 dark:text-gray-100"}}
+   :navbar {:bg "bg-gray-800 dark:bg-gray-900"
+            :text "text-gray-300 dark:text-gray-300"
+            :hover "hover:bg-gray-700 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white"}})
+
+(defn get-theme-class
+  "Get a class string from the theme configuration"
+  [component-type & path]
+  (let [path-vec (into [component-type] path)
+        class-str (get-in *theme* path-vec)]
+    class-str))
+
+#_:clj-kondo/ignore
+(defn with-theme
+  "Execute body with a custom theme configuration"
+  [custom-theme & body]
+  (binding [*theme* (merge-with merge *theme* custom-theme)]
+    (do body)))
+
 (defn- merge-classes
   "Merge base class with custom class if provided."
   [base-class custom-class]
@@ -19,6 +57,15 @@
         merged-class (merge-classes base-class user-class)]
     (-> (merge base-attrs user-attrs)
         (assoc :class merged-class))))
+
+(defmethod c/resolve-alias ::view
+  [_ attrs content]
+  (let [theme-bg (or (:bg-class attrs) (get-theme-class :view :bg))
+        base-attrs {:class (str "w-full h-full " theme-bg)}
+        filtered-attrs (dissoc attrs :bg-class)
+        merged-attrs (merge-attrs base-attrs filtered-attrs)]
+    [:div merged-attrs
+     content]))
 
 (defmethod c/resolve-alias ::row
   [_ attrs content]
@@ -50,16 +97,29 @@
 
 (defmethod c/resolve-alias ::card
   [_ attrs content]
-  (let [base-attrs {:class "overflow-hidden bg-white shadow-sm sm:rounded-lg"}
-        merged-attrs (merge-attrs base-attrs attrs)]
+  (let [theme-bg (or (:bg-class attrs) (get-theme-class :card :bg))
+        theme-border (or (:border-class attrs) (get-theme-class :card :border))
+        theme-shadow (or (:shadow-class attrs) (get-theme-class :card :shadow))
+        base-attrs {:class (str "overflow-hidden "
+                                theme-bg " " theme-border " " theme-shadow
+                                " sm:rounded-lg ring-1 ring-gray-200 dark:ring-gray-700")}
+        filtered-attrs (dissoc attrs :bg-class :border-class :shadow-class)
+        merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:div merged-attrs
      [:div {:class "px-4 py-5 sm:p-6"}
       content]]))
 
 (defmethod c/resolve-alias ::card-with-header
   [_ attrs content]
-  (let [base-attrs {:class "divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm"}
-        merged-attrs (merge-attrs base-attrs attrs)
+  (let [theme-bg (or (:bg-class attrs) (get-theme-class :card-with-header :bg))
+        theme-border (or (:border-class attrs) (get-theme-class :card-with-header :border))
+        theme-shadow (or (:shadow-class attrs) (get-theme-class :card-with-header :shadow))
+        base-attrs {:class (str theme-border
+                                " overflow-hidden rounded-lg "
+                                theme-bg " " theme-shadow
+                                " ring-1 ring-gray-200 dark:ring-gray-700")}
+        filtered-attrs (dissoc attrs :bg-class :border-class :shadow-class)
+        merged-attrs (merge-attrs base-attrs filtered-attrs)
         header (first content)
         body (rest content)]
     [:div merged-attrs
@@ -72,38 +132,71 @@
         text (or (first content) (:title attrs))
         button-type (or (:type attrs) :primary)
         handler (:on-click attrs)
-        type-styles {:primary {:bg "bg-indigo-600"
-                               :hover "hover:bg-indigo-500"
-                               :focus "focus-visible:outline-indigo-600"
-                               :text "text-white"}
-                     :danger {:bg "bg-red-600"
-                              :hover "hover:bg-red-500"
-                              :focus "focus-visible:outline-red-600"
-                              :text "text-white"}
-                     :secondary {:bg "bg-gray-200"
-                                 :hover "hover:bg-gray-300"
-                                 :focus "focus-visible:outline-gray-600"
-                                 :text "text-gray-900"}}
-        type-style (get type-styles button-type)
+        type-style {:bg (or (:bg-class attrs)
+                            (get-theme-class :button button-type :bg))
+                    :hover (or (:hover-class attrs)
+                               (get-theme-class :button button-type :hover))
+                    :focus (or (:focus-class attrs)
+                               (get-theme-class :button button-type :focus))
+                    :text (or (:text-class attrs)
+                              (get-theme-class :button button-type :text))}
         button-sizes
-        {:xs {:class (str "rounded-sm " (:bg type-style) " px-2 py-1 text-xs font-semibold " (:text type-style) " shadow-xs " (:hover type-style) " focus-visible:outline-2 focus-visible:outline-offset-2 " (:focus type-style))}
-         :s {:class (str "rounded-sm " (:bg type-style) " px-2 py-1 text-sm font-semibold " (:text type-style) " shadow-xs " (:hover type-style) " focus-visible:outline-2 focus-visible:outline-offset-2 " (:focus type-style))}
-         :md {:class (str "rounded-md " (:bg type-style) " px-2.5 py-1.5 text-base font-semibold " (:text type-style) " shadow-xs " (:hover type-style) " focus-visible:outline-2 focus-visible:outline-offset-2 " (:focus type-style))}
-         :lg {:class (str "rounded-md " (:bg type-style) " px-3 py-2 text-lg font-semibold " (:text type-style) " shadow-xs " (:hover type-style) " focus-visible:outline-2 focus-visible:outline-offset-2 " (:focus type-style))}
-         :xl {:class (str "rounded-md " (:bg type-style) " px-3.5 py-2.5 text-xl font-semibold " (:text type-style) " shadow-xs " (:hover type-style) " focus-visible:outline-2 focus-visible:outline-offset-2 " (:focus type-style))}}
+        {:xs {:class (str "rounded-sm "
+                          (:bg type-style)
+                          " px-2 py-1 text-xs font-semibold "
+                          (:text type-style)
+                          " shadow-xs "
+                          (:hover type-style)
+                          " focus-visible:outline-2 focus-visible:outline-offset-2 "
+                          (:focus type-style))}
+         :s {:class (str "rounded-sm "
+                         (:bg type-style)
+                         " px-2 py-1 text-sm font-semibold "
+                         (:text type-style)
+                         " shadow-xs "
+                         (:hover type-style)
+                         " focus-visible:outline-2 focus-visible:outline-offset-2 "
+                         (:focus type-style))}
+         :md {:class (str "rounded-md "
+                          (:bg type-style)
+                          " px-2.5 py-1.5 text-base font-semibold "
+                          (:text type-style)
+                          " shadow-xs "
+                          (:hover type-style)
+                          " focus-visible:outline-2 focus-visible:outline-offset-2 "
+                          (:focus type-style))}
+         :lg {:class (str "rounded-md "
+                          (:bg type-style)
+                          " px-3 py-2 text-lg font-semibold "
+                          (:text type-style)
+                          " shadow-xs "
+                          (:hover type-style)
+                          " focus-visible:outline-2 focus-visible:outline-offset-2 "
+                          (:focus type-style))}
+         :xl {:class (str "rounded-md "
+                          (:bg type-style)
+                          " px-3.5 py-2.5 text-xl font-semibold "
+                          (:text type-style)
+                          " shadow-xs "
+                          (:hover type-style)
+                          " focus-visible:outline-2 focus-visible:outline-offset-2 "
+                          (:focus type-style))}}
         style (get button-sizes size)
         base-attrs {:type "button"
                     :class (:class style)
                     :data-on-click handler}
-        ;; Remove special keys that we've already processed
         filtered-attrs (dissoc attrs :size :title :type :on-click)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:button merged-attrs text]))
 
 (defmethod c/resolve-alias ::navbar
   [_ attrs content]
-  (let [base-attrs {:id "app-header"
-                    :class "bg-gray-800 sm:flex sm:justify-between sm:items-center sm:px-4 sm:py-3"
+  (let [theme-bg (or (:bg-class attrs) (get-theme-class :navbar :bg))
+        theme-text (or (:text-class attrs) (get-theme-class :navbar :text))
+        theme-hover (or (:hover-class attrs) (get-theme-class :navbar :hover))
+        base-attrs {:id "app-header"
+                    :class (str theme-bg
+                                " sm:flex sm:justify-between sm:items-center sm:px-4 sm:py-3")
                     :data-signals-navbar-open "false"}
         merged-attrs (merge-attrs base-attrs attrs)
         logo-url (or (:logo-url attrs) "/weave.svg")
@@ -125,6 +218,6 @@
        :class "sm:block"}
       [:div.flex.flex-col.sm:flex-row
        (for [[name handler] nav-items]
-         [:a.text-gray-300.hover:bg-gray-700.hover:text-white.rounded-md.px-3.py-2.text-sm.font-medium.cursor-pointer.block.mb-1.sm:mb-0.sm:inline-block
-          {:data-on-click handler}
+         [:a {:class (str theme-text " " theme-hover " rounded-md px-3 py-2 text-sm font-medium cursor-pointer block mb-1 sm:mb-0 sm:inline-block")
+              :data-on-click handler}
           name])]]]))
