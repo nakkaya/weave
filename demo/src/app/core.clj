@@ -7,32 +7,6 @@
    [weave.session :as session]
    [weave.components :as c]))
 
-(defn tw
-  "Combines multiple Tailwind CSS classes into a single string.
-   Filters out nil values and trims whitespace."
-  [& classes]
-  (clojure.string/trim
-   (clojure.string/join " "
-                        (remove nil?
-                                (map #(if (string? %)
-                                        (clojure.string/trim %)
-                                        %)
-                                     classes)))))
-
-(def view-container-class
-  "max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg")
-
-(def button-base-class "transition duration-200 rounded")
-(def button-primary-class "bg-blue-500 hover:bg-blue-600 text-white")
-(def button-danger-class "bg-red-500 hover:bg-red-600 text-white")
-(def button-size-normal "px-4 py-2")
-(def button-size-large "px-6 py-3 font-semibold text-lg")
-
-(def input-base-class
-  "border rounded focus:outline-none focus:ring-2 focus:ring-blue-500")
-(def input-size-normal "px-4 py-2")
-(def input-full-width "w-full")
-
 (let [click-count (atom 0)]
 
   (defn click-count-view []
@@ -143,23 +117,24 @@
 
 (defn session-app-view []
   [:div
-   [:div.mb-4.p-3.bg-green-100.text-green-800.rounded-lg
+   [::c/alert.m-5 {:type :info}
     [:p.font-semibold
      (str "Welcome, " (or (:name (:identity weave/*request*)) "User") "!")]
     [:p.text-sm
      "You are currently logged in."]]
-   [:button
-    {:class (tw button-danger-class button-size-large button-base-class)
-     :data-on-click
-     (weave/handler
-      (weave/set-cookie! (session/sign-out))
-      (weave/broadcast-path! "/sign-in")
-      (weave/push-reload!))}
-    "Sign Out"]])
+   [::c/row.justify-center
+    [::c/button
+     {:size :xl
+      :type :primary
+      :data-on-click (weave/handler
+                      (weave/set-cookie! (session/sign-out))
+                      (weave/broadcast-path! "/sign-in")
+                      (weave/push-reload!))}
+     "Sign Out"]]])
 
 (defn session-sign-in-view []
   [:div
-   [:div.mb-4.p-3.bg-gray-100.text-gray-700.rounded-lg
+   [::c/alert.m-5 {:type :info}
     [:p
      "You are not logged in."]
     [:p.text-sm
@@ -177,38 +152,33 @@
      [:label {:for "username"
               :class "block text-sm font-medium text-gray-700 mb-1"}
       "Username"]
-     [:input
+     [::c/input
       {:name "username"
-       :id "username"
-       :type "text"
        :placeholder "Enter your username"
-       :required true
-       :class (tw input-base-class input-size-normal input-full-width)}]]
-
+       :required true}]]
     [:div {:class "text-left mb-4"}
      [:label {:for "password"
               :class "block text-sm font-medium text-gray-700 mb-1"}
       "Password"]
-     [:input
+     [::c/input
       {:name "password"
-       :id "password"
        :type "password"
        :placeholder "Enter your password"
-       :required true
-       :class (tw input-base-class input-size-normal input-full-width)}]]
-
-    [:button
-     {:class (tw button-primary-class button-size-large button-base-class "w-full")
-      :type "submit"}
-     "Sign In"]]])
+       :required true}]]
+    [::c/row.justify-center
+     [::c/button
+      {:button-type "submit"
+       :size :xl
+       :type :primary}
+      "Sign In"]]]])
 
 (defn session-view []
-  [:div {:id "view" :class (tw view-container-class "text-center")}
-   [:h1.text-center.text-gray-500
-    "Authentication Example"]
-   (case (router routes)
-     :sign-in (session-sign-in-view)
-     (session-app-view))])
+  [::c/view#app
+   [::c/center-hv
+    [::c/card
+     (case (router routes)
+       :sign-in (session-sign-in-view)
+       (session-app-view))]]])
 
 (defn run [options]
   (let [view (condp = (:view options)
