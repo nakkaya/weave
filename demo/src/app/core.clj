@@ -17,7 +17,7 @@
         @click-count]
        [::c/button
         {:size :xl
-         :type :primary
+         :variant :primary
          :data-on-click (weave/handler
                          (swap! click-count inc)
                          (weave/push-html!
@@ -37,11 +37,11 @@
        [:ul {:class "space-y-2 mb-6"}
         (map-indexed
          (fn [idx x]
-           [:li.flex.items-center.justify-between.p-3.bg-gray-50.rounded
+           [:li.flex.items-center.justify-between.p-3.rounded
             [:span.text-gray-700 x]
             [::c/button
              {:size :md
-              :type :danger
+              :variant :danger
               :data-on-click (weave/handler
                               (swap! todos (fn [items]
                                              (vec (concat
@@ -64,9 +64,9 @@
            :placeholder "Add new todo item"
            :required true}]
          [::c/button
-          {:button-type "submit"
+          {:type "submit"
            :size :md
-           :type :primary}
+           :variant :primary}
           "Add"]]]]]]))
 
 (let [router (r/router
@@ -82,13 +82,13 @@
         [::c/flex-between
          [::c/button
           {:size :md
-           :type :primary
+           :variant :primary
            :data-on-click (weave/handler
                            (weave/push-path! "/views/one" navigation-view))}
           "Page One"]
          [::c/button
           {:size :md
-           :type :primary
+           :variant :primary
            :data-on-click (weave/handler
                            (weave/push-path! "/views/two" navigation-view))}
           "Page Two"]]]]
@@ -125,7 +125,7 @@
    [::c/row.justify-center
     [::c/button
      {:size :xl
-      :type :primary
+      :variant :primary
       :data-on-click (weave/handler
                       (weave/set-cookie! (session/sign-out))
                       (weave/broadcast-path! "/sign-in")
@@ -165,9 +165,9 @@
        :required true}]]
     [::c/row.justify-center
      [::c/button
-      {:button-type "submit"
+      {:type "submit"
        :size :xl
-       :type :primary}
+       :variant :primary}
       "Sign In"]]]])
 
 (defn session-view []
