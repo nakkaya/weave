@@ -149,16 +149,14 @@
       (weave/broadcast-path! "/app")
       (weave/push-reload!))}
     [:div {:class "text-left mb-3"}
-     [:label {:for "username"
-              :class "block text-sm font-medium text-gray-700 mb-1"}
+     [::c/label {:for "username"}
       "Username"]
      [::c/input
       {:name "username"
        :placeholder "Enter your username"
        :required true}]]
     [:div {:class "text-left mb-4"}
-     [:label {:for "password"
-              :class "block text-sm font-medium text-gray-700 mb-1"}
+     [::c/label {:for "password"}
       "Password"]
      [::c/input
       {:name "password"

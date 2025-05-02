@@ -28,6 +28,8 @@
            :bg "bg-white dark:bg-gray-800"
            :text "text-gray-900 dark:text-gray-100"
            :placeholder "placeholder:text-gray-400"}
+   :label {:text "text-gray-700 dark:text-gray-300"
+           :required "text-red-500 dark:text-red-400"}
    :alert {:success {:bg "bg-green-50 dark:bg-green-900/30"
                      :border "border-green-400 dark:border-green-700"
                      :text "text-green-800 dark:text-green-300"}
@@ -262,6 +264,29 @@
                                :bg-class :text-class :placeholder-class)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:input merged-attrs]))
+
+(defmethod c/resolve-alias ::label
+  [_ attrs content]
+  (let [size (or (:size attrs) :md)
+        required? (:required? attrs)
+        for-id (:for attrs)
+        theme-text (or (:text-class attrs) (get-theme-class :label :text))
+        theme-required (or (:required-class attrs) (get-theme-class :label :required))
+        label-sizes
+        {:xs {:class (str "block text-xs font-medium " theme-text)}
+         :s {:class (str "block text-sm font-medium " theme-text)}
+         :md {:class (str "block text-base font-medium " theme-text)}
+         :lg {:class (str "block text-lg font-medium " theme-text)}
+         :xl {:class (str "block text-xl font-medium " theme-text)}}
+        style (get label-sizes size)
+        base-attrs {:class (:class style)}
+        base-attrs (if for-id (assoc base-attrs :for for-id) base-attrs)
+        filtered-attrs (dissoc attrs :size :required? :for :text-class :required-class)
+        merged-attrs (merge-attrs base-attrs filtered-attrs)]
+    [:label merged-attrs
+     content
+     (when required?
+       [:span {:class theme-required} " *"])]))
 
 (defmethod c/resolve-alias ::alert
   [_ attrs content]
