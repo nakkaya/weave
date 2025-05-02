@@ -79,6 +79,13 @@
     [:div merged-attrs
      content]))
 
+(defmethod c/resolve-alias ::col
+  [_ attrs content]
+  (let [base-attrs {:class "flex flex-col"}
+        merged-attrs (merge-attrs base-attrs attrs)]
+    [:div merged-attrs
+     content]))
+
 (defmethod c/resolve-alias ::flex-between
   [_ attrs content]
   (let [base-attrs {:class "flex justify-between items-center"}
