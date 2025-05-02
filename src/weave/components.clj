@@ -114,13 +114,6 @@
     [:div merged-attrs
      content]))
 
-(defmethod c/resolve-alias ::flex-between
-  [_ attrs content]
-  (let [base-attrs {:class "flex justify-between items-center"}
-        merged-attrs (merge-attrs base-attrs attrs)]
-    [:div merged-attrs
-     content]))
-
 (defmethod c/resolve-alias ::card
   [_ attrs content]
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :card :bg))
