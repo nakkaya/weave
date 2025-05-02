@@ -100,33 +100,38 @@
                ["/views/two" ::view-two]])]
 
   (defn navigation-view []
-    [:div {:id "view" :class view-container-class}
-     [:div.flex.justify-between.items-center.mb-6.bg-gray-200.p-3.rounded-lg
-      [:a {:class (tw button-primary-class button-size-normal button-base-class)
-           :data-on-click
-           (weave/handler
-            (weave/push-path! "/views/one" navigation-view))}
-       "Page One"]
-      [:a {:class (tw button-primary-class button-size-normal button-base-class)
-           :data-on-click
-           (weave/handler
-            (weave/push-path! "/views/two" navigation-view))}
-       "Page Two"]]
+    [::c/view#app
+     [::c/col
+      {:class "w-1/3 m-5"}
+      [::c/row
+       [::c/card.mb-5.w-full
+        [::c/flex-between
+         [::c/button
+          {:size :md
+           :type :primary
+           :data-on-click (weave/handler
+                           (weave/push-path! "/views/one" navigation-view))}
+          "Page One"]
+         [::c/button
+          {:size :md
+           :type :primary
+           :data-on-click (weave/handler
+                           (weave/push-path! "/views/two" navigation-view))}
+          "Page Two"]]]]
 
-     [:div {:class "bg-white p-4 rounded-lg shadow"}
-      (case (get-in (r/match-by-path router weave/*app-path*) [:data :name])
-        ::view-one [:div.text-center
-                    [:h2.text-xl.font-bold
-                     "Page One Content"]
-                    [:p
-                     "This is the content for page one."]]
-        ::view-two [:div.text-center
-                    [:h2.text-xl.font-bold
-                     "Page Two Content"]
-                    [:p
-                     "This is the content for page two."]]
-        [:div.text-center.text-gray-500
-         "Select a page from the navigation above"])]]))
+      [::c/row
+       [::c/card.w-full
+        (case (get-in (r/match-by-path router weave/*app-path*) [:data :name])
+          ::view-one [:div.text-center
+                      [:h2.text-xl.font-bold
+                       "Page One Content"]
+                      [:p "This is the content for page one."]]
+          ::view-two [:div.text-center
+                      [:h2.text-xl.font-bold
+                       "Page Two Content"]
+                      [:p "This is the content for page two."]]
+          [:div.text-center.text-gray-500
+           "Select a page from the navigation above"])]]]]))
 
 (def routes
   (-> (r/router
