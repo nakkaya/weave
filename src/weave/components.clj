@@ -28,6 +28,18 @@
            :bg "bg-white dark:bg-gray-800"
            :text "text-gray-900 dark:text-gray-100"
            :placeholder "placeholder:text-gray-400"}
+   :alert {:success {:bg "bg-green-50 dark:bg-green-900/30"
+                     :border "border-green-400 dark:border-green-700"
+                     :text "text-green-800 dark:text-green-300"}
+           :warning {:bg "bg-yellow-50 dark:bg-yellow-900/30"
+                     :border "border-yellow-400 dark:border-yellow-700"
+                     :text "text-yellow-800 dark:text-yellow-300"}
+           :error {:bg "bg-red-50 dark:bg-red-900/30"
+                   :border "border-red-400 dark:border-red-700"
+                   :text "text-red-800 dark:text-red-300"}
+           :info {:bg "bg-blue-50 dark:bg-blue-900/30"
+                  :border "border-blue-400 dark:border-blue-700"
+                  :text "text-blue-800 dark:text-blue-300"}}
    :navbar {:bg "bg-gray-800 dark:bg-gray-900"
             :text "text-gray-300 dark:text-gray-300"
             :hover "hover:bg-gray-700 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white"}})
@@ -250,6 +262,68 @@
                                :bg-class :text-class :placeholder-class)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:input merged-attrs]))
+
+(defmethod c/resolve-alias ::alert
+  [_ attrs content]
+  (let [alert-type (or (:type attrs) :info)
+        alert-styles
+        {:success {:bg "bg-green-50 dark:bg-green-900/30"
+                   :border "border-green-400 dark:border-green-700"
+                   :text "text-green-800 dark:text-green-300"
+                   :icon [:svg.h-5.w-5.text-green-400.dark:text-green-500
+                          {:viewBox "0 0 20 20" :fill "currentColor" :aria-hidden "true"}
+                          [:path {:fill-rule "evenodd"
+                                  :d "M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                                  :clip-rule "evenodd"}]]}
+         :warning {:bg "bg-yellow-50 dark:bg-yellow-900/30"
+                   :border "border-yellow-400 dark:border-yellow-700"
+                   :text "text-yellow-800 dark:text-yellow-300"
+                   :icon [:svg.h-5.w-5.text-yellow-400.dark:text-yellow-500
+                          {:viewBox "0 0 20 20" :fill "currentColor" :aria-hidden "true"}
+                          [:path {:fill-rule "evenodd"
+                                  :d "M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                                  :clip-rule "evenodd"}]]}
+         :error {:bg "bg-red-50 dark:bg-red-900/30"
+                 :border "border-red-400 dark:border-red-700"
+                 :text "text-red-800 dark:text-red-300"
+                 :icon [:svg.h-5.w-5.text-red-400.dark:text-red-500
+                        {:viewBox "0 0 20 20" :fill "currentColor" :aria-hidden "true"}
+                        [:path {:fill-rule "evenodd"
+                                :d "M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                                :clip-rule "evenodd"}]]}
+         :info {:bg "bg-blue-50 dark:bg-blue-900/30"
+                :border "border-blue-400 dark:border-blue-700"
+                :text "text-blue-800 dark:text-blue-300"
+                :icon [:svg.h-5.w-5.text-blue-400.dark:text-blue-500
+                       {:viewBox "0 0 20 20" :fill "currentColor" :aria-hidden "true"}
+                       [:path {:fill-rule "evenodd"
+                               :d "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
+                               :clip-rule "evenodd"}]]}}
+        style (get alert-styles alert-type)
+        dismissible? (:dismissible? attrs)
+        base-attrs {:class (str "rounded-md p-4 border "
+                                (:bg style) " "
+                                (:border style) " "
+                                (:text style))}
+        filtered-attrs (dissoc attrs :type :dismissible?)
+        merged-attrs (merge-attrs base-attrs filtered-attrs)]
+    [:div merged-attrs
+     [:div.flex.relative.items-center
+      [:div.flex-shrink-0
+       (:icon style)]
+      [:div.ml-3.flex-1
+       [:div.text-sm
+        content]]
+      (when dismissible?
+        [:div.ml-auto.pl-3
+         [:button.text-gray-400.hover:text-gray-500.focus:outline-none
+          {:type "button"
+           :onclick "this.closest('[class*=\"rounded-md p-4 border\"]').remove()"}
+          [:span.sr-only "Dismiss"]
+          [:svg.h-5.w-5 {:viewBox "0 0 20 20" :fill "currentColor"}
+           [:path {:fill-rule "evenodd"
+                   :d "M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                   :clip-rule "evenodd"}]]]])]]))
 
 (defmethod c/resolve-alias ::navbar
   [_ attrs content]
