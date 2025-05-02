@@ -23,6 +23,11 @@
                         :hover "hover:bg-gray-300 dark:hover:bg-gray-600"
                         :focus "focus-visible:outline-gray-600 dark:focus-visible:outline-gray-400"
                         :text "text-gray-900 dark:text-gray-100"}}
+   :input {:border "ring-gray-300 dark:ring-gray-700"
+           :focus "focus:ring-indigo-600 dark:focus:ring-indigo-500"
+           :bg "bg-white dark:bg-gray-800"
+           :text "text-gray-900 dark:text-gray-100"
+           :placeholder "placeholder:text-gray-400"}
    :navbar {:bg "bg-gray-800 dark:bg-gray-900"
             :text "text-gray-300 dark:text-gray-300"
             :hover "hover:bg-gray-700 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white"}})
@@ -188,6 +193,58 @@
         filtered-attrs (dissoc attrs :size :title :type :on-click)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:button merged-attrs text]))
+
+(defmethod c/resolve-alias ::input
+  [_ attrs _content]
+  (let [input-type (or (:type attrs) "text")
+        size (or (:size attrs) :md)
+        placeholder (or (:placeholder attrs) "")
+        value (or (:value attrs) "")
+        name (or (:name attrs) "")
+        theme-border (or (:border-class attrs) (get-theme-class :input :border))
+        theme-focus (or (:focus-class attrs) (get-theme-class :input :focus))
+        theme-bg (or (:bg-class attrs) (get-theme-class :input :bg))
+        theme-text (or (:text-class attrs) (get-theme-class :input :text))
+        theme-placeholder (or (:placeholder-class attrs)
+                              (get-theme-class :input :placeholder))
+        input-sizes
+        {:xs {:class (str "block w-full rounded-sm border-0 py-1 px-1.5 text-xs "
+                          theme-text " shadow-sm ring-1 ring-inset "
+                          theme-border " " theme-placeholder
+                          " focus:ring-2 focus:ring-inset "
+                          theme-focus " " theme-bg " sm:leading-6")}
+         :s {:class (str "block w-full rounded-sm border-0 py-1.5 px-2 text-sm "
+                         theme-text " shadow-sm ring-1 ring-inset "
+                         theme-border " " theme-placeholder
+                         " focus:ring-2 focus:ring-inset "
+                         theme-focus " " theme-bg " sm:leading-6")}
+         :md {:class (str "block w-full rounded-md border-0 py-1.5 px-2.5 text-base "
+                          theme-text " shadow-sm ring-1 ring-inset "
+                          theme-border " " theme-placeholder
+                          " focus:ring-2 focus:ring-inset "
+                          theme-focus " " theme-bg " sm:leading-6")}
+         :lg {:class (str "block w-full rounded-md border-0 py-2 px-3 text-lg "
+                          theme-text " shadow-sm ring-1 ring-inset "
+                          theme-border " " theme-placeholder
+                          " focus:ring-2 focus:ring-inset "
+                          theme-focus " " theme-bg " sm:leading-6")}
+         :xl {:class (str "block w-full rounded-md border-0 py-2.5 px-3.5 text-xl "
+                          theme-text " shadow-sm ring-1 ring-inset "
+                          theme-border " " theme-placeholder
+                          " focus:ring-2 focus:ring-inset "
+                          theme-focus " " theme-bg " sm:leading-6")}}
+        style (get input-sizes size)
+        base-attrs {:type input-type
+                    :class (:class style)
+                    :placeholder placeholder
+                    :value value
+                    :name name}
+        filtered-attrs (dissoc attrs
+                               :size :type :placeholder :value :name
+                               :on-change  :border-class :focus-class
+                               :bg-class :text-class :placeholder-class)
+        merged-attrs (merge-attrs base-attrs filtered-attrs)]
+    [:input merged-attrs]))
 
 (defmethod c/resolve-alias ::navbar
   [_ attrs content]

@@ -84,11 +84,10 @@
                           (weave/push-html!
                            (todo-view)))}
         [:div {:class "flex space-x-2 m-3"}
-         [:input
+         [::c/input
           {:name "bar"
            :placeholder "Add new todo item"
-           :required true
-           :class (tw input-base-class input-size-normal "flex-grow")}]
+           :required true}]
          [:button
           {:class (tw button-primary-class button-size-normal button-base-class)}
           "Add"]]]]]]))
