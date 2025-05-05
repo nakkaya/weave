@@ -113,6 +113,8 @@
         ["/app" {:name :app
                  :auth-required? true}]])))
 
+(declare session-view)
+
 (def router (weave/make-router))
 
 (defn session-app-view []
@@ -133,50 +135,33 @@
      "Sign Out"]]])
 
 (defn session-sign-in-view []
-  [:div
-   [::c/alert.m-5 {:type :info}
-    [:p
-     "You are not logged in."]
-    [:p.text-sm
-     "Please sign in with your credentials."]]
-   [:form
-    {:class "mt-4 space-y-4"
-     :data-on-submit
-     (weave/handler
-      (weave/set-cookie!
-       (session/sign-in
-        {:name (:username (:params weave/*request*)) :role "User"}))
-      (weave/broadcast-path! "/app")
-      (weave/push-reload!))}
-    [:div {:class "text-left mb-3"}
-     [::c/label {:for "username"}
-      "Username"]
-     [::c/input
-      {:name "username"
-       :placeholder "Enter your username"
-       :required true}]]
-    [:div {:class "text-left mb-4"}
-     [::c/label {:for "password"}
-      "Password"]
-     [::c/input
-      {:name "password"
-       :type "password"
-       :placeholder "Enter your password"
-       :required true}]]
-    [::c/row.justify-center
-     [::c/button
-      {:type "submit"
-       :size :xl
-       :variant :primary}
-      "Sign In"]]]])
+  [::c/sign-in
+   {:title "Welcome Back"
+    :username-label "Username"
+    :username-placeholder "Enter your username"
+    :password-label "Password"
+    :password-placeholder "Enter your password"
+    :submit-text "Sign In"
+    :forgot-password-text "Forgot your password?"
+    :forgot-password-url "/#/forgot-password"
+    :register-text "Don't have an account?"
+    :register-url "/#/register"
+    :on-submit (weave/handler
+                {:type :form}
+                (weave/set-cookie!
+                 (session/sign-in
+                  {:name (:username (:params weave/*request*)) :role "User"}))
+                (weave/broadcast-path! "/app")
+                (weave/push-reload!))}])
 
 (defn session-view []
   [::c/view#app
-   [::c/center-hv
-    [::c/card
-     (case (router routes)
-       :sign-in (session-sign-in-view)
-       (session-app-view))]]])
+   (case (router routes)
+     :sign-in (session-sign-in-view)
+     :app [::c/center-hv
+           [::c/card
+            (session-app-view)]]
+     (session-sign-in-view))])
 
 (defn run [options]
   (let [view (condp = (:view options)

@@ -1,7 +1,8 @@
 (ns weave.components
   (:require
    [dev.onionpancakes.chassis.core :as c]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [weave.core :as core]))
 
 (defn tw
   "Combines multiple Tailwind CSS classes into a single string.
@@ -376,3 +377,104 @@
          [:a {:class (str theme-text " " theme-hover " rounded-md px-3 py-2 text-sm font-medium cursor-pointer block mb-1 sm:mb-0 sm:inline-block")
               :data-on-click handler}
           name])]]]))
+
+(defmethod c/resolve-alias ::sign-in
+  [_ attrs content]
+  (let [logo-url (or (:logo-url attrs) "/weave.svg")
+        logo-alt (or (:logo-alt attrs) "Your Company")
+        title (or (:title attrs) "Sign in to your account")
+        username-label (or (:username-label attrs) "Email")
+        username-placeholder (or (:username-placeholder attrs) "Enter your email")
+        password-label (or (:password-label attrs) "Password")
+        password-placeholder (or (:password-placeholder attrs) "Enter your password")
+        submit-text (or (:submit-text attrs) "Sign In")
+        forgot-password-text (or (:forgot-password-text attrs) "Forgot your password?")
+        forgot-password-url (or (:forgot-password-url attrs) "/#/forgot-password")
+        register-text (or (:register-text attrs) "Don't have an account? Sign up")
+        register-url (or (:register-url attrs) "/#/register")
+        error-message (or (:error-message attrs) "Invalid username or password.")
+        error-signal (or (:error-signal attrs) "$_error")
+        on-submit (or (:on-submit attrs) (core/handler))
+
+        ;; Container classes
+        container-classes (get-theme-class :view :bg)
+        card-container-classes "mx-auto w-full sm:max-w-lg"
+        heading-classes "mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900"
+        form-container-classes "mt-10 mx-auto w-full sm:max-w-lg"
+        form-classes "space-y-6"
+        footer-text-classes "mt-10 text-center text-sm/6 text-gray-500"
+        link-classes "font-semibold text-indigo-600 hover:text-indigo-500 cursor-pointer"
+
+        ;; Prepare base attributes
+        base-attrs {:class (tw "flex min-h-full flex-col w-full md:w-96 justify-center px-6 py-6 lg:px-8" container-classes)}
+        merged-attrs (merge-attrs
+                      base-attrs (dissoc attrs
+                                         :logo-url :logo-alt :title
+                                         :username-label :username-placeholder
+                                         :password-label :password-placeholder
+                                         :submit-text :forgot-password-text
+                                         :forgot-password-url
+                                         :register-text :register-handler
+                                         :error-message :error-signal
+                                         :on-submit))]
+
+    [::center-hv
+     [:div merged-attrs
+      [:div {:class card-container-classes}
+       [:img {:class "mx-auto h-10 w-auto"
+              :src logo-url
+              :alt logo-alt}]
+       [:h2 {:class heading-classes}
+        title]]
+
+      [:div {:class form-container-classes}
+       [:div {:id "sign-in-error"
+              :class "p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg"
+              :data-show error-signal
+              :style "display: none"}
+        error-message]
+
+       [:form {:class form-classes
+               :data-on-submit on-submit}
+
+        [:div
+         [::label {:for "username"}
+          username-label]
+         [:div {:class "mt-2"}
+          [::input
+           {:name "username"
+            :id "username"
+            :autocomplete "username"
+            :placeholder username-placeholder
+            :required true}]]]
+
+        [:div
+         [:div {:class "flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2"}
+          [::label {:for "password"}
+           password-label]
+          [:div {:class "text-sm"}
+           [:a {:href forgot-password-url :class link-classes}
+            forgot-password-text]]]
+         [:div {:class "mt-2"}
+          [::input
+           {:name "password"
+            :id "password"
+            :type "password"
+            :autocomplete "current-password"
+            :placeholder password-placeholder
+            :required true}]]]
+
+        [:div
+         [::button {:class "w-full"
+                    :type "submit"
+                    :size :s
+                    :variant :primary}
+          submit-text]]]
+
+       [:p {:class footer-text-classes}
+        register-text
+        [:a {:class link-classes
+             :href register-url}
+         " Sign up"]]
+
+       content]]]))
