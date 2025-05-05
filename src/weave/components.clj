@@ -40,7 +40,7 @@
    :card-with-header {:bg "bg-white dark:bg-gray-800"
                       :border "divide-y divide-gray-300 dark:divide-gray-700"
                       :shadow "shadow-sm"}
-   :button {:base "inline-flex items-center gap-2 rounded-lg shadow-theme-xs transition"
+   :button {:base "inline-flex items-center justify-center text-center gap-2 rounded-lg shadow-theme-xs transition"
             :sizes {:xs "px-2 py-1.5 text-xs"
                     :s "px-3 py-2 text-sm"
                     :md "px-4 py-3 text-sm"
