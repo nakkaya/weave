@@ -14,7 +14,7 @@ The counter example demonstrates simple state management with atomic
 updates:
 
 #+begin_src shell
-clj -M:server
+clj -X:server
 #+end_src
 
 *** Todo List Example
@@ -22,7 +22,7 @@ clj -M:server
 The todo list example demonstrates form handling and dynamic content:
 
 #+begin_src shell
-clj -M:server :view :todo
+clj -X:server :view :todo
 #+end_src
 
 *** Navigation Example
@@ -31,7 +31,7 @@ The navigation example demonstrates client-side routing with
 hash-based URLs:
 
 #+begin_src shell
-clj -M:server :view :navigation
+clj -X:server :view :navigation
 #+end_src
 
 *** Authentication Example
@@ -40,7 +40,7 @@ The authentication example demonstrates session management with
 login/logout:
 
 #+begin_src shell
-clj -M:server :view :session
+clj -X:server :view :session
 #+end_src
 
 ** Building an Uberjar
