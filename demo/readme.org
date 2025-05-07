@@ -40,7 +40,7 @@ The authentication example demonstrates session management with
 login/logout:
 
 #+begin_src shell
-clj -X:server :view :session
+clj -X:server :view :todo
 #+end_src
 
 ** Building an Uberjar
