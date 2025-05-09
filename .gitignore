@@ -12,4 +12,4 @@ pom.xml.asc
 /.clj-kondo
 .aider*
 .lsp/
-examples/hello-world/.nrepl-port
+demo/.nrepl-port
