@@ -14,7 +14,8 @@
    [ring.util.response :as resp]
    [starfederation.datastar.clojure.adapter.http-kit :as hk-gen]
    [starfederation.datastar.clojure.api :as d*]
-   [weave.session :as session])
+   [weave.session :as session]
+   [weave.squint :as squint :refer [clj->js]])
   (:import
    [java.awt.image BufferedImage]
    [java.awt RenderingHints]
@@ -149,29 +150,33 @@
            ;;
            [:script {:src "/tailwind@3.4.16.js"}]
            [:script
-            "tailwind.config = {
-               darkMode: 'class',
-             }"]
+            #_:clj-kondo/ignore
+            (clj->js
+             (set! (.-config js/tailwind) {:darkMode "class"})
+
+             (defn csrf []
+               (some-> (.-cookie js/document)
+                       (.match #"(^|)weave-csrf=([^;]+)")
+                       (aget 2)))
+
+             (.addEventListener js/window "hashchange"
+                                (fn [e]
+                                  (when-not (.-__pushHashChange js/window)
+                                    (.reload (.-location js/window)))))
+
+             (set! (.-__pushHashChange js/window) false)
+
+             (defn path []
+               (let [hash-path (.substring (.-hash (.-location js/window)) 1)]
+                 (if (not hash-path)
+                   "/"
+                   (if (.startsWith hash-path "/")
+                     hash-path
+                     (str "/" hash-path))))))]
            ;;
            [:script
-            "window.__pushHashChange = false;
-             function path() {
-               const hashPath = window.location.hash.substring(1);
-
-               if (!hashPath) {
-                 return \"/\";
-               } else {
-                 return hashPath.startsWith(\"/\") ? hashPath : \"/\" + hashPath;
-               }
-             }"
-            "function csrf() { return document.cookie.match(/(^| )weave-csrf=([^;]+)/)?.[2];}"
             "function instance() { return  \"" (random-uuid) "\";}"
-            "function server() { return  \"" server-id "\";}"
-            "window.addEventListener('hashchange', function(e) {
-               if (!window.__pushHashChange) {
-                 window.location.reload();
-               }
-             });"]
+            "function server() { return  \"" server-id "\";}"]
            (:head opts)]
           ;;
           [:body {:class "w-full h-full"}
