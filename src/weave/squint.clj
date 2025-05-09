@@ -36,6 +36,10 @@
   [_ _ test & body]
   (list 'if (bool-expr test) (cons 'expr/do body)))
 
+(defn expr-when-not
+  [_ _ test & body]
+  (list 'if (bool-expr (list 'expr/not test)) (cons 'expr/do body)))
+
 (defn expr-or
   ([_ _] nil)
   ([_ _ x] x)
@@ -78,16 +82,16 @@
                          'not      'expr/not
                          'println  'expr/println
                          'when     'expr/when
-                         'expr/raw 'expr/raw})
+                         'when-not 'expr/when-not})
 
 (def compiler-macro-options {'expr {'and         expr-and
                                     'or          expr-or
                                     'when        expr-when
+                                    'when-not    expr-when-not
                                     'do          expr-do
                                     'if          expr-if
                                     'not         expr-not
-                                    'println     expr-println
-                                    'raw         expr-raw}})
+                                    'println     expr-println}})
 
 (defn js*
   ([form]
