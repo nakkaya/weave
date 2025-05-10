@@ -15,7 +15,7 @@
    [starfederation.datastar.clojure.adapter.http-kit :as hk-gen]
    [starfederation.datastar.clojure.api :as d*]
    [weave.session :as session]
-   [weave.squint :as squint :refer [clj->js]])
+   [weave.squint :refer [clj->js]])
   (:import
    [java.awt.image BufferedImage]
    [java.awt RenderingHints]
