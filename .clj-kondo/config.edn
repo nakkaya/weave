@@ -1,0 +1,3 @@
+{:linters {}
+ :lint-as {weave.squint/clj->js clojure.core/identity}
+ :hooks {:analyze-call {weave.squint/clj->js hooks.weave.squint/clj->js-hook}}}
