@@ -147,6 +147,7 @@
            [:title (or (:title opts) "Weave")]
            ;;
            [:script {:type "module" :src "/datastar@v1.0.0-beta.11.js"}]
+           [:script {:src "/squint@v0.8.147.js"}]
            ;;
            [:script {:src "/tailwind@3.4.16.js"}]
            [:script
