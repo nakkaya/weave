@@ -24,7 +24,7 @@ RUN native-image \
     -H:Name=/dist/app
 
 
-FROM gcr.io/distroless/base
+FROM gcr.io/distroless/static-debian12
 EXPOSE 8080
 COPY --from=build /dist/app /app
 ENTRYPOINT ["/app"]
