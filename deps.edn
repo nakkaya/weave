@@ -10,10 +10,13 @@
         compojure/compojure          {:mvn/version "1.7.0"}
         dev.onionpancakes/chassis    {:mvn/version "1.0.365"}
         com.cnuernber/charred        {:mvn/version "1.034"}
+        backtick/backtick            {:mvn/version "0.3.5"}
         metosin/reitit               {:mvn/version "0.8.0"}
         datastar/sdk                 {:git/url "https://github.com/starfederation/datastar/"
                                       :git/sha "65a301da9e82a4d2ad5e3c62a680102314dbf8dd"
                                       :deps/root "sdk/clojure/sdk"}
+        io.github.squint-cljs/squint {:git/url "https://github.com/squint-cljs/squint.git"
+                                      :git/sha "1ecbf7fd37389211fcaf815dee9d64edb1d308e0"}
         datastar/ring                {:git/url "https://github.com/starfederation/datastar/"
                                       :git/sha "65a301da9e82a4d2ad5e3c62a680102314dbf8dd"
                                       :deps/root "sdk/clojure/adapter-http-kit"

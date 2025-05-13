@@ -3,28 +3,28 @@
 
 FROM ghcr.io/graalvm/native-image-community:24-muslib AS build
 
-RUN curl -O https://download.clojure.org/install/linux-install-1.11.1.1237.sh && \
-    chmod +x linux-install-1.11.1.1237.sh && \
-    ./linux-install-1.11.1.1237.sh
+COPY ./target/demo.jar /dist/
+RUN mkdir -p /dist/build_cache
 
-COPY . /build
-WORKDIR /build
-RUN clojure -X:uberjar
-RUN mkdir -p /build/build_cache
 RUN native-image \
     --initialize-at-build-time \
     --no-server \
-    -H:ReflectionConfigurationFiles=reflect-config.json \
+    # -H:ReflectionConfigurationFiles=reflect-config.json \
+    --initialize-at-run-time=sun.font.SunFontManager \
+    --initialize-at-run-time=sun.font.FontManagerNativeLibrary \
+    --initialize-at-run-time=sun.font.StrikeCache \
+    --initialize-at-run-time=sun.font.PhysicalStrike \
+    --initialize-at-run-time=sun.font.FreetypeFontScaler \
     -H:TempDirectory=/build/build_cache \
     --enable-native-access=ALL-UNNAMED \
     --static --libc=musl \
     -H:+UnlockExperimentalVMOptions \
     -H:IncludeResources="public/.*" \
-    -jar ./app.jar \
-    -H:Name=./app.app
+    -jar /dist/demo.jar \
+    -H:Name=/dist/app
 
 
-FROM gcr.io/distroless/base
+FROM gcr.io/distroless/static-debian12
 EXPOSE 8080
-COPY --from=build /build/app /app
+COPY --from=build /dist/app /app
 ENTRYPOINT ["/app"]
