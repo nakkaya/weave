@@ -150,7 +150,6 @@
            ;;
            [:script {:src "/tailwind@3.4.16.js"}]
            [:script
-            #_:clj-kondo/ignore
             (clj->js
              (set! (.-config js/tailwind) {:darkMode "class"})
 
@@ -226,7 +225,9 @@
          {:on-open
           (fn [sse-gen]
             (d*/execute-script!
-             sse-gen "window.location.reload();"))})))))
+             sse-gen
+             (clj->js
+              (-> js/window .-location .reload))))})))))
 
 (defmethod app-inner true
   [_req _server-id view _options]
@@ -378,9 +379,11 @@
    (push-path! url nil))
   ([url view-fn]
    (let [sse (sse-conn)
-         cmd (str "window.__pushHashChange = true;
-                   history.pushState(null, null, \"#" url "\");
-                   window.__pushHashChange = false;")]
+         cmd (clj->js
+              (set! (.-__pushHashChange js/window) true)
+              (.pushState js/history nil nil ~(str "#" url))
+              (set! (.-__pushHashChange js/window) false))]
+
      (d*/merge-signals!
       sse
       (charred/write-json-str {:app {:path url}}))
@@ -396,9 +399,10 @@
    (broadcast-path! url nil))
   ([url view-fn]
    (let [connections (session/session-connections *session-id*)
-         cmd (str "window.__pushHashChange = true;
-                   history.pushState(null, null, \"#" url "\");
-                   window.__pushHashChange = false;")]
+         cmd (clj->js
+              (set! (.-__pushHashChange js/window) true)
+              (.pushState js/history nil nil ~(str "#" url))
+              (set! (.-__pushHashChange js/window) false))]
      (doseq [sse connections]
        (d*/merge-signals!
         sse
@@ -419,7 +423,10 @@
   "Send a reload command to the specific browser tab/window that
    triggered the current handler."
   []
-  (d*/execute-script! (sse-conn) "window.location.reload();"))
+  (d*/execute-script!
+   (sse-conn)
+   (clj->js
+    (-> js/window .-location .reload))))
 
 (defn broadcast-script!
   "Send JavaScript to all browser tabs/windows that share the same
