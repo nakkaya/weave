@@ -172,11 +172,14 @@
                    "/"
                    (if (.startsWith hash-path "/")
                      hash-path
-                     (str "/" hash-path))))))]
-           ;;
-           [:script
-            "function instance() { return  \"" (random-uuid) "\";}"
-            "function server() { return  \"" server-id "\";}"]
+                     (str "/" hash-path)))))
+
+             (defn instance []
+               ~(str (random-uuid)))
+
+             (defn server []
+               ~(str server-id)))]
+
            (:head opts)]
           ;;
           [:body {:class "w-full h-full"}

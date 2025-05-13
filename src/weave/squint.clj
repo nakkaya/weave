@@ -6,7 +6,8 @@
   (:require
    [clojure.string :as str]
    [clojure.walk :as clojure.walk]
-   [squint.compiler :as squint]))
+   [squint.compiler :as squint]
+   [backtick :as b]))
 
 (defn bool-expr [e]
   (vary-meta e assoc :tag 'boolean))
@@ -118,11 +119,20 @@
        (cons (get macro-replacements (first node)) (rest node))
        node)) form))
 
+(defn remove-namespaces [form]
+  (clojure.walk/postwalk
+   (fn [x]
+     (if (and (symbol? x) (namespace x))
+       (symbol (name x))
+       x))
+   form))
+
 (defn compile
   ([forms]
    (compile forms {}))
   ([forms options]
-   (->> (map process-macros forms)
+   (->> (map remove-namespaces forms)
+        (map process-macros)
         (map #(js* % options))
         (str/join "; "))))
 
@@ -130,7 +140,8 @@
   (let [[options forms] (if (and (map? (first args)) (next args))
                           [(first args) (rest args)]
                           [{} args])]
-    (str (weave.squint/compile forms options) ";")))
+    `(-> (b/template ~forms)
+         (compile ~options))))
 
 (comment
   (compile '((println "Hello World!")))
@@ -142,5 +153,9 @@
 
   (compile  '((set! (.-config js/tailwind) {:darkMode "class"})))
 
-  ;;
+  (let [x 43]
+    (clj->js
+     (defn f [] ~x)))
+
+  ;;;;
   )
