@@ -127,7 +127,7 @@
             :head - Additional HTML to include in the head section
             :view-port - The viewport meta tag
             :keep-alive - Whether to keep SSE connections alive when tab is hidden"
-  [server-id opts]
+  [_server-id opts]
   (-> (resp/response
        (c/html
         [c/doctype-html5
@@ -179,7 +179,7 @@
                ~(str (random-uuid)))
 
              (defn server []
-               ~(str server-id)))]
+               ~(str _server-id)))]
 
            (:head opts)]
           ;;
