@@ -6,6 +6,7 @@
    [compojure.core :refer [GET POST routes]]
    [compojure.route :as route]
    [dev.onionpancakes.chassis.core :as c]
+   [integrant.core :as ig]
    [nrepl.server :as nrepl.server]
    [org.httpkit.server :as http.server]
    [reitit.core :as r]
@@ -558,6 +559,28 @@
      :content-length (#'resp/connection-content-length resource)
      :last-modified  (#'resp/connection-last-modified resource)}))
 
+(defmethod ig/init-key :weave/nrepl [_ {:keys [bind port] :as options}]
+  (when options
+    (log/info "Starting nREPL server on" (str bind ":" port))
+    (let [server (apply nrepl.server/start-server (mapcat identity options))]
+      {:nrepl-server server})))
+
+(defmethod ig/halt-key! :weave/nrepl [_ {:keys [nrepl-server]}]
+  (when nrepl-server
+    (log/info "Stopping nREPL server")
+    (nrepl.server/stop-server nrepl-server)))
+
+(defmethod ig/init-key :weave/http [_ {:keys [handler options]}]
+  (let [server (http.server/run-server handler options)]
+    (log/info "Started Weave server on"
+              (str (:bind options) ":" (:port options)))
+    {:http-server server}))
+
+(defmethod ig/halt-key! :weave/http [_ {:keys [http-server]}]
+  (when http-server
+    (log/info "Stopping Weave HTTP server")
+    (http-server)))
+
 (defn run
   "Starts the Weave application server.
 
@@ -609,8 +632,6 @@
                           (assoc-in [:security :anti-forgery] false)
                           (assoc-in [:static :resources] false)
                           (assoc-in [:static :files] false))
-        http-kit-opts (merge {:bind "0.0.0.0" :port 8080}
-                             (:http-kit options))
         icon-path (:icon options)
         icon-handlers (when icon-path
                         [(GET "/favicon.png" [] (icon-handler icon-path 32 32))
@@ -645,15 +666,10 @@
                   (wrap-gzip)
                   (apply [request])))))]
 
-    (when-let [nrepl-opts (:nrepl options)]
-      (let [nrepl-opts (merge
-                        {:bind "0.0.0.0" :port 8888} nrepl-opts)]
-        (apply nrepl.server/start-server (mapcat identity nrepl-opts))
-        (log/info
-         "Started nREPL server on"
-         (str (:bind nrepl-opts) ":" (:port nrepl-opts)))))
-
-    (let [server (http.server/run-server handler http-kit-opts)]
-      (log/info "Started Weave server on"
-                (str (:bind http-kit-opts) ":" (:port http-kit-opts)))
-      server)))
+    (ig/init
+     {:weave/nrepl (when-let [nrepl-opts (:nrepl options)]
+                     (merge {:bind "0.0.0.0" :port 8888}
+                            nrepl-opts))
+      :weave/http {:handler handler
+                   :options (merge {:bind "0.0.0.0" :port 8080}
+                                   (:http-kit options))}})))

@@ -20,7 +20,8 @@
         datastar/ring                {:git/url "https://github.com/starfederation/datastar/"
                                       :git/sha "65a301da9e82a4d2ad5e3c62a680102314dbf8dd"
                                       :deps/root "sdk/clojure/adapter-http-kit"
-                                      :exclusions [http-kit/http-kit]}}
+                                      :exclusions [http-kit/http-kit]}
+        integrant/integrant          {:mvn/version "0.13.1"}}
 
  :paths ["resources" "src" "target/assets"]
 

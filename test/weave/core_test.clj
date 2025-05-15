@@ -4,6 +4,7 @@
    [clojure.test :refer [deftest is testing]]
    [compojure.core :refer [GET]]
    [etaoin.api :as e]
+   [integrant.core :as ig]
    [weave.core :as core]
    [weave.session :as session]
    [charred.api :as charred]))
@@ -66,7 +67,7 @@
         (is (= "Hello, Weave!" (e/get-element-text driver {:id :content}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (deftest page-load-test-without-sse
   (let [server (core/run simple-view
@@ -80,7 +81,7 @@
         (is (= "Hello, Weave!" (e/get-element-text driver {:id :content}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (defn push-click-count-view [click-count]
   [:div#view
@@ -110,7 +111,7 @@
         (is (= "42" (e/get-element-text driver {:id :count}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (deftest push-html-test-without-sse
   (let [counter (atom 41)
@@ -129,7 +130,7 @@
         (is (= "42" (e/get-element-text driver {:id :count}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (defn broadcast-click-count-view [click-count]
   [:div#view
@@ -188,7 +189,7 @@
           (is (= "1" (e/get-element-text driver {:id :count})))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (defn push-path-view []
   [:div {:id "view"}
@@ -227,7 +228,7 @@
         (is (= "Page Two Content" (e/get-element-text driver {:id :page-two-content}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (deftest push-path-test-without-sse
   (let [server (core/run push-path-view
@@ -244,7 +245,7 @@
         (is (= "Page Two Content" (e/get-element-text driver {:id :page-two-content}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (defn broadcast-path-view []
   [:div {:id "view"}
@@ -315,7 +316,7 @@
           (is (= "Page Two Content" (e/get-element-text driver {:id :page-two-content})))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (defn manual-hash-change-view []
   [:div {:id "view"}
@@ -344,7 +345,7 @@
         (is (= "Page One Content" (e/get-element-text driver {:id :page-one-content}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (defn push-script-view []
   [:div {:id "view"}
@@ -372,7 +373,7 @@
         (is (= "Script executed!" (e/get-element-text driver {:id :content}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (deftest push-script-test-without-sse
   (let [server (core/run push-script-view
@@ -390,7 +391,7 @@
         (is (= "Script executed!" (e/get-element-text driver {:id :content}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (defn broadcast-script-view []
   [:div {:id "view"}
@@ -443,7 +444,7 @@
           (is (= "Broadcast script executed!" (e/get-element-text driver {:id :content})))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (defn push-signal-view []
   [:div {:id "view"}
@@ -472,7 +473,7 @@
         (is (= "42" (e/get-element-value driver {:id :signal-value}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (deftest push-signal-test-without-sse
   (let [server (core/run push-signal-view
@@ -491,7 +492,7 @@
         (is (= "42" (e/get-element-value driver {:id :signal-value}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (defn set-cookie-view []
   [:div {:id "view"}
@@ -525,7 +526,7 @@
              "test-cookie=cookie-value")))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (defn session-management-view []
   [:div {:id "view"}
@@ -577,7 +578,7 @@
                (e/get-element-text driver {:id :auth-status}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (defn auth-required-view []
   [:div {:id "view"}
@@ -639,7 +640,7 @@
                (e/get-element-text driver {:id :protected-result}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (deftest custom-handlers-test
   (testing "Test custom handlers functionality"
@@ -654,7 +655,7 @@
       (try
         (is (= response-body response))
         (finally
-          (server))))))
+          (ig/halt! server))))))
 
 (deftest authenticated-test
   (testing "authenticated? returns true when identity is present"
@@ -760,7 +761,7 @@
           (is (= "/icon-512.png" (-> manifest :icons second :src)))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (deftest without-icon-options-test
   (let [server (core/run (fn [] [:div "No Icon Test"])
@@ -786,7 +787,7 @@
              "return document.querySelector('link[rel=\"manifest\"][href=\"/manifest.json\"]') === null")))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (deftest with-pwa-options-test
   (let [pwa-options {:name "PWA Test App"
@@ -820,7 +821,7 @@
           (is (= "/start" (:start_url manifest)))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (deftest without-pwa-options-test
   (let [server (core/run (fn [] [:div "No PWA Test"])
@@ -848,7 +849,7 @@
           (is (= "/" (:start_url manifest)))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
 
 (deftest secure-handlers-test
   (let [server (core/run secure-handlers-view
@@ -894,4 +895,4 @@
                (e/get-element-text driver {:id :secure-result}))))
       (finally
         (e/quit driver)
-        (server)))))
+        (ig/halt! server)))))
