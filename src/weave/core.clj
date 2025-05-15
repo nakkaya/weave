@@ -17,8 +17,8 @@
    [weave.session :as session]
    [weave.squint :refer [clj->js]])
   (:import
-   [java.awt.image BufferedImage]
    [java.awt RenderingHints]
+   [java.awt.image BufferedImage]
    [java.io ByteArrayOutputStream]
    [javax.imageio ImageIO]))
 
