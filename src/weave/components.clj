@@ -93,7 +93,18 @@
                              :text "text-blue-800 dark:text-blue-300"}}}
    :navbar {:bg "bg-gray-800 dark:bg-gray-900"
             :text "text-gray-300 dark:text-gray-300"
-            :hover "hover:bg-gray-700 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white"}})
+            :hover "hover:bg-gray-700 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white"}
+   :select {:base "block w-full h-11 rounded-lg border bg-transparent shadow-sm focus:outline-hidden focus:ring-3 appearance-none"
+            :sizes {:xs "px-3 py-2 text-xs"
+                    :s "px-3.5 py-2 text-sm"
+                    :md "px-4 py-2.5 text-sm"
+                    :lg "px-4 py-3 text-base"
+                    :xl "px-5 py-3.5 text-lg"}
+            :border "border-gray-300 dark:border-gray-700 focus:border-indigo-300 dark:focus:border-indigo-800"
+            :focus "focus:ring-indigo-500/10"
+            :bg "bg-transparent dark:bg-gray-900"
+            :text "text-gray-800 dark:text-white/90"
+            :icon "absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"}})
 
 #_:clj-kondo/ignore
 (defn with-theme
@@ -377,6 +388,55 @@
          [:a {:class (str theme-text " " theme-hover " rounded-md px-3 py-2 text-sm font-medium cursor-pointer block mb-1 sm:mb-0 sm:inline-block")
               :data-on-click handler}
           name])]]]))
+
+(defmethod c/resolve-alias ::select
+  [_ attrs _content]
+  (let [size (or (:size attrs) :md)
+        placeholder (or (:placeholder attrs) "Select an option")
+        value (or (:selected attrs) "")
+        name (or (:name attrs) "")
+        id (or (:id attrs) name)
+        options (or (:options attrs) [])
+
+        base-class (get-theme-class :select :base)
+        size-class (get-size-class :select size)
+        theme-border (or (:border-class attrs) (get-theme-class :select :border))
+        theme-focus (or (:focus-class attrs) (get-theme-class :select :focus))
+        theme-bg (or (:bg-class attrs) (get-theme-class :select :bg))
+        theme-text (or (:text-class attrs) (get-theme-class :select :text))
+        theme-icon (or (:icon-class attrs) (get-theme-class :select :icon))
+
+        select-class (tw
+                      base-class
+                      size-class
+                      theme-text
+                      theme-border
+                      theme-focus
+                      theme-bg)
+
+        base-attrs {:class select-class
+                    :name name
+                    :id id}
+        filtered-attrs (dissoc attrs
+                               :size :placeholder :selected :name :id :options
+                               :border-class :focus-class :bg-class :text-class
+                               :icon-class)
+        merged-attrs (merge-attrs base-attrs filtered-attrs)]
+
+    [:div.relative
+     [:select merged-attrs
+      (when placeholder
+        [:option {:value ""} placeholder])
+      (for [option options]
+        [:option {:value (:value option)
+                  :selected (= value (:value option))}
+         (:label option)])]
+     [:div {:class theme-icon}
+      [:svg.h-5.w-5.text-gray-400
+       {:xmlns "http://www.w3.org/2000/svg" :viewBox "0 0 20 20" :fill "currentColor" :aria-hidden "true"}
+       [:path {:fill-rule "evenodd"
+               :d "M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
+               :clip-rule "evenodd"}]]]]))
 
 (defmethod c/resolve-alias ::sign-in
   [_ attrs content]
