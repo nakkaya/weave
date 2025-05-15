@@ -7,7 +7,7 @@
    [compojure.route :as route]
    [dev.onionpancakes.chassis.core :as c]
    [nrepl.server :as nrepl.server]
-   [org.httpkit.server :as server]
+   [org.httpkit.server :as http.server]
    [reitit.core :as r]
    [ring.middleware.defaults :as def]
    [ring.middleware.gzip :refer [wrap-gzip]]
@@ -653,7 +653,7 @@
          "Started nREPL server on"
          (str (:bind nrepl-opts) ":" (:port nrepl-opts)))))
 
-    (let [server (server/run-server handler http-kit-opts)]
+    (let [server (http.server/run-server handler http-kit-opts)]
       (log/info "Started Weave server on"
                 (str (:bind http-kit-opts) ":" (:port http-kit-opts)))
       server)))
