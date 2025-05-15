@@ -628,6 +628,10 @@
                              (GET "/app-loader" req
                                (bind-vars
                                 req (app-loader req server-id view options)))
+                             (GET "/health" _req
+                               {:status 200
+                                :headers {"Content-Type" "application/json"}
+                                :body "{\"status\":\"ok\"}"})
                              (route/resources "/"))
                 all-routes (routes base-routes
                                    (apply routes @event-routes)
