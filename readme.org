@@ -2,8 +2,10 @@
 
 Weave is an easy-to-use, Clojure-based web application framework.
 
-It's great for micro web apps, dashboards, admin interfaces, smart
-home solutions, and similar use cases.
+Weave enables the creation of full-stack web applications in Clojure
+including the user interface. It's great for micro web apps,
+dashboards, admin interfaces, smart home solutions, and similar use
+cases.
 
 ** Features
 
@@ -29,7 +31,7 @@ Add Weave to your `deps.edn` file:
              :git/sha "LATEST_SHA"}}
 #+end_src
 
-** Example
+** Weave in 1 minute
 
 #+begin_src clojure
 (ns app.core
@@ -54,10 +56,12 @@ Add Weave to your `deps.edn` file:
 The repository includes several example applications demonstrating
 Weave's capabilities:
 
-- =Counter app=: Simple state management with atomic updates
-- =Todo list=: Form handling and dynamic content
-- =Navigation=: Client-side routing with hash-based URLs
-- =Authentication=: Session management with login/logout
+|----------------+---------------------------------------------|
+| Counter        | Simple state management with atomic updates |
+| Todo List      | Form handling and dynamic content           |
+| Navigation     | Client-side routing with hash-based URLs    |
+| Authentication | Session management with login/logout        |
+|----------------+---------------------------------------------|
 
 ** Why Weave?
 
