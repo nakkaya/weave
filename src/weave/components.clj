@@ -487,7 +487,8 @@
        [:h2 {:class heading-classes}
         title]]
 
-      [:div {:class form-container-classes}
+      [:div {:class form-container-classes
+             :data-signals-_error "false"}
        [:div {:id "sign-in-error"
               :class "p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg"
               :data-show error-signal
