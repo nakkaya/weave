@@ -17,7 +17,7 @@ cases.
 - Built-in session management and authentication
 - Server-side rendering with client-side interactivity
 - Push updates to specific browser tabs or broadcast to all sessions
-- GraalVM compatible. See =demo/Dockerfile= for static single
+- GraalVM compatible. See `demo/Dockerfile` for static single
   executable builds
 - Automatically generate and serve the needed resources for
   Progressive Web Apps (PWA)
