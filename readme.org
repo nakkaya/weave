@@ -1,8 +1,8 @@
-#+begin_src html
+#+BEGIN_EXPORT html
 <p align=center><img src="https://raw.githubusercontent.com/nakkaya/weave/refs/heads/master/resources/public/weave.svg" width="100"/></p>
 <h1 align=center>Weave</h1>
 <p align=center>Weave is an easy-to-use, Clojure-based web application framework.</p>
-#+end_src
+#+END_EXPORT
 
 Weave enables the creation of full-stack web applications in Clojure
 including the user interface. It's great for micro web apps,
