@@ -56,12 +56,10 @@ Add Weave to your `deps.edn` file:
 The repository includes several example applications demonstrating
 Weave's capabilities:
 
-|----------------+---------------------------------------------|
 | Counter        | Simple state management with atomic updates |
 | Todo List      | Form handling and dynamic content           |
 | Navigation     | Client-side routing with hash-based URLs    |
 | Authentication | Session management with login/logout        |
-|----------------+---------------------------------------------|
 
 ** Why Weave?
 
