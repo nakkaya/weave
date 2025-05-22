@@ -1,0 +1,39 @@
+site_name: Weave - Clojure Web Framework
+site_description: Weave is a Clojure web framework that provides a simple and powerful way to build web applications.
+site_url: https://github.com/nakkaya/weave
+
+theme:
+  favicon: https://raw.githubusercontent.com/nakkaya/weave/refs/heads/master/resources/public/weave.svg
+  name: material
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/link
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch-off
+        name: Switch to system preference
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+plugins:
+  - search
+
+# markdown_extensions:
+#     - toc:
+#         toc_depth : "1-2"
+
+extra:
+  generator: false
