@@ -33,7 +33,8 @@ events. They are a core part of Weave's reactivity model.
 ```
 
 When this handler is registered, Weave:
-- Creates a unique route like `/a1b2c3d4-e5f6-7890-abcd-ef1234567890`
-- Sets up a POST endpoint for that route
-- Returns client-side code that will POST to that route when the
-  click event occurs
+
+ - Creates a unique route like `/a1b2c3d4-e5f6-7890-abcd-ef1234567890`
+ - Sets up a POST endpoint for that route
+ - Returns client-side code that will POST to that route when the
+   click event occurs
