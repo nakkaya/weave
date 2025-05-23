@@ -13,3 +13,4 @@ pom.xml.asc
 .aider*
 .lsp/
 demo/.nrepl-port
+doc/venv/

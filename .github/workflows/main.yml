@@ -67,3 +67,31 @@ jobs:
         env:
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  docs:
+    needs: test
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          cd doc
+          pip install -r requirements.txt
+
+      - name: Deploy documentation
+        run: |
+          cd doc
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          mkdocs gh-deploy --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

@@ -1,4 +1,4 @@
-* Weave
+# Introduction
 
 Weave is an easy-to-use, Clojure-based web application framework.
 
@@ -7,7 +7,7 @@ including the user interface. It's great for micro web apps,
 dashboards, admin interfaces, smart home solutions, and similar use
 cases.
 
-** Features
+## Features
 
 - Browser-based graphical user interface with real-time updates
 - Reactive UI with server-sent events (SSE) for instant updates
@@ -17,51 +17,12 @@ cases.
 - Built-in session management and authentication
 - Server-side rendering with client-side interactivity
 - Push updates to specific browser tabs or broadcast to all sessions
-- GraalVM compatible. See =demo/Dockerfile= for static single
+- GraalVM compatible. See `demo/Dockerfile` for static single
   executable builds
 - Automatically generate and serve the needed resources for
   Progressive Web Apps (PWA)
-  
-** Installation
 
-Add Weave to your `deps.edn` file:
-
-#+begin_src clojure
-{weave/core {:git/url "https://github.com/nakkaya/weave/"
-             :git/sha "LATEST_SHA"}}
-#+end_src
-
-** Weave in 1 minute
-
-#+begin_src clojure
-(ns app.core
-  (:require [weave.core :as weave]))
-
-(defn view []
-  [:div.p-6
-   [:h1#label.text-2xl.font-bold "Hello Weave!"]
-   [:button.bg-blue-500.text-white.px-4.py-2.rounded
-    {:data-on-click
-     (weave/handler
-      (weave/push-html!
-       [:h1#label.text-2xl.font-bold "Button was clicked!"]))}
-    "CLICK ME"]])
-
-(defn -main []
-  (weave/run view {:port 8080}))
-#+end_src
-
-** Examples
-
-The repository includes several example applications demonstrating
-Weave's capabilities:
-
-| Counter        | Simple state management with atomic updates |
-| Todo List      | Form handling and dynamic content           |
-| Navigation     | Client-side routing with hash-based URLs    |
-| Authentication | Session management with login/logout        |
-
-** Why Weave?
+## Why Weave?
 
 Weave combines the simplicity of Hiccup templates with the power of
 server-side rendering and real-time updates.  It provides a cohesive
@@ -73,13 +34,3 @@ codebases, Weave lets you build interactive web applications using
 only Clojure. The server pushes UI updates directly to the browser
 using server-sent events, eliminating the need for complex client-side
 JavaScript frameworks.
-
-** Documentation
-
-For more detailed documentation see [[https://nakkaya.github.io/weave/][Documentation]].
-
-** License
-
-Copyright © 2025
-
-Distributed under the Eclipse Public License, the same as Clojure.
