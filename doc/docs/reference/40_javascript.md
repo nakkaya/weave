@@ -160,6 +160,7 @@ Here's a complete example of a timer application using JavaScript interoperabili
 ```
 
 This example demonstrates:
+
 - Setting up a JavaScript interval timer
 - Storing state in a browser window property
 - Manipulating the DOM directly
