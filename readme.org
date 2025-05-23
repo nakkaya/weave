@@ -76,8 +76,7 @@ JavaScript frameworks.
 
 ** Documentation
 
-For more detailed documentation and examples, see the `demo` directory
-in the repository.
+For more detailed documentation see [[https://nakkaya.github.io/weave/][Documentation]].
 
 ** License
 
