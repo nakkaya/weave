@@ -601,6 +601,7 @@
                     :keep-alive - Whether to keep SSE connections alive when tab is hidden (default: false)
               :handlers - A vector of custom route handlers (Compojure routes) that
                           will be included in the application's routing system
+              :middleware - A sequence of middleware functions to apply to the handler chain
               :csrf-secret - Secret for CSRF token generation
               :jwt-secret - Secret for JWT token generation/validation
               :secure-handlers - When true, all handlers require authentication by default
@@ -657,14 +658,21 @@
                 all-routes (routes base-routes
                                    (apply routes @event-routes)
                                    (apply routes custom-handlers)
-                                   (route/not-found "Not Found"))]
+                                   (route/not-found "Not Found"))
+                user-middleware (:middleware options)
+                handler-chain (-> all-routes
+                                  (session/wrap-session jwt-secret)
+                                  (def/wrap-defaults site-defaults)
+                                  (wrap-gzip))]
             (binding [session/*csrf-keyspec* csrf-keyspec
                       *secure-handlers* (:secure-handlers options)]
-              (-> all-routes
-                  (session/wrap-session jwt-secret)
-                  (def/wrap-defaults site-defaults)
-                  (wrap-gzip)
-                  (apply [request])))))]
+              (let [handler (if user-middleware
+                              (reduce (fn [handler middleware-fn]
+                                        (middleware-fn handler))
+                                      handler-chain
+                                      (reverse user-middleware))
+                              handler-chain)]
+                (handler request)))))]
 
     (ig/init
      {:weave/nrepl (when-let [nrepl-opts (:nrepl options)]

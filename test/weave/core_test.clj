@@ -851,6 +851,51 @@
         (e/quit driver)
         (ig/halt! server)))))
 
+(deftest user-middleware-test
+  (testing "Test user-supplied middleware functionality"
+    (let [middleware-execution-order (atom [])
+          middleware-1 (fn [handler]
+                         (fn [request]
+                           (swap! middleware-execution-order conj :middleware-1-before)
+                           (let [response (handler request)]
+                             (swap! middleware-execution-order conj :middleware-1-after)
+                             (assoc-in response [:headers "X-Middleware-1"] "applied"))))
+          middleware-2 (fn [handler]
+                         (fn [request]
+                           (swap! middleware-execution-order conj :middleware-2-before)
+                           (let [response (handler request)]
+                             (swap! middleware-execution-order conj :middleware-2-after)
+                             (assoc-in response [:headers "X-Middleware-2"] "applied"))))
+          custom-route (GET "/middleware-test" []
+                         {:status 200
+                          :headers {"Content-Type" "text/plain"}
+                          :body "Middleware test endpoint"})
+          server (core/run (fn [] [:div "Middleware Test"])
+                           (assoc test-options
+                                  :handlers [custom-route]
+                                  :middleware [middleware-1 middleware-2]))
+          response (slurp (str test-url "/middleware-test"))]
+
+      (try
+        (is (= "Middleware test endpoint" response))
+
+        (is (= [:middleware-1-before
+                :middleware-2-before
+                :middleware-2-after
+                :middleware-1-after]
+               @middleware-execution-order))
+
+        (let [url (java.net.URL. (str test-url "/middleware-test"))
+              connection (.openConnection url)
+              _ (.connect connection)
+              headers (into {} (.getHeaderFields connection))]
+
+          (is (= "applied" (first (get headers "X-Middleware-1"))))
+          (is (= "applied" (first (get headers "X-Middleware-2")))))
+
+        (finally
+          (ig/halt! server))))))
+
 (deftest secure-handlers-test
   (let [server (core/run secure-handlers-view
                          (assoc test-options
