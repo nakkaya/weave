@@ -42,6 +42,7 @@
    :card-with-header {:bg "bg-white dark:bg-gray-800"
                       :border "divide-y divide-gray-300 dark:divide-gray-700"
                       :shadow "shadow-sm"}
+   :link {:base "text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"}
    :button {:base "inline-flex items-center justify-center text-center gap-2 rounded-lg shadow-theme-xs transition"
             :sizes {:xs "px-2 py-1.5 text-xs"
                     :s "px-3 py-2 text-sm"
@@ -459,6 +460,13 @@
      [:div {:class theme-icon}
       [::icon#solid-chevron-up-down
        {:class "h-5 w-5 text-gray-400"}]]]))
+
+(defmethod c/resolve-alias ::a
+  [_ attrs content]
+  (let [base-class (get-theme-class :link :base)
+        base-attrs {:class base-class}
+        merged-attrs (merge-attrs base-attrs attrs)]
+    [:a merged-attrs (first content)]))
 
 (defmethod c/resolve-alias ::sign-in
   [_ attrs content]
