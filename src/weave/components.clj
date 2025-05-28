@@ -3,7 +3,8 @@
    [dev.onionpancakes.chassis.core :as c]
    [clojure.string :as str]
    [clojure.java.io :as io]
-   [weave.core :as core]))
+   [weave.core :as core]
+   [weave.squint :refer [clj->js]]))
 
 (defn tw
   "Combines multiple Tailwind CSS classes into a single string.
@@ -43,6 +44,10 @@
                       :border "divide-y divide-gray-300 dark:divide-gray-700"
                       :shadow "shadow-sm"}
    :link {:base "text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"}
+   :sidebar {:bg "bg-gray-800 dark:bg-gray-900"
+             :text "text-gray-300 dark:text-gray-300"
+             :hover "hover:bg-gray-700 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white"
+             :active "bg-gray-900 text-white dark:bg-gray-800 dark:text-white"}
    :button {:base "inline-flex items-center justify-center text-center gap-2 rounded-lg shadow-theme-xs transition"
             :sizes {:xs "px-2 py-1.5 text-xs"
                     :s "px-3 py-2 text-sm"
@@ -467,6 +472,87 @@
         base-attrs {:class base-class}
         merged-attrs (merge-attrs base-attrs attrs)]
     [:a merged-attrs (first content)]))
+
+(defmethod c/resolve-alias ::sidebar
+  [_ attrs content]
+  (let [theme-bg (or (:bg-class attrs) (get-theme-class :sidebar :bg))
+        logo-url (or (:logo-url attrs) "/weave.svg")
+        title (or (:title attrs) nil)]
+
+    [:div.flex.h-screen
+     ;; Sidebar backdrop for mobile
+     [:div#sidebar-backdrop.fixed.inset-0.bg-gray-800.bg-opacity-75.z-20.hidden.md:hidden
+      {:onclick (clj->js
+                 (let [sidebar (js/document.getElementById "sidebar")
+                       backdrop (js/document.getElementById "sidebar-backdrop")]
+                   (.add (.-classList sidebar) "-translate-x-full")
+                   (.add (.-classList backdrop) "hidden")))}]
+
+     ;; Sidebar itself
+     [:aside#sidebar
+      {:class (tw theme-bg
+                  "fixed inset-y-0 left-0 z-30 w-64"
+                  "transform -translate-x-full md:translate-x-0"
+                  "transition-transform duration-300 ease-in-out")}
+
+      ;; Sidebar header
+      [:div.flex.items-center.justify-between.px-4.py-3.border-b.border-gray-700
+       [:div.flex.items-center.gap-3
+        [:img.h-8.w-auto
+         {:src logo-url}]
+        (when title
+          [:div
+           {:class "font-medium text-lg text-gray-300 dark:text-gray-300"}
+           title])]]
+
+      ;; Sidebar content - just pass through the content
+      [:nav
+       {:class "flex-1 px-2 py-4 overflow-y-auto flex flex-col h-[calc(100%-4rem)]"}
+       content]]
+
+     ;; Toggle button for mobile
+     [:div.fixed.bottom-4.left-4.md:hidden.z-30
+      [:button.p-2.rounded-full.bg-gray-800.text-white.shadow-lg
+       {:onclick (clj->js
+                  (let [sidebar (js/document.getElementById "sidebar")
+                        backdrop (js/document.getElementById "sidebar-backdrop")]
+                    (if (.contains (.-classList sidebar) "-translate-x-full")
+                      (do
+                        (.remove (.-classList sidebar) "-translate-x-full")
+                        (.remove (.-classList backdrop) "hidden"))
+                      (do
+                        (.add (.-classList sidebar) "-translate-x-full")
+                        (.add (.-classList backdrop) "hidden")))))}
+       [::icon#solid-bars-3 {:class "h-6 w-6"}]]]]))
+
+(defmethod c/resolve-alias ::sidebar-item
+  [_ attrs content]
+  (let [theme-text (or (:text-class attrs) (get-theme-class :sidebar :text))
+        theme-hover (or (:hover-class attrs) (get-theme-class :sidebar :hover))
+        theme-active (or (:active-class attrs) (get-theme-class :sidebar :active))
+        active? (get attrs :active false)
+        icon (get attrs :icon nil)
+        handler (get attrs :handler nil)
+        item-class (tw
+                    theme-text
+                    (if active? theme-active theme-hover)
+                    "flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer")]
+
+    [:li
+     [:a {:class item-class
+          :data-on-click handler}
+      (when icon
+        [::icon {:id icon :class "h-5 w-5 mr-2"}])
+      (or content (:label attrs))]]))
+
+(defmethod c/resolve-alias ::sidebar-group
+  [_ attrs content]
+  [:div.mb-6
+   (when-let [title (:title attrs)]
+     [:h3.px-3.mb-2.text-xs.font-semibold.text-gray-400.uppercase
+      title])
+   [:ul.space-y-1
+    content]])
 
 (defmethod c/resolve-alias ::sign-in
   [_ attrs content]
