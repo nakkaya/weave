@@ -390,20 +390,28 @@
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :navbar :bg))
         theme-text (or (:text-class attrs) (get-theme-class :navbar :text))
         theme-hover (or (:hover-class attrs) (get-theme-class :navbar :hover))
-        base-attrs {:id "app-header"
-                    :class (str theme-bg
-                                " sm:flex sm:justify-between sm:items-center sm:px-4 sm:py-3")
-                    :data-signals-navbar-open "false"}
-        merged-attrs (merge-attrs base-attrs attrs)
         logo-url (or (:logo-url attrs) "/weave.svg")
-        nav-items (partition 2 content)]
+        title (or (:title attrs) nil)
+        base-attrs {:id "app-header"
+                    :class (tw theme-bg
+                               "sm:flex sm:justify-between sm:items-center sm:px-4 sm:py-3")
+                    :data-signals-navbar-open "false"}
+        merged-attrs (merge-attrs base-attrs attrs)]
+
     [:header merged-attrs
+     ;; Navbar header with logo and mobile toggle
      [:div.flex.items-center.justify-between.px-4.py-3.sm:p-0
-      [:div
-       [:img.h-8
-        {:src logo-url}]]
+      [:div.flex.items-center.gap-3
+       [:img.h-8.w-auto
+        {:src logo-url}]
+       (when title
+         [:div
+          {:class "font-medium text-lg text-gray-300 dark:text-gray-300"}
+          title])]
+
+      ;; Mobile menu toggle button
       [:div.sm:hidden
-       [:button.block.text-gray-500.hover:text-white.focus:text-white.focus:outline-none
+       [:button.block.text-gray-300.hover:text-white.focus:text-white.focus:outline-none
         {:data-on-click "$navbarOpen = !$navbarOpen"
          :type "button"}
         [:div
@@ -411,14 +419,13 @@
           [::icon#solid-x-mark {:class "h-6 w-6"}]]
          [:div {:data-if "!$navbarOpen"}
           [::icon#solid-bars-3 {:class "h-6 w-6"}]]]]]]
-     [:nav.px-2.pt-2.pb-4.bg-gray-800.sm:flex.sm:p-0
+
+     ;; Navbar content/links
+     [:nav.px-2.pt-2.pb-4.sm:flex.sm:p-0
       {:data-class-hidden "!$navbarOpen"
-       :class "sm:block"}
+       :class (tw theme-bg "sm:block")}
       [:div.flex.flex-col.sm:flex-row
-       (for [[name handler] nav-items]
-         [:a {:class (str theme-text " " theme-hover " rounded-md px-3 py-2 text-sm font-medium cursor-pointer block mb-1 sm:mb-0 sm:inline-block")
-              :data-on-click handler}
-          name])]]]))
+       content]]]))
 
 (defmethod c/resolve-alias ::select
   [_ attrs _content]
@@ -553,6 +560,25 @@
       title])
    [:ul.space-y-1
     content]])
+
+(defmethod c/resolve-alias ::navbar-item
+  [_ attrs content]
+  (let [theme-text (or (:text-class attrs) (get-theme-class :navbar :text))
+        theme-hover (or (:hover-class attrs) (get-theme-class :navbar :hover))
+        active? (get attrs :active false)
+        theme-active (or (:active-class attrs) (get-theme-class :navbar :active))
+        icon (get attrs :icon nil)
+        handler (get attrs :handler nil)
+        item-class (tw
+                    theme-text
+                    (if active? theme-active theme-hover)
+                    "rounded-md px-3 py-2 text-sm font-medium cursor-pointer block mb-1 sm:mb-0 sm:inline-block")]
+
+    [:a {:class item-class
+         :data-on-click handler}
+     (when icon
+       [::icon {:id icon :class "h-5 w-5 mr-2 inline-block"}])
+     (or content (:label attrs))]))
 
 (defmethod c/resolve-alias ::sign-in
   [_ attrs content]
