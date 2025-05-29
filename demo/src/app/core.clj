@@ -3,6 +3,7 @@
   (:require
    [clojure.string]
    [reitit.core :as r]
+   [integrant.core :as ig]
    [weave.core :as weave]
    [weave.session :as session]
    [weave.components :as c]))
@@ -163,12 +164,110 @@
             (session-app-view)]]
      (session-sign-in-view))])
 
+(defn navbar-example []
+  [::c/view#app
+   [::c/navbar
+    {:logo-url "/weave.svg"
+     :title "Weave Demo"}
+
+    [::c/navbar-item
+     {:icon "solid-home"
+      :active true
+      :handler (weave/handler
+                (println "Home clicked"))}
+     "Home"]
+
+    [::c/navbar-item
+     {:icon "solid-user"
+      :handler (weave/handler
+                (println "Profile clicked"))}
+     "Profile"]
+
+    [::c/navbar-item
+     {:icon "solid-cog"
+      :handler (weave/handler
+                (println "Settings clicked"))}
+     "Settings"]]
+
+   [::c/center-hv
+    [::c/card
+     [:h1.text-2xl.font-bold.mb-4 "Navbar Example"]
+     [:p "This example demonstrates the navbar component."]]]])
+
+(defn sidebar-example []
+  [::c/view#app
+   {:class "flex flex-row"}
+   [::c/sidebar
+    {:logo-url "/weave.svg"
+     :title "Weave Demo"}
+
+    [::c/sidebar-group
+     {:title "Main"}
+     [::c/sidebar-item
+      {:icon "solid-home"
+       :active true
+       :handler (weave/handler
+                 (println "Home clicked"))}
+      "Home"]
+
+     [::c/sidebar-item
+      {:icon "solid-user"
+       :handler (weave/handler
+                 (println "Profile clicked"))}
+      "Profile"]
+
+     [::c/sidebar-item
+      {:icon "solid-cog"
+       :handler (weave/handler
+                 (println "Settings clicked"))}
+      "Settings"]]
+
+    [::c/sidebar-group
+     {:title "Content"}
+     [::c/sidebar-item
+      {:icon "solid-document-text"
+       :handler (weave/handler
+                 (println "Documents clicked"))}
+      "Documents"]
+
+     [::c/sidebar-item
+      {:icon "solid-photo"
+       :handler (weave/handler
+                 (println "Photos clicked"))}
+      "Photos"]]
+
+    ;; Spacer to push content to bottom
+    [:div.flex-1]
+
+    ;; Bottom section
+    [::c/sidebar-group
+     {:title "Account"}
+     [::c/sidebar-item
+      {:icon "solid-user-circle"
+       :handler (weave/handler
+                 (println "Account clicked"))}
+      "My Account"]
+
+     [::c/sidebar-item
+      {:icon "solid-arrow-right-on-rectangle"
+       :handler (weave/handler
+                 (println "Logout clicked"))}
+      "Logout"]]]
+
+   [:div.flex-1.ml-64
+    [::c/center-hv
+     [::c/card
+      [:h1.text-2xl.font-bold.mb-4 "Sidebar Example"]
+      [:p "This example demonstrates the sidebar component with multiple groups and items."]]]]])
+
 (defn run [options]
   (let [view (condp = (:view options)
                :click-count #'click-count-view
                :todo #'todo-view
                :session #'session-view
-               :navigation #'navigation-view)]
+               :navigation #'navigation-view
+               :navbar #'navbar-example
+               :sidebar #'sidebar-example)]
     (weave/run view options)))
 
 (defn -main
@@ -179,10 +278,10 @@
 
 (comment
   (def s (weave/run
-          #'click-count-view {:port 8080
-                              :csrf-secret "my-csrf-secret"
-                              :jwt-secret "my-jwt-secret"}))
+          #'sidebar-example {:port 8080
+                             :csrf-secret "my-csrf-secret"
+                             :jwt-secret "my-jwt-secret"}))
 
-  (s :timeout 100)
+  (ig/halt! s)
   ;;
   )
