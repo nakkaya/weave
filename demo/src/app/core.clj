@@ -279,6 +279,7 @@
 (comment
   (def s (weave/run
           #'sidebar-example {:port 8080
+                             :icon "public/weave.png"
                              :csrf-secret "my-csrf-secret"
                              :jwt-secret "my-jwt-secret"}))
 
