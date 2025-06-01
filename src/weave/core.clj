@@ -617,7 +617,7 @@
                       :start-url - Start URL when launched (default: \"/\")
 
    Returns:
-     A function that stops the server when called"
+     An integrant system."
   [view options]
   (let [server-id (str (random-uuid))
         options (update options :sse #(merge {:enabled true :keep-alive false} %))
