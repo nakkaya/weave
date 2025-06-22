@@ -485,12 +485,15 @@
     (let [resized (BufferedImage. width height BufferedImage/TYPE_INT_ARGB)
           g (.createGraphics resized)]
       (try
-        (.setRenderingHint g RenderingHints/KEY_INTERPOLATION
-                          RenderingHints/VALUE_INTERPOLATION_BILINEAR)
-        (.setRenderingHint g RenderingHints/KEY_RENDERING
-                          RenderingHints/VALUE_RENDER_QUALITY)
-        (.setRenderingHint g RenderingHints/KEY_ANTIALIASING
-                          RenderingHints/VALUE_ANTIALIAS_ON)
+        (.setRenderingHint g
+                           RenderingHints/KEY_INTERPOLATION
+                           RenderingHints/VALUE_INTERPOLATION_BILINEAR)
+        (.setRenderingHint g
+                           RenderingHints/KEY_RENDERING
+                           RenderingHints/VALUE_RENDER_QUALITY)
+        (.setRenderingHint g
+                           RenderingHints/KEY_ANTIALIASING
+                           RenderingHints/VALUE_ANTIALIAS_ON)
         (.drawImage g icon 0 0 width height nil)
         resized
         (finally
