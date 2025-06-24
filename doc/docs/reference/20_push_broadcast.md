@@ -123,7 +123,7 @@ accessed in HTML attributes using the `data-signals-` prefix:
 ```clojure
 [:form
  {:data-on-submit
-  (weave/handler {:type :form}
+  (weave/handler [] {:type :form}
    (let [form-data (:params weave/*request*)]
      (save-data! form-data)
      (weave/push-html! 
@@ -135,15 +135,16 @@ accessed in HTML attributes using the `data-signals-` prefix:
 ### Toggling UI Elements
 
 ```clojure
-[:button
- {:data-on-click
-  (weave/handler
-   (weave/push-html!
-    [:div#panel
-     {:class (if @panel-visible "hidden" "block")}
-     "Panel content"])
-   (swap! panel-visible not))}
- "Toggle Panel"]
+(let [panel-visible (atom false)]
+  [:button
+   {:data-on-click
+    (weave/handler [panel-visible]
+     (weave/push-html!
+      [:div#panel
+       {:class (if @panel-visible "hidden" "block")}
+       "Panel content"])
+     (swap! panel-visible not))}
+   "Toggle Panel"])
 ```
 
 ### Broadcasting Notifications
@@ -153,7 +154,7 @@ accessed in HTML attributes using the `data-signals-` prefix:
   (weave/broadcast-html!
    [:div#notification.fixed.top-0.right-0.m-4.p-4.bg-blue-500.text-white.rounded
     {:data-on-load
-     (weave/handler
+     (weave/handler []
       (weave/push-script!
        "setTimeout(() => document.getElementById('notification').remove(), 5000)"))}
     message]))

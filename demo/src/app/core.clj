@@ -19,7 +19,7 @@
        [::c/button
         {:size :xl
          :variant :primary
-         :data-on-click (weave/handler
+         :data-on-click (weave/handler [click-count]
                          (swap! click-count inc)
                          (weave/push-html!
                           (click-count-view)))}
@@ -43,7 +43,7 @@
             [::c/button
              {:size :md
               :variant :danger
-              :data-on-click (weave/handler
+              :data-on-click (weave/handler [todos]
                               (swap! todos (fn [items]
                                              (vec (concat
                                                    (subvec items 0 idx)
@@ -54,7 +54,7 @@
          @todos)]
        [:form
         {:class "mt-4 space-y-4"
-         :data-on-submit (weave/handler
+         :data-on-submit (weave/handler [todos]
                           {:type :form}
                           (swap! todos conj (-> weave/*request* :params :bar))
                           (weave/push-html!
@@ -84,13 +84,13 @@
          [::c/button
           {:size :md
            :variant :primary
-           :data-on-click (weave/handler
+           :data-on-click (weave/handler [navigation-view]
                            (weave/push-path! "/views/one" navigation-view))}
           "Page One"]
          [::c/button
           {:size :md
            :variant :primary
-           :data-on-click (weave/handler
+           :data-on-click (weave/handler [navigation-view]
                            (weave/push-path! "/views/two" navigation-view))}
           "Page Two"]]]]
 
@@ -129,7 +129,7 @@
     [::c/button
      {:size :xl
       :variant :primary
-      :data-on-click (weave/handler
+      :data-on-click (weave/handler []
                       (weave/set-cookie! (session/sign-out))
                       (weave/broadcast-path! "/sign-in")
                       (weave/push-reload!))}
@@ -147,7 +147,7 @@
     :forgot-password-url "/#/forgot-password"
     :register-text "Don't have an account?"
     :register-url "/#/register"
-    :on-submit (weave/handler
+    :on-submit (weave/handler []
                 {:type :form}
                 (weave/set-cookie!
                  (session/sign-in
@@ -173,19 +173,19 @@
     [::c/navbar-item
      {:icon "solid-home"
       :active true
-      :handler (weave/handler
+      :handler (weave/handler []
                 (println "Home clicked"))}
      "Home"]
 
     [::c/navbar-item
      {:icon "solid-user"
-      :handler (weave/handler
+      :handler (weave/handler []
                 (println "Profile clicked"))}
      "Profile"]
 
     [::c/navbar-item
      {:icon "solid-cog"
-      :handler (weave/handler
+      :handler (weave/handler []
                 (println "Settings clicked"))}
      "Settings"]]
 
@@ -206,19 +206,19 @@
      [::c/sidebar-item
       {:icon "solid-home"
        :active true
-       :handler (weave/handler
+       :handler (weave/handler []
                  (println "Home clicked"))}
       "Home"]
 
      [::c/sidebar-item
       {:icon "solid-user"
-       :handler (weave/handler
+       :handler (weave/handler []
                  (println "Profile clicked"))}
       "Profile"]
 
      [::c/sidebar-item
       {:icon "solid-cog"
-       :handler (weave/handler
+       :handler (weave/handler []
                  (println "Settings clicked"))}
       "Settings"]]
 
@@ -226,13 +226,13 @@
      {:title "Content"}
      [::c/sidebar-item
       {:icon "solid-document-text"
-       :handler (weave/handler
+       :handler (weave/handler []
                  (println "Documents clicked"))}
       "Documents"]
 
      [::c/sidebar-item
       {:icon "solid-photo"
-       :handler (weave/handler
+       :handler (weave/handler []
                  (println "Photos clicked"))}
       "Photos"]]
 
@@ -244,13 +244,13 @@
      {:title "Account"}
      [::c/sidebar-item
       {:icon "solid-user-circle"
-       :handler (weave/handler
+       :handler (weave/handler []
                  (println "Account clicked"))}
       "My Account"]
 
      [::c/sidebar-item
       {:icon "solid-arrow-right-on-rectangle"
-       :handler (weave/handler
+       :handler (weave/handler []
                  (println "Logout clicked"))}
       "Logout"]]]
 

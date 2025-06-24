@@ -89,7 +89,7 @@
    [:button
     {:id "increment-button"
      :data-on-click
-     (core/handler
+     (core/handler [click-count]
       (swap! click-count inc)
       (core/push-html!
        (push-click-count-view click-count)))}
@@ -138,7 +138,7 @@
    [:button
     {:id "increment-button"
      :data-on-click
-     (core/handler
+     (core/handler [click-count]
       (swap! click-count inc)
       (core/broadcast-html!
        (broadcast-click-count-view click-count)))}
@@ -196,12 +196,12 @@
    [:div
     [:a {:id "trigger-view-one"
          :data-on-click
-         (core/handler
+         (core/handler []
           (core/push-path! "/views/one" push-path-view))}
      "Page One"]
     [:a {:id "trigger-view-two"
          :data-on-click
-         (core/handler
+         (core/handler []
           (core/push-path! "/views/two" push-path-view))}
      "Page Two"]]
 
@@ -252,12 +252,12 @@
    [:div
     [:a {:id "trigger-view-one"
          :data-on-click
-         (core/handler
+         (core/handler []
           (core/broadcast-path! "/views/one" broadcast-path-view))}
      "Page One"]
     [:a {:id "trigger-view-two"
          :data-on-click
-         (core/handler
+         (core/handler []
           (core/broadcast-path! "/views/two" broadcast-path-view))}
      "Page Two"]]
 
@@ -353,7 +353,7 @@
    [:button
     {:id "execute-script-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       (core/push-script!
        "document.getElementById('content').textContent = 'Script executed!';"))}
     "Execute Script"]])
@@ -399,7 +399,7 @@
    [:button
     {:id "execute-script-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       (core/broadcast-script!
        "document.getElementById('content').textContent = 'Broadcast script executed!';"))}
     "Execute Script"]])
@@ -451,7 +451,7 @@
    [:button
     {:id "increment-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       (core/push-signal! {:foo 42}))}
     "Update Signal"]
    [:div {:data-signals-foo "0"}
@@ -500,7 +500,7 @@
    [:button
     {:id "set-cookie-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       (core/set-cookie! "test-cookie=cookie-value; Path=/; Max-Age=3600")
       (core/push-script! "document.getElementById('cookie-status').textContent = 'Cookie set: ' + document.cookie;"))}
     "Set Cookie"]])
@@ -538,14 +538,14 @@
    [:button
     {:id "sign-in-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
       (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       (core/set-cookie! (session/sign-out))
       (core/push-reload!))}
     "Sign Out"]])
@@ -589,21 +589,21 @@
    [:button
     {:id "sign-in-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
       (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       (core/set-cookie! (session/sign-out))
       (core/push-reload!))}
     "Sign Out"]
    [:button
     {:id "protected-action-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       {:auth-required? true}
       (core/push-script! "document.getElementById('protected-result').textContent = 'Protected action executed!';"))}
     "Execute Protected Action"]
@@ -694,7 +694,7 @@
    [:button
     {:id "sign-in-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       {:auth-required? false}
       (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
       (core/push-reload!))}
@@ -702,7 +702,7 @@
    [:button
     {:id "sign-out-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       {:auth-required? false}  ;; Explicitly allow unauthenticated access
       (core/set-cookie! (session/sign-out))
       (core/push-reload!))}
@@ -710,18 +710,64 @@
    [:button
     {:id "secure-action-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       (core/push-script! "document.getElementById('secure-result').textContent = 'Secure action executed!';"))}
     "Execute Secure Action"]
    [:button
     {:id "public-action-button"
      :data-on-click
-     (core/handler
+     (core/handler []
       {:auth-required? false}
       (core/push-script! "document.getElementById('public-result').textContent = 'Public action executed!';"))}
     "Execute Public Action"]
    [:div#secure-result "Secure action not executed"]
    [:div#public-result "Public action not executed"]])
+
+(deftest secure-handlers-test
+  (let [server (core/run secure-handlers-view
+                         (assoc test-options
+                                :jwt-secret "test-jwt-secret"
+                                :secure-handlers true))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test secure-handlers functionality"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :secure-action-button})
+        (is (e/visible? driver {:id :secure-action-button}))
+        (is (= "Not authenticated"
+               (e/get-element-text driver {:id :auth-status})))
+
+        ;; Try secure action while not authenticated - should fail
+        (e/click driver {:id :secure-action-button})
+        (Thread/sleep 100)
+        (is (= "Secure action not executed"
+               (e/get-element-text driver {:id :secure-result})))
+
+        ;; Try public action while not authenticated - should work
+        (e/click driver {:id :public-action-button})
+        (e/wait-predicate
+         #(= "Public action executed!"
+             (e/get-element-text driver {:id :public-result})))
+        (is (= "Public action executed!"
+               (e/get-element-text driver {:id :public-result})))
+
+        ;; Sign in
+        (e/click driver {:id :sign-in-button})
+        (e/wait-visible driver {:id :sign-out-button})
+        (e/wait-predicate
+         #(= "Authenticated as TestUser"
+             (e/get-element-text driver {:id :auth-status})))
+
+        ;; Try secure action while authenticated - should work
+        (e/click driver {:id :secure-action-button})
+        (e/wait-predicate
+         #(= "Secure action executed!"
+             (e/get-element-text driver {:id :secure-result})))
+        (is (= "Secure action executed!"
+               (e/get-element-text driver {:id :secure-result}))))
+      (finally
+        (e/quit driver)
+        (ig/halt! server)))))
 
 (def read-json
   (charred/parse-json-fn
@@ -895,49 +941,3 @@
 
         (finally
           (ig/halt! server))))))
-
-(deftest secure-handlers-test
-  (let [server (core/run secure-handlers-view
-                         (assoc test-options
-                                :jwt-secret "test-jwt-secret"
-                                :secure-handlers true))
-        driver (e/chrome-headless (driver-options))]
-    (try
-      (testing "Test secure-handlers functionality"
-        (e/go driver test-url)
-        (e/wait-visible driver {:id :secure-action-button})
-        (is (e/visible? driver {:id :secure-action-button}))
-        (is (= "Not authenticated"
-               (e/get-element-text driver {:id :auth-status})))
-
-        ;; Try secure action while not authenticated - should fail
-        (e/click driver {:id :secure-action-button})
-        (Thread/sleep 100)
-        (is (= "Secure action not executed"
-               (e/get-element-text driver {:id :secure-result})))
-
-        ;; Try public action while not authenticated - should work
-        (e/click driver {:id :public-action-button})
-        (e/wait-predicate
-         #(= "Public action executed!"
-             (e/get-element-text driver {:id :public-result})))
-        (is (= "Public action executed!"
-               (e/get-element-text driver {:id :public-result})))
-
-        ;; Sign in
-        (e/click driver {:id :sign-in-button})
-        (e/wait-visible driver {:id :sign-out-button})
-        (e/wait-predicate
-         #(= "Authenticated as TestUser"
-             (e/get-element-text driver {:id :auth-status})))
-
-        ;; Try secure action while authenticated - should work
-        (e/click driver {:id :secure-action-button})
-        (e/wait-predicate
-         #(= "Secure action executed!"
-             (e/get-element-text driver {:id :secure-result})))
-        (is (= "Secure action executed!"
-               (e/get-element-text driver {:id :secure-result}))))
-      (finally
-        (e/quit driver)
-        (ig/halt! server)))))

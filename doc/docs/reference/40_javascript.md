@@ -49,7 +49,7 @@ You can combine DOM updates with JavaScript execution:
 
 ```clojure
 {:data-on-click
- (weave/handler
+ (weave/handler []
   ;; Update the DOM
   (weave/push-html! [:div#status "Processing..."])
   
@@ -127,7 +127,7 @@ Here's a complete example of a timer application using JavaScript interoperabili
    [:div.flex.gap-2.mt-4
     [:button.bg-green-500.text-white.px-4.py-2.rounded
      {:data-on-click
-      (weave/handler
+      (weave/handler []
        (weave/push-script!
         (squint/clj->js
          (let [interval-id (js/setInterval
@@ -141,7 +141,7 @@ Here's a complete example of a timer application using JavaScript interoperabili
     
     [:button.bg-red-500.text-white.px-4.py-2.rounded
      {:data-on-click
-      (weave/handler
+      (weave/handler []
        (weave/push-script!
         (squint/clj->js
          (when (.. js/window -weaveTimerId)
@@ -151,7 +151,7 @@ Here's a complete example of a timer application using JavaScript interoperabili
     
     [:button.bg-blue-500.text-white.px-4.py-2.rounded
      {:data-on-click
-      (weave/handler
+      (weave/handler []
        (weave/push-script!
         (squint/clj->js
          (let [timer (js/document.getElementById "timer")]

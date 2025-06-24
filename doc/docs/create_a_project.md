@@ -33,7 +33,7 @@ Then in `src/app/core.clj`
    [:h1#label.text-2xl.font-bold "Hello Weave!"]
    [:button.bg-blue-500.text-white.px-4.py-2.rounded
 	{:data-on-click
-	 (weave/handler
+	 (weave/handler []
 	  (weave/push-html!
 	   [:h1#label.text-2xl.font-bold "Button was clicked!"]))}
 	"CLICK ME"]])

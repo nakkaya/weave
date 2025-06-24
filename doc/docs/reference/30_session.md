@@ -67,13 +67,13 @@ in the browser.
 (weave/set-cookie! "mycookie=value; Path=/; Max-Age=86400")
 
 ;; Sign in example
-(weave/handler
+(weave/handler []
   (weave/set-cookie! 
     (session/sign-in {:name "Weave" :role "User"}))
   (weave/push-reload!))
 
 ;; Sign out example
-(weave/handler
+(weave/handler []
   (weave/set-cookie! (session/sign-out))
   (weave/push-path! "/sign-in"))
 ```

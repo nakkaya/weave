@@ -275,75 +275,55 @@
    (throw (ex-info "Unauthorized." {::type ::unauthorized
                                     ::payload errordata}))))
 
-(def ^{:private true} event-routes
-  "Contains all dynamically registered event handler routes.
-
-   Stores Compojure route definitions created by the handler macro.
-   Each time a handler is defined, a new unique route is generated and added
-   to this collection. These routes are then combined with the base routes
-   when processing requests.
-
-   This approach allows handlers to be defined inline within views while still
-   being properly registered with the web server."
-  (atom []))
+(def ^{:private true} event-handlers
+  "Atom storing registered event handlers for the weave application."
+  (atom {}))
 
 (defn- add-route!
-  "Dynamically registers a new route for a handler function.
-
-    - Generate a unique route path using UUID
-    - Add the handler to the event-routes atom as a POST route
-    - Return the client-side datastar code to invoke this route
-
-   Parameters:
-     handler-fn - The Ring handler function to register
-     opts - Options map for the handler (passed to request-options)
-
-   Returns:
-     A string containing the datastar code to invoke this route"
-  [handler-fn opts]
-  (let [route (str "/" (random-uuid))]
-    (swap! event-routes conj (POST route [] handler-fn))
-    (str "@post('" route "', " (request-options opts) ")")))
+  "Register a new route for a handler function."
+  [route route-hash handler-fn dstar-expr]
+  (swap! event-handlers assoc route-hash {:route route
+                                          :handler (POST route [] handler-fn)
+                                          :dstar-expr dstar-expr}))
 
 (defmacro handler
-  "Create a handler function for processing client-side events.
-
-   Parameters:
-     opts - Optional map of handler options:
-            :auth-required? - Whether authentication is required (defaults to true if :secure-handlers is enabled)
-            :type - Request content type (:form for form submissions)
-            :keep-alive - Whether to keep the connection alive when tab is hidden
-            :selector - CSS selector for the form to submit (e.g. \"#myform\")
-     body - Forms to execute when the handler is invoked
-
-   Returns:
-     A string containing the datastar code to invoke this handler"
-  [& args]
-  (let [[opts body] (if (and (seq args) (map? (first args)))
-                      [(first args) (rest args)]
-                      [{} args])]
-    `(let [handler-fn#
-           (fn [req#]
-             (let [body# (:body req#)
-                   body# (if (instance? java.io.InputStream body#)
-                           (slurp body#)
-                           body#)
-                   req# (assoc req# :body body#)]
-               (bind-vars
-                req#
-                (let [auth-required?# (if (contains? ~opts :auth-required?)
-                                        (:auth-required? ~opts)
-                                        *secure-handlers*)]
-                  (if (and auth-required?#
-                           (not (authenticated? *request*)))
-                    {:status 403, :headers {}, :body nil}
-                    (hk-gen/->sse-response *request*
-                                           {:on-open
-                                            (fn [sse-gen#]
-                                              (binding [*sse-gen* sse-gen#]
-                                                ~@body)
-                                              (d*/close-sse! sse-gen#))}))))))]
-       (#'add-route! handler-fn# ~opts))))
+  "Create a handler that caches based on both code structure and closure identities"
+  [args & body]
+  (let [[opts body] (if (and (seq body) (map? (first body)))
+                      [(first body) (rest body)]
+                      [{} body])
+        src-loc (select-keys (meta &form) [:line :column :file])
+        body-hash (hash body)]
+    `(let [arg-hash# (mapv System/identityHashCode ~args)
+           cache-key# [~src-loc ~body-hash arg-hash#]
+           route-hash# (Integer/toUnsignedString (hash cache-key#))]
+       (if-let [cached-route# (get @#'event-handlers route-hash#)]
+         (:dstar-expr cached-route#)
+         (let [handler-fn#
+               (fn [req#]
+                 (let [body# (:body req#)
+                       body# (if (instance? java.io.InputStream body#)
+                               (slurp body#)
+                               body#)
+                       req# (assoc req# :body body#)]
+                   (bind-vars
+                    req#
+                    (let [auth-required?# (if (contains? ~opts :auth-required?)
+                                            (:auth-required? ~opts)
+                                            *secure-handlers*)]
+                      (if (and auth-required?#
+                               (not (authenticated? *request*)))
+                        {:status 403, :headers {}, :body nil}
+                        (hk-gen/->sse-response *request*
+                                               {:on-open
+                                                (fn [sse-gen#]
+                                                  (binding [*sse-gen* sse-gen#]
+                                                    ~@body)
+                                                  (d*/close-sse! sse-gen#))}))))))
+               route# (str "/h/" route-hash#)
+               dstar-expr# (str "@post('" route# "', " (#'request-options ~opts) ")")]
+           (#'add-route! route# route-hash# handler-fn# dstar-expr#)
+           dstar-expr#)))))
 
 (defn- sse-conn
   "Returns the current Server-Sent Events (SSE) connection.
@@ -659,7 +639,7 @@
                                 :body "{\"status\":\"ok\"}"})
                              (route/resources "/"))
                 all-routes (routes base-routes
-                                   (apply routes @event-routes)
+                                   (apply routes (map :handler (vals @event-handlers)))
                                    (apply routes custom-handlers)
                                    (route/not-found "Not Found"))
                 user-middleware (:middleware options)

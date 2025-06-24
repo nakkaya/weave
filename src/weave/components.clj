@@ -596,7 +596,7 @@
         register-url (or (:register-url attrs) "/#/register")
         error-message (or (:error-message attrs) "Invalid username or password.")
         error-signal (or (:error-signal attrs) "$_error")
-        on-submit (or (:on-submit attrs) (core/handler))
+        on-submit (or (:on-submit attrs) (core/handler []))
 
         ;; Container classes
         container-classes (get-theme-class :view :bg)
