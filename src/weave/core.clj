@@ -437,20 +437,6 @@
   (push-script!
    (str "document.cookie = '" cookie "';")))
 
-#_:clj-kondo/ignore
-(defn make-router []
-  (fn [router]
-    (let [path *app-path*
-          match (r/match-by-path router path)]
-      (if-not match
-        nil
-        (let [route-data (:data match)
-              requires-auth? (:auth-required? route-data)
-              authenticated? (:identity *request*)]
-          (if (and requires-auth? (not authenticated?))
-            :sign-in
-            (-> route-data :name)))))))
-
 (defn- load-icon
   "Load an icon from the classpath."
   [icon-path]

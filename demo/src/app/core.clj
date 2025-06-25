@@ -108,15 +108,10 @@
           [:div.text-center.text-gray-500
            "Select a page from the navigation above"])]]]]))
 
-(def routes
+(def router
   (-> (r/router
        [["/sign-in" {:name :sign-in}]
-        ["/app" {:name :app
-                 :auth-required? true}]])))
-
-(declare session-view)
-
-(def router (weave/make-router))
+        ["/app"     {:name :app}]])))
 
 (defn session-app-view []
   [:div
@@ -130,9 +125,9 @@
      {:size :xl
       :variant :primary
       :data-on-click (weave/handler []
-                      (weave/set-cookie! (session/sign-out))
-                      (weave/broadcast-path! "/sign-in")
-                      (weave/push-reload!))}
+                       (weave/set-cookie! (session/sign-out))
+                       (weave/broadcast-path! "/sign-in")
+                       (weave/push-reload!))}
      "Sign Out"]]])
 
 (defn session-sign-in-view []
@@ -148,21 +143,25 @@
     :register-text "Don't have an account?"
     :register-url "/#/register"
     :on-submit (weave/handler []
-                {:type :form}
-                (weave/set-cookie!
-                 (session/sign-in
-                  {:name (:username (:params weave/*request*)) :role "User"}))
-                (weave/broadcast-path! "/app")
-                (weave/push-reload!))}])
+                 {:type :form}
+                 (weave/set-cookie!
+                   (session/sign-in
+                     {:name (:username (:params weave/*request*)) :role "User"}))
+                 (weave/broadcast-path! "/app")
+                 (weave/push-reload!))}])
 
 (defn session-view []
-  [::c/view#app
-   (case (router routes)
-     :sign-in (session-sign-in-view)
-     :app [::c/center-hv
-           [::c/card
-            (session-app-view)]]
-     (session-sign-in-view))])
+  (if (:identity weave/*request*)
+    (let [route-match (r/match-by-path
+                       router weave/*app-path*)
+          route-name (get-in route-match [:data :name])]
+      [::c/view#app
+       (case route-name
+         :sign-in (session-sign-in-view)
+         :app     [::c/center-hv
+                   [::c/card
+                    (session-app-view)]])])
+    (session-sign-in-view)))
 
 (defn navbar-example []
   [::c/view#app
