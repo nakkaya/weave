@@ -23,6 +23,10 @@
    [java.io ByteArrayOutputStream]
    [javax.imageio ImageIO]))
 
+(def ^:dynamic *view*
+  "Holds the view function that renders the application."
+  nil)
+
 (def ^:dynamic *session-id*
   "The current user's session ID, extracted from the session cookie.
    Available in handler functions and view rendering code."
@@ -647,7 +651,8 @@
                                   (session/wrap-session jwt-secret)
                                   (def/wrap-defaults site-defaults)
                                   (wrap-gzip))]
-            (binding [session/*csrf-keyspec* csrf-keyspec
+            (binding [*view* view
+                      session/*csrf-keyspec* csrf-keyspec
                       *secure-handlers* (:secure-handlers options)]
               (let [handler (if user-middleware
                               (reduce (fn [handler middleware-fn]
