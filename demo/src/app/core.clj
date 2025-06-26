@@ -54,8 +54,7 @@
          @todos)]
        [:form
         {:class "mt-4 space-y-4"
-         :data-on-submit (weave/handler [todos]
-                          {:type :form}
+         :data-on-submit (weave/handler ^{:type :form} [todos]
                           (swap! todos conj (-> weave/*request* :params :bar))
                           (weave/push-html!
                            (todo-view)))}
@@ -142,8 +141,7 @@
     :forgot-password-url "/#/forgot-password"
     :register-text "Don't have an account?"
     :register-url "/#/register"
-    :on-submit (weave/handler []
-                 {:type :form}
+    :on-submit (weave/handler ^{:type :form} []
                  (weave/set-cookie!
                    (session/sign-in
                      {:name (:username (:params weave/*request*)) :role "User"}))

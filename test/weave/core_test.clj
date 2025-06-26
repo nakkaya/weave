@@ -603,8 +603,7 @@
    [:button
     {:id "protected-action-button"
      :data-on-click
-     (core/handler []
-      {:auth-required? true}
+     (core/handler ^{:auth-required? true} []
       (core/push-script! "document.getElementById('protected-result').textContent = 'Protected action executed!';"))}
     "Execute Protected Action"]
    [:div#protected-result "Protected action not executed"]])
@@ -694,16 +693,14 @@
    [:button
     {:id "sign-in-button"
      :data-on-click
-     (core/handler []
-      {:auth-required? false}
+     (core/handler ^{:auth-required? false} []
       (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
       (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
      :data-on-click
-     (core/handler []
-      {:auth-required? false}  ;; Explicitly allow unauthenticated access
+     (core/handler ^{:auth-required? false} []
       (core/set-cookie! (session/sign-out))
       (core/push-reload!))}
     "Sign Out"]
@@ -716,8 +713,7 @@
    [:button
     {:id "public-action-button"
      :data-on-click
-     (core/handler []
-      {:auth-required? false}
+     (core/handler ^{:auth-required? false} []
       (core/push-script! "document.getElementById('public-result').textContent = 'Public action executed!';"))}
     "Execute Public Action"]
    [:div#secure-result "Secure action not executed"]

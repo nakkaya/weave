@@ -291,11 +291,9 @@
                                           :dstar-expr dstar-expr}))
 
 (defmacro handler
-  "Create a handler that caches based on both code structure and closure identities"
+  "Create a handler that process client-side events."
   [args & body]
-  (let [[opts body] (if (and (seq body) (map? (first body)))
-                      [(first body) (rest body)]
-                      [{} body])
+  (let [opts (or (meta args) {})
         src-loc (select-keys (meta &form) [:line :column :file])
         body-hash (hash body)]
     `(let [arg-hash# (mapv System/identityHashCode ~args)
@@ -527,10 +525,10 @@
 (defmethod resp/resource-data :resource
   [^java.net.URL url]
   ;; GraalVM resource scheme
-  (let [resource     (.openConnection url)]
-    {:content        (.getInputStream resource)
+  (let [resource (.openConnection url)]
+    {:content (.getInputStream resource)
      :content-length (#'resp/connection-content-length resource)
-     :last-modified  (#'resp/connection-last-modified resource)}))
+     :last-modified (#'resp/connection-last-modified resource)}))
 
 (defmethod ig/init-key :weave/nrepl [_ {:keys [bind port] :as options}]
   (when options

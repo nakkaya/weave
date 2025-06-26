@@ -20,8 +20,7 @@ events. They are a core part of Weave's reactivity model.
 ## Handler Syntax
 
 ```clojure
-(weave/handler [captured-vars]
-  {options-map}
+(weave/handler ^{options} [arguments]
   ;; handler body
   )
 ```
@@ -41,7 +40,7 @@ caching and ensures handlers work correctly with closures:
 
 ## Handler Options
 
-The second argument (optional) is an options map:
+Options are provided as metadata (optional):
 
 - `:auth-required?` - Whether authentication is required (defaults to
   the value of `*secure-handlers*`)

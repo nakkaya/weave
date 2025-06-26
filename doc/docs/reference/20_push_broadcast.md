@@ -123,7 +123,7 @@ accessed in HTML attributes using the `data-signals-` prefix:
 ```clojure
 [:form
  {:data-on-submit
-  (weave/handler [] {:type :form}
+  (weave/handler ^{:type :form} []
    (let [form-data (:params weave/*request*)]
      (save-data! form-data)
      (weave/push-html! 
