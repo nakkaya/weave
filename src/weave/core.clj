@@ -296,7 +296,7 @@
   (let [opts (or (meta args) {})
         src-loc (select-keys (meta &form) [:line :column :file])
         body-hash (hash body)]
-    `(let [arg-hash# (mapv System/identityHashCode ~args)
+    `(let [arg-hash# (mapv hash ~args)
            cache-key# [~src-loc ~body-hash arg-hash#]
            route-hash# (Integer/toUnsignedString (hash cache-key#))]
        (if-let [cached-route# (get @#'event-handlers route-hash#)]
