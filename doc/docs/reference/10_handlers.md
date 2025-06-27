@@ -101,6 +101,7 @@ you can store state as signals in the browser and access them via
 ```
 
 In this example:
+
 - `data-signals-click-count="0"` initializes the signal with value 0
 - `data-text="$click_count"` displays the signal value reactively
 - The handler reads the current value from `weave/*signals*` and updates it with `push-signal!`
