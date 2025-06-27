@@ -475,16 +475,21 @@
       (ImageIO/write icon "png" baos)
       (.toByteArray baos))))
 
+(def ^{:private true} icon-loader
+  (memoize
+   (fn [icon-path width height]
+     (if-let [icon (load-icon icon-path)]
+       (->> (resize-icon icon width height)
+            (icon->bytes))))))
+
 (defn- icon-handler
   "Create a handler that serves an icon at the specified size."
   [icon-path width height]
   (fn [_req]
-    (if-let [icon (load-icon icon-path)]
-      (let [resized (resize-icon icon width height)
-            bytes (icon->bytes resized)]
-        (-> (resp/response bytes)
-            (resp/content-type "image/png")
-            (resp/header "Cache-Control" "public, max-age=86400")))
+    (if-let [icon (icon-loader icon-path width height)]
+      (-> (resp/response icon)
+          (resp/content-type "image/png")
+          (resp/header "Cache-Control" "public, max-age=86400"))
       (resp/not-found "Icon not found"))))
 
 (defn- manifest-handler
