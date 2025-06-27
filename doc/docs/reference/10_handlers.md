@@ -7,7 +7,8 @@ events. They are a core part of Weave's reactivity model.
 
 - When you define a handler using the `weave/handler` macro, Weave:
     - Generates a unique route path based on code structure and
-      captured variables
+      captured variables. A hash is calculated for each handler,
+      handlers with the same hash share the same unique route
     - Registers the handler function with that route
     - Returns client-side [Datastar](https://data-star.dev/)
       expression that will invoke this route when triggered
@@ -67,7 +68,97 @@ Options are provided as metadata (optional):
 
 When this handler is registered, Weave:
 
- - Creates a unique route based on the handler code and captured variables
+ - Creates a unique route based on the handler code and captured
+   variables.
  - Sets up a POST endpoint for that route
  - Returns client-side code that will POST to that route when the
    click event occurs
+
+## Handlers with Signals
+
+Signals provide a powerful alternative to variable capture for
+managing dynamic state. Instead of capturing variables in closures,
+you can store state as signals in the browser and access them via
+`weave/*signals*`.
+
+### Basic Signal Example
+
+```clojure
+(defn click-count-view []
+  [::c/view#app
+   [::c/center-hv
+    [::c/card
+     [:div.text-center.text-6xl.font-bold.mb-6.text-blue-600
+      {:data-signals-click-count "0"
+       :data-text "$click_count"}]
+     [::c/button
+      {:size :xl
+       :variant :primary
+       :data-on-click (weave/handler []
+                        (let [current-count (or (:click-count weave/*signals*) 0)]
+                          (weave/push-signal! {:click-count (inc current-count)})))}
+      "Increment Count"]]]])
+```
+
+In this example:
+- `data-signals-click-count="0"` initializes the signal with value 0
+- `data-text="$click_count"` displays the signal value reactively
+- The handler reads the current value from `weave/*signals*` and updates it with `push-signal!`
+
+### Why Signals Are Better Than Closures for Some Use Cases
+
+#### Problem: Route Explosion with Closures
+
+When using variable capture, each unique combination of captured
+variables creates a separate route. This becomes problematic with
+dynamic data like table rows:
+
+```clojure
+;; BAD: Creates separate handler for each row × action combination
+(defn user-table-bad [users]
+  [:table
+   (for [user users]
+     [:tr
+      [:td (:name user)]
+      [:td
+       [::c/button
+        {:data-on-click (weave/handler [user] ; Captures user - creates unique route!
+                          (delete-user! (:id user))
+                          (weave/push-html! (user-table-bad (get-updated-users))))}
+        "Delete"]
+       [::c/button
+        {:data-on-click (weave/handler [user] ; Another unique route per user!
+                          (promote-user! (:id user))
+                          (weave/push-html! (user-table-bad (get-updated-users))))}
+        "Promote"]]])])
+
+;; With 100 users × 2 actions = 200 different routes registered!
+```
+
+#### Solution: Shared Handlers with Signals
+
+```clojure
+;; GOOD: Only 2 handlers total, regardless of number of users
+(defn user-table-good [users]
+  [:table
+   (for [user users]
+     [:tr
+      [:td (:name user)]
+      [:td
+       [::c/button
+        {:data-signals-user-id (:id user)         ; Store user ID as signal
+         :data-on-click (weave/handler []         ; No variable capture!
+                          (let [user-id (:user-id weave/*signals*)]
+                            (delete-user! user-id)
+                            (weave/push-html! (user-table-good (get-updated-users)))))}
+        "Delete"]
+       [::c/button
+        {:data-signals-user-id (:id user)         ; Same user ID signal
+         :data-on-click (weave/handler []         ; Same handler pattern
+                          (let [user-id (:user-id weave/*signals*)]
+                            (promote-user! user-id)
+                            (weave/push-html! (user-table-good (get-updated-users)))))}
+        "Promote"]]])])
+
+;; Only 2 handlers registered total - shared across all rows!
+```
