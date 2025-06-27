@@ -1,5 +1,6 @@
 (ns weave.core
   (:require
+   [camel-snake-kebab.core :as csk]
    [charred.api :as charred]
    [clojure.java.io :as io]
    [clojure.tools.logging :as log]
@@ -9,7 +10,6 @@
    [integrant.core :as ig]
    [nrepl.server :as nrepl.server]
    [org.httpkit.server :as http.server]
-   [reitit.core :as r]
    [ring.middleware.defaults :as def]
    [ring.middleware.gzip :refer [wrap-gzip]]
    [ring.util.response :as resp]
@@ -48,6 +48,13 @@
    including headers, parameters, and the authenticated user identity."
   nil)
 
+(def ^:dynamic *signals*
+  "Contains the parsed client-side signals from the current request.
+
+   Signals are reactive state data sent from the browser via Datastar,
+   similar to form data but for real-time applications."
+  nil)
+
 (def ^:dynamic *secure-handlers*
   "When true, all handlers require authentication by default
    unless :auth-required? is explicitly set to false."
@@ -74,12 +81,13 @@
      (binding [*session-id* session-id#
                *instance-id* instance-id#
                *app-path* app-path#
-               *request* ~req]
+               *request* ~req
+               *signals* (get-signals ~req)]
        ~@body)))
 
 (let [read-json
       (charred/parse-json-fn
-       {:async? false :bufsize 1024 :key-fn keyword})]
+       {:async? false :bufsize 1024 :key-fn (fn [v] (-> v csk/->kebab-case-keyword keyword))})]
   (defn get-signals
     "Extract and parse client-side signals from the request."
     [req]
