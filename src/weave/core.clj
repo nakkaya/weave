@@ -291,16 +291,16 @@
    (throw (ex-info "Unauthorized." {::type ::unauthorized
                                     ::payload errordata}))))
 
-(def ^{:private true} event-handlers
-  "Atom storing registered event handlers for the weave application."
+(def ^{:private true :dynamic true} *event-handlers*
+  "Registered event handlers for the application."
   (atom {}))
 
 (defn- add-route!
   "Register a new route for a handler function."
   [route route-hash handler-fn dstar-expr]
-  (swap! event-handlers assoc route-hash {:route route
-                                          :handler-fn handler-fn
-                                          :dstar-expr dstar-expr}))
+  (swap! *event-handlers* assoc route-hash {:route route
+                                            :handler-fn handler-fn
+                                            :dstar-expr dstar-expr}))
 
 (defn- handler-router-middleware
   "Custom middleware that handles event handler routes via direct hash map lookup."
@@ -311,7 +311,7 @@
       (if (and (= method :post)
                (.startsWith uri "/h/"))
         (let [route-hash (subs uri 3)
-              handlers @event-handlers
+              handlers @*event-handlers*
               handler-entry (get handlers route-hash)]
           (if-let [handler-fn (:handler-fn handler-entry)]
             (handler-fn request)
@@ -324,12 +324,11 @@
   "Create a handler that process client-side events."
   [args & body]
   (let [opts (or (meta args) {})
-        src-loc (select-keys (meta &form) [:line :column :file])
         body-hash (hash body)]
     `(let [arg-hash# (mapv hash ~args)
-           cache-key# [~src-loc ~body-hash arg-hash#]
+           cache-key# [~body-hash arg-hash#]
            route-hash# (Integer/toUnsignedString (hash cache-key#))]
-       (if-let [cached-route# (get @#'event-handlers route-hash#)]
+       (if-let [cached-route# (get @#'*event-handlers* route-hash#)]
          (:dstar-expr cached-route#)
          (let [handler-fn#
                (fn [req#]

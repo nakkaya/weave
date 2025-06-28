@@ -1,13 +1,21 @@
 (ns weave.core-test
   (:require
    [clojure.string :as str]
-   [clojure.test :refer [deftest is testing]]
+   [clojure.test :refer [deftest is testing use-fixtures]]
    [compojure.core :refer [GET]]
    [etaoin.api :as e]
    [integrant.core :as ig]
    [weave.core :as core]
    [weave.session :as session]
    [charred.api :as charred]))
+
+(defn event-handler-fixture
+  "Test fixture that binds a fresh event-handlers atom for each test."
+  [test-fn]
+  (binding [core/*event-handlers* (atom {})]
+    (test-fn)))
+
+(use-fixtures :each event-handler-fixture)
 
 (defn clean-string [s]
   (-> s
