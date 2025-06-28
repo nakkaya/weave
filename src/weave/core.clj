@@ -511,7 +511,7 @@
 (def ^{:private true} icon-loader
   (memoize
    (fn [icon-path width height]
-     (if-let [icon (load-icon icon-path)]
+     (when-let [icon (load-icon icon-path)]
        (->> (resize-icon icon width height)
             (icon->bytes))))))
 

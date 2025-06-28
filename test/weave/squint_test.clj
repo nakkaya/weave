@@ -1,7 +1,6 @@
 (ns weave.squint-test
   (:require [clojure.test :refer [deftest testing is]]
-            [weave.squint :as squint]
-            [clojure.string :as str]))
+            [weave.squint :as squint]))
 
 (deftest test-compile
   (testing "basic compilation"
@@ -27,6 +26,6 @@
 (deftest test-clj->js-macro-variable-capture
   (testing "clj->js macro can capture variables")
   (is (= "var f = function () {\nreturn 43;;\n};\n"
-         (let [x 43]
+         (let [_x 43]
            (squint/clj->js
-            (defn f [] ~x))))))
+            (defn f [] ~_x))))))
