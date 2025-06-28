@@ -49,10 +49,7 @@
 
 (defn driver-options []
   {:path-driver "chromedriver"
-   :args [(str "--user-data-dir="
-               (str "/tmp/chrome-data-"
-                    (System/currentTimeMillis)))
-          "--no-sandbox"]})
+   :args [(str "--user-data-dir=/tmp/chrome-data-" (System/currentTimeMillis)) "--no-sandbox"]})
 
 (def test-port 3333)
 (def test-url (str "http://localhost:" test-port))
@@ -136,6 +133,74 @@
         (e/click driver {:id :increment-button})
         (e/wait-predicate #(= "42" (e/get-element-text driver {:id :count})))
         (is (= "42" (e/get-element-text driver {:id :count}))))
+      (finally
+        (e/quit driver)
+        (ig/halt! server)))))
+
+(defn form-submission-view []
+  [:div {:id "view"}
+   [:h1 "Form Submission Test"]
+   [:form {:id "test-form"
+           :data-on-submit
+           (core/handler ^{:type :form} []
+             (let [form-data (:params core/*request*)
+                   name (:name form-data)
+                   email (:email form-data)]
+               (core/push-html!
+                 [:div#view
+                  [:div#result
+                   [:p (str "Hello " name "!")]
+                   [:p (str "Email: " email)]]])))}
+    [:div
+     [:label {:for "name"} "Name:"]
+     [:input {:type "text" :id "name" :name "name" :required true}]]
+    [:div
+     [:label {:for "email"} "Email:"]
+     [:input {:type "email" :id "email" :name "email" :required true}]]
+    [:button {:type "submit" :id "submit-btn"} "Submit"]]])
+
+(deftest form-submission-test-with-sse
+  (let [server (core/run form-submission-view test-options)
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test form submission with SSE enabled"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :test-form})
+        (is (e/visible? driver {:id :test-form}))
+
+        (e/fill driver {:id :name} "John Doe")
+        (e/fill driver {:id :email} "john@example.com")
+
+        (e/click driver {:id :submit-btn})
+
+        (e/wait-visible driver {:id :result})
+        (is (e/visible? driver {:id :result}))
+
+        (is (str/includes? (e/get-element-text driver {:id :result}) "Hello John Doe!"))
+        (is (str/includes? (e/get-element-text driver {:id :result}) "Email: john@example.com")))
+      (finally
+        (e/quit driver)
+        (ig/halt! server)))))
+
+(deftest form-submission-test-without-sse
+  (let [server (core/run form-submission-view (assoc-in test-options [:sse :enabled] false))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test form submission without SSE"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :test-form})
+        (is (e/visible? driver {:id :test-form}))
+
+        (e/fill driver {:id :name} "Jane Smith")
+        (e/fill driver {:id :email} "jane@example.com")
+
+        (e/click driver {:id :submit-btn})
+
+        (e/wait-visible driver {:id :result})
+        (is (e/visible? driver {:id :result}))
+
+        (is (str/includes? (e/get-element-text driver {:id :result}) "Hello Jane Smith!"))
+        (is (str/includes? (e/get-element-text driver {:id :result}) "Email: jane@example.com")))
       (finally
         (e/quit driver)
         (ig/halt! server)))))
