@@ -85,13 +85,17 @@
                *signals* (get-signals ~req)]
        ~@body)))
 
-(let [read-json
-      (charred/parse-json-fn
-       {:async? false :bufsize 1024 :key-fn (fn [v] (-> v csk/->kebab-case-keyword keyword))})]
+(let [key-fn (fn [v]
+               (-> v csk/->kebab-case-keyword keyword))
+      read-json (charred/parse-json-fn
+                  {:async? false :bufsize 1024 :key-fn key-fn})]
   (defn get-signals
     "Extract and parse client-side signals from the request."
     [req]
-    (-> req d*/get-signals read-json)))
+    (let [signals (-> req d*/get-signals)]
+      (if (empty? signals)
+        {}
+        (read-json signals)))))
 
 (defn ->sse-response
   "Create a Server-Sent Events (SSE) response with the given options."
