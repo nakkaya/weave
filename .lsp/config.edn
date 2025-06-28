@@ -1,0 +1,2 @@
+{:cljfmt {:indents {weave.core/handler [[:inner 0]]
+                    core/handler [[:inner 0]]}}}
