@@ -4,7 +4,7 @@
    [charred.api :as charred]
    [clojure.java.io :as io]
    [clojure.tools.logging :as log]
-   [compojure.core :refer [GET POST routes]]
+   [compojure.core :refer [GET routes]]
    [compojure.route :as route]
    [dev.onionpancakes.chassis.core :as c]
    [integrant.core :as ig]
@@ -295,8 +295,26 @@
   "Register a new route for a handler function."
   [route route-hash handler-fn dstar-expr]
   (swap! event-handlers assoc route-hash {:route route
-                                          :handler (POST route [] handler-fn)
+                                          :handler-fn handler-fn
                                           :dstar-expr dstar-expr}))
+
+(defn- handler-router-middleware
+  "Custom middleware that handles event handler routes via direct hash map lookup."
+  [routes]
+  (fn [request]
+    (let [uri (:uri request)
+          method (:request-method request)]
+      (if (and (= method :post)
+               (.startsWith uri "/h/"))
+        (let [route-hash (subs uri 3)
+              handlers @event-handlers
+              handler-entry (get handlers route-hash)]
+          (if-let [handler-fn (:handler-fn handler-entry)]
+            (handler-fn request)
+            {:status 404
+             :headers {"Content-Type" "text/plain"}
+             :body "Handler not found"}))
+        (routes request)))))
 
 (defmacro handler
   "Create a handler that process client-side events."
@@ -618,46 +636,44 @@
                           (assoc-in [:static :resources] false)
                           (assoc-in [:static :files] false))
         icon-path (:icon options)
-        icon-handlers (when icon-path
-                        [(GET "/favicon.png" [] (icon-handler icon-path 32 32))
-                         (GET "/icon-180.png" [] (icon-handler icon-path 180 180))
-                         (GET "/icon-192.png" [] (icon-handler icon-path 192 192))
-                         (GET "/icon-512.png" [] (icon-handler icon-path 512 512))
-                         (GET "/manifest.json" [] (manifest-handler options server-id))])
-        custom-handlers (concat (or (:handlers options) [])
-                                (or icon-handlers []))
+        icon-routes (when icon-path
+                      [(GET "/favicon.png" [] (icon-handler icon-path 32 32))
+                       (GET "/icon-180.png" [] (icon-handler icon-path 180 180))
+                       (GET "/icon-192.png" [] (icon-handler icon-path 192 192))
+                       (GET "/icon-512.png" [] (icon-handler icon-path 512 512))
+                       (GET "/manifest.json" [] (manifest-handler options server-id))])
+        custom-routes (concat (or (:handlers options) [])
+                              (or icon-routes []))
+        routes (routes
+                (GET "/" _req
+                  (app-outer server-id options))
+                (GET "/app-loader" req
+                  (bind-vars
+                   req (app-loader req server-id view options)))
+                (GET "/health" _req
+                  {:status 200
+                   :headers {"Content-Type" "application/json"}
+                   :body "{\"status\":\"ok\"}"})
+                (route/resources "/")
+                (apply routes custom-routes)
+                (route/not-found "Not Found"))
+        handler-chain (-> routes
+                          handler-router-middleware
+                          (session/wrap-session jwt-secret)
+                          (def/wrap-defaults site-defaults)
+                          (wrap-gzip))
+        handler-chain (if (:middleware options)
+                        (reduce (fn [handler middleware-fn]
+                                  (middleware-fn handler))
+                                handler-chain
+                                (reverse (:middleware options)))
+                        handler-chain)
         handler
         (fn [request]
-          (let [base-routes (compojure.core/routes
-                             (GET "/" _req
-                               (app-outer server-id options))
-                             (GET "/app-loader" req
-                               (bind-vars
-                                req (app-loader req server-id view options)))
-                             (GET "/health" _req
-                               {:status 200
-                                :headers {"Content-Type" "application/json"}
-                                :body "{\"status\":\"ok\"}"})
-                             (route/resources "/"))
-                all-routes (routes base-routes
-                                   (apply routes (map :handler (vals @event-handlers)))
-                                   (apply routes custom-handlers)
-                                   (route/not-found "Not Found"))
-                user-middleware (:middleware options)
-                handler-chain (-> all-routes
-                                  (session/wrap-session jwt-secret)
-                                  (def/wrap-defaults site-defaults)
-                                  (wrap-gzip))]
-            (binding [*view* view
-                      session/*csrf-keyspec* csrf-keyspec
-                      *secure-handlers* (:secure-handlers options)]
-              (let [handler (if user-middleware
-                              (reduce (fn [handler middleware-fn]
-                                        (middleware-fn handler))
-                                      handler-chain
-                                      (reverse user-middleware))
-                              handler-chain)]
-                (handler request)))))]
+          (binding [*view* view
+                    session/*csrf-keyspec* csrf-keyspec
+                    *secure-handlers* (:secure-handlers options)]
+            (handler-chain request)))]
 
     (ig/init
      {:weave/nrepl (when-let [nrepl-opts (:nrepl options)]
