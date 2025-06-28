@@ -1,4 +1,4 @@
 {:linters {}
- :lint-as {weave/handler clojure.core/fn
+ :lint-as {weave.core/handler clojure.core/fn
            weave.squint/clj->js clojure.core/identity}
  :hooks {:analyze-call {weave.squint/clj->js hooks.weave.squint/clj->js-hook}}}
