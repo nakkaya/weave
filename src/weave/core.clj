@@ -501,7 +501,7 @@
   "Convert a BufferedImage to a byte array in PNG format."
   [^BufferedImage icon]
   (when icon
-    (let [baos (ByteArrayOutputStream.)]
+    (with-open [baos (ByteArrayOutputStream.)]
       (ImageIO/write icon "png" baos)
       (.toByteArray baos))))
 
