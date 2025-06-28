@@ -110,19 +110,23 @@
    Returns:
      A datastar string containing configured options."
   [opts]
-  (let [headers (str "headers: {
-                       'x-csrf-token': $app.csrf,
-                       'x-instance-id': $app.instance,
-                       'x-app-path': $app.path
-                      }")
-        type (when (or (= (opts :type) :form)
-                       (= (opts :type) :sign-in))
-               ", contentType: 'form'")
-        keep-alive (when (opts :keep-alive)
-                     ", openWhenHidden: true")
-        selector (when (opts :selector)
-                   (str ", selector: '" (opts :selector) "'"))]
-    (str "{" headers type keep-alive selector "}")))
+  (let [sb (StringBuilder.)]
+    (.append sb "{headers: {
+                   'x-csrf-token': $app.csrf,
+                   'x-instance-id': $app.instance,
+                   'x-app-path': $app.path
+                  }")
+    (when (or (= (:type opts) :form)
+              (= (:type opts) :sign-in))
+      (.append sb ", contentType: 'form'"))
+    (when (:keep-alive opts)
+      (.append sb ", openWhenHidden: true"))
+    (when-let [selector (:selector opts)]
+      (.append sb ", selector: '")
+      (.append sb selector)
+      (.append sb "'"))
+    (.append sb "}")
+    (.toString sb)))
 
 (defn- app-outer
   "Generate the outer HTML shell for the application.
