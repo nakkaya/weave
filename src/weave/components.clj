@@ -111,7 +111,16 @@
             :focus "focus:ring-indigo-500/10"
             :bg "bg-transparent dark:bg-gray-900"
             :text "text-gray-800 dark:text-white/90"
-            :icon "absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"}})
+            :icon "absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"}
+   :modal {:overlay "fixed inset-0 z-50 bg-black/50 dark:bg-black/70 transition-opacity"
+           :container "fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+           :dialog "relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+           :sizes {:sm "max-w-sm"
+                   :md "max-w-md"
+                   :lg "max-w-lg"
+                   :xl "max-w-xl"
+                   :2xl "max-w-2xl"
+                   :full "max-w-full mx-4"}}})
 
 #_:clj-kondo/ignore
 (defn with-theme
@@ -135,7 +144,7 @@
 (defn- get-variant-classes
   "Get all classes for a component variant"
   [component-type variant]
-    (get-in *theme* [component-type :variants variant]))
+  (get-in *theme* [component-type :variants variant]))
 
 (def ^:private load-heroicons-sprite
   (memoize
@@ -681,3 +690,24 @@
          " Sign up"]]
 
        content]]]))
+
+(defmethod c/resolve-alias ::modal
+  [_ attrs content]
+  (let [size (or (:size attrs) :md)
+        signal (or (:id attrs) "modal")
+        overlay-class (get-theme-class :modal :overlay)
+        container-class (get-theme-class :modal :container)
+        dialog-class (get-theme-class :modal :dialog)
+        size-class (get-size-class :modal size)
+        dialog-class-with-size (tw dialog-class size-class)
+        base-attrs {:id (or (:id attrs) "modal")
+                    :data-show (str "$" signal)}
+        filtered-attrs (dissoc attrs :size :id)
+        merged-attrs (merge-attrs base-attrs filtered-attrs)]
+    [:div
+     {(-> (str "data-signals-" signal) keyword) "false"}
+     [:div merged-attrs
+      [:div {:class overlay-class}]
+      [:div {:class container-class}
+       [:div {:class dialog-class-with-size}
+        content]]]]))

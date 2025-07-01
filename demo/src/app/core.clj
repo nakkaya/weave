@@ -257,6 +257,43 @@
       [:h1.text-2xl.font-bold.mb-4 "Sidebar Example"]
       [:p "This example demonstrates the sidebar component with multiple groups and items."]]]]])
 
+(defn modal-example []
+  [::c/view#app
+   [::c/center-hv
+    [::c/card
+     [:h1.text-2xl.font-bold.mb-4 "Modal Example"]
+     [:p.mb-6 "Click the button below to open a modal dialog."]
+
+     [::c/modal
+      {:id "demo_modal"
+       :size :xl
+       :title "Example Modal"}
+
+      [:div
+       [:div.m-4
+        [:p.mb-4 "This is a modal dialog built with Weave components!"]
+        [:p.mb-4 "Howto use this modal:"]
+        [:ul.list-disc.list-inside.space-y-2.mb-4
+         [:li "Each ::c/modal automatically declares a signal by its id"]
+         [:li "Set the signal true or false to toggle the modal"]]]
+
+       [::c/flex-between.m-4
+        [::c/button
+         {:variant :secondary
+          :data-on-click "$demo_modal = false"}
+         "Cancel"]
+        [::c/button
+         {:variant :primary
+          :data-on-click (weave/handler []
+                           (weave/push-signal! {:demo_modal false}))}
+         "Confirm"]]]]
+
+     [::c/button
+      {:size :lg
+       :variant :primary
+       :data-on-click "$demo_modal = true"}
+      "Open Modal"]]]])
+
 (defn run [options]
   (let [view (condp = (:view options)
                :click-count #'click-count-view
@@ -264,7 +301,8 @@
                :session #'session-view
                :navigation #'navigation-view
                :navbar #'navbar-example
-               :sidebar #'sidebar-example)]
+               :sidebar #'sidebar-example
+               :modal #'modal-example)]
     (weave/run view options)))
 
 (defn -main
