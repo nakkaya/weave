@@ -683,9 +683,11 @@
             (handler-chain request)))]
 
     (ig/init
-     {:weave/nrepl (when-let [nrepl-opts (:nrepl options)]
-                     (merge {:bind "0.0.0.0" :port 8888}
-                            nrepl-opts))
-      :weave/http {:handler handler
-                   :options (merge {:bind "0.0.0.0" :port 8080}
-                                   (:http-kit options))}})))
+     (merge
+       {:weave/nrepl (when-let [nrepl-opts (:nrepl options)]
+                       (merge {:bind "0.0.0.0" :port 8888}
+                              nrepl-opts))
+        :weave/http {:handler handler
+                     :options (merge {:bind "0.0.0.0" :port 8080}
+                                     (:http-kit options))}}
+       (:integrant options)))))
