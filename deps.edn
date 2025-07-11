@@ -14,12 +14,12 @@
         backtick/backtick                    {:mvn/version "0.3.5"}
         metosin/reitit                       {:mvn/version "0.8.0"}
         datastar/sdk                         {:git/url "https://github.com/starfederation/datastar/"
-                                              :git/sha "70b77cf09273d293d9b353ad02a1e0841994cc44"
+                                              :git/sha "d86d859e6829bff2d4c8896b154f05eeb9a5c73c"
                                               :deps/root "sdk/clojure/sdk"}
         io.github.squint-cljs/squint         {:git/url "https://github.com/squint-cljs/squint.git"
                                               :git/sha "1ecbf7fd37389211fcaf815dee9d64edb1d308e0"}
         datastar/ring                        {:git/url "https://github.com/starfederation/datastar/"
-                                              :git/sha "70b77cf09273d293d9b353ad02a1e0841994cc44"
+                                              :git/sha "d86d859e6829bff2d4c8896b154f05eeb9a5c73c"
                                               :deps/root "sdk/clojure/adapter-http-kit"
                                               :exclusions [http-kit/http-kit]}
         integrant/integrant                  {:mvn/version "0.13.1"}}

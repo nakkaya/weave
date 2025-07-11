@@ -167,7 +167,7 @@
               [:link {:rel "manifest" :href "/manifest.json"}]])
            [:title (or (:title opts) "Weave")]
            ;;
-           [:script {:type "module" :src "/datastar@v1.0.0-beta.11.js"}]
+           [:script {:type "module" :src "/datastar@v1.0.0-RC.1.js"}]
            [:script {:src "/squint@v0.8.147.js"}]
            ;;
            [:script {:src "/tailwind@3.4.16.js"}]
@@ -244,7 +244,7 @@
       (do
         (session/remove-connection! *session-id* *instance-id*)
         (->sse-response
-         {:on-open
+         {hk-gen/on-open
           (fn [sse-gen]
             (d*/execute-script!
              sse-gen
@@ -254,9 +254,9 @@
 (defmethod app-inner true
   [_req _server-id view _options]
   (->sse-response
-   {:on-open
+   {hk-gen/on-open
     (fn [sse-gen]
-      (d*/merge-fragment!
+      (d*/patch-elements!
        sse-gen
        (c/html
         [:div {:id "weave-main"
@@ -265,7 +265,7 @@
       (session/add-connection!
        *session-id* *instance-id* sse-gen))
 
-    :on-close
+    hk-gen/on-close
     (fn [_sse-gen _status]
       (session/remove-connection!
        *session-id* *instance-id*))}))
@@ -273,9 +273,9 @@
 (defmethod app-inner false
   [_req _server-id view _options]
   (->sse-response
-   {:on-open
+   {hk-gen/on-open
     (fn [sse-gen]
-      (d*/merge-fragment!
+      (d*/patch-elements!
        sse-gen
        (c/html
         [:div {:id "weave-main"
@@ -350,7 +350,7 @@
                                (not (authenticated? *request*)))
                         {:status 403, :headers {}, :body nil}
                         (hk-gen/->sse-response *request*
-                                               {:on-open
+                                               {hk-gen/on-open
                                                 (fn [sse-gen#]
                                                   (binding [*sse-gen* sse-gen#]
                                                     ~@body)
@@ -379,7 +379,7 @@
   "Push HTML to the specific browser tab/window that
    triggered the handler."
   [html]
-  (d*/merge-fragment! (sse-conn) (c/html html)))
+  (d*/patch-elements! (sse-conn) (c/html html)))
 
 (defn broadcast-html!
   "Pushes HTML to all browser tabs/windows that share the same
@@ -387,7 +387,7 @@
   [html]
   (let [connections (session/session-connections *session-id*)]
     (doseq [sse connections]
-      (d*/merge-fragment! sse (c/html html)))))
+      (d*/patch-elements! sse (c/html html)))))
 
 (defn push-path!
   "Change the URL hash for the specific browser tab/window that
@@ -401,7 +401,7 @@
               (.pushState js/history nil nil ~(str "#" url))
               (set! (.-__pushHashChange js/window) false))]
 
-     (d*/merge-signals!
+     (d*/patch-signals!
       sse
       (charred/write-json-str {:app {:path url}}))
      (d*/execute-script! sse cmd)
@@ -421,14 +421,14 @@
               (.pushState js/history nil nil ~(str "#" url))
               (set! (.-__pushHashChange js/window) false))]
      (doseq [sse connections]
-       (d*/merge-signals!
+       (d*/patch-signals!
         sse
         (charred/write-json-str {:app {:path url}}))
        (d*/execute-script! sse cmd))
      (when view-fn
        (binding [*app-path* url]
          (doseq [sse connections]
-           (d*/merge-fragment! sse (c/html (view-fn)))))))))
+           (d*/patch-elements! sse (c/html (view-fn)))))))))
 
 (defn push-script!
   "Send JavaScript to the specific browser tab/window that
@@ -457,7 +457,7 @@
   "Send updated signal values to the specific browser tab/window that
    triggered the current handler."
   [signal]
-  (d*/merge-signals!
+  (d*/patch-signals!
    (sse-conn) (charred/write-json-str signal)))
 
 (defn set-cookie!
