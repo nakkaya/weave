@@ -167,7 +167,7 @@
               [:link {:rel "manifest" :href "/manifest.json"}]])
            [:title (or (:title opts) "Weave")]
            ;;
-           [:script {:type "module" :src "/datastar@v1.0.0-RC.1.js"}]
+           [:script {:type "module" :src "/weave.js"}]
            [:script {:src "/squint@v0.8.147.js"}]
            ;;
            [:script {:src "/tailwind@3.4.16.js"}]
@@ -356,7 +356,7 @@
                                                     ~@body)
                                                   (d*/close-sse! sse-gen#))}))))))
                route# (str "/h/" route-hash#)
-               dstar-expr# (str "@post('" route# "', " (#'request-options ~opts) ")")]
+               dstar-expr# (str "@call('" route# "', " (#'request-options ~opts) ")")]
            (#'add-route! route# route-hash# handler-fn# dstar-expr#)
            dstar-expr#)))))
 
