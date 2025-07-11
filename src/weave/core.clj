@@ -15,8 +15,7 @@
    [ring.util.response :as resp]
    [starfederation.datastar.clojure.adapter.http-kit :as hk-gen]
    [starfederation.datastar.clojure.api :as d*]
-   [weave.session :as session]
-   [weave.squint :refer [clj->js]])
+   [weave.session :as session])
   (:import
    [java.awt RenderingHints]
    [java.awt.image BufferedImage]
@@ -147,7 +146,7 @@
             :head - Additional HTML to include in the head section
             :view-port - The viewport meta tag
             :keep-alive - Whether to keep SSE connections alive when tab is hidden"
-  [_server-id opts]
+  [server-id opts]
   (-> (resp/response
        (c/html
         [c/doctype-html5
@@ -167,47 +166,17 @@
               [:link {:rel "manifest" :href "/manifest.json"}]])
            [:title (or (:title opts) "Weave")]
            ;;
-           [:script {:type "module" :src "/weave.js"}]
-           [:script {:src "/squint@v0.8.147.js"}]
-           ;;
            [:script {:src "/tailwind@3.4.16.js"}]
-           [:script
-            (clj->js
-             (set! (.-config js/tailwind) {:darkMode "class"})
-
-             (defn csrf []
-               (some-> (.-cookie js/document)
-                       (.match #"(^|)weave-csrf=([^;]+)")
-                       (aget 2)))
-
-             (.addEventListener js/window "hashchange"
-                                (fn [e]
-                                  (when-not (.-__pushHashChange js/window)
-                                    (.reload (.-location js/window)))))
-
-             (set! (.-__pushHashChange js/window) false)
-
-             (defn path []
-               (let [hash-path (.substring (.-hash (.-location js/window)) 1)]
-                 (if (not hash-path)
-                   "/"
-                   (if (.startsWith hash-path "/")
-                     hash-path
-                     (str "/" hash-path)))))
-
-             (defn instance []
-               ~(str (random-uuid)))
-
-             (defn server []
-               ~(str _server-id)))]
-
+           [:script {:type "module" :src "/weave.js"}]
+           [:script {:type "module"}
+            (str "weave.setup('" server-id "', '" (random-uuid) "');")]
            (:head opts)]
           ;;
           [:body {:class "w-full h-full"}
-           [:div {:data-signals-app.server "server();"}]
-           [:div {:data-signals-app.path "path();"}]
-           [:div {:data-signals-app.csrf "csrf();"}]
-           [:div {:data-signals-app.instance "instance();"}]
+           [:div {:data-signals-app.server "weave.server();"}]
+           [:div {:data-signals-app.path "weave.path();"}]
+           [:div {:data-signals-app.csrf "weave.csrf();"}]
+           [:div {:data-signals-app.instance "weave.instance();"}]
            (let [opts (if (get-in opts [:sse :keep-alive])
                         {:keep-alive true}
                         {})
@@ -246,10 +215,7 @@
         (->sse-response
          {hk-gen/on-open
           (fn [sse-gen]
-            (d*/execute-script!
-             sse-gen
-             (clj->js
-              (-> js/window .-location .reload))))})))))
+            (d*/execute-script! sse-gen "weave.reload();"))})))))
 
 (defmethod app-inner true
   [_req _server-id view _options]
@@ -396,10 +362,7 @@
    (push-path! url nil))
   ([url view-fn]
    (let [sse (sse-conn)
-         cmd (clj->js
-              (set! (.-__pushHashChange js/window) true)
-              (.pushState js/history nil nil ~(str "#" url))
-              (set! (.-__pushHashChange js/window) false))]
+         cmd (str "weave.pushHistoryState('" url "');")]
 
      (d*/patch-signals!
       sse
@@ -416,10 +379,7 @@
    (broadcast-path! url nil))
   ([url view-fn]
    (let [connections (session/session-connections *session-id*)
-         cmd (clj->js
-              (set! (.-__pushHashChange js/window) true)
-              (.pushState js/history nil nil ~(str "#" url))
-              (set! (.-__pushHashChange js/window) false))]
+         cmd (str "weave.pushHistoryState('" url "');")]
      (doseq [sse connections]
        (d*/patch-signals!
         sse
@@ -440,10 +400,7 @@
   "Send a reload command to the specific browser tab/window that
    triggered the current handler."
   []
-  (d*/execute-script!
-   (sse-conn)
-   (clj->js
-    (-> js/window .-location .reload))))
+  (d*/execute-script! (sse-conn) "weave.reload();"))
 
 (defn broadcast-script!
   "Send JavaScript to all browser tabs/windows that share the same
