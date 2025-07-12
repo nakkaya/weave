@@ -87,7 +87,7 @@
 (let [key-fn (fn [v]
                (-> v csk/->kebab-case-keyword keyword))
       read-json (charred/parse-json-fn
-                  {:async? false :bufsize 1024 :key-fn key-fn})]
+                 {:async? false :bufsize 1024 :key-fn key-fn})]
   (defn get-signals
     "Extract and parse client-side signals from the request."
     [req]
@@ -206,7 +206,7 @@
   (let [headers (:headers req)
         valid-session? (and (= server-id (headers "x-server-id"))
                             (session/verify-csrf
-                              *session-id* (headers "x-csrf-token")))]
+                             *session-id* (headers "x-csrf-token")))]
     (if valid-session?
       (app-inner req server-id view options)
       (do
@@ -645,10 +645,10 @@
 
     (ig/init
      (merge
-       {:weave/nrepl (when-let [nrepl-opts (:nrepl options)]
-                       (merge {:bind "0.0.0.0" :port 8888}
-                              nrepl-opts))
-        :weave/http {:handler handler
-                     :options (merge {:bind "0.0.0.0" :port 8080}
-                                     (:http-kit options))}}
-       (:integrant options)))))
+      {:weave/nrepl (when-let [nrepl-opts (:nrepl options)]
+                      (merge {:bind "0.0.0.0" :port 8888}
+                             nrepl-opts))
+       :weave/http {:handler handler
+                    :options (merge {:bind "0.0.0.0" :port 8080}
+                                    (:http-kit options))}}
+      (:integrant options)))))

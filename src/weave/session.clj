@@ -22,14 +22,14 @@
   [key-spec data]
   (-> (doto (Mac/getInstance "HmacSHA256")
         (.init key-spec))
-    (.doFinal (.getBytes ^java.lang.String data))
-    bytes->base64))
+      (.doFinal (.getBytes ^java.lang.String data))
+      bytes->base64))
 
 (defn get-sid [req]
   (try
     (some->> (get-in req [:headers "cookie"])
-      (re-find #"weave-sid=([^;^ ]+)")
-      second)
+             (re-find #"weave-sid=([^;^ ]+)")
+             second)
     (catch Throwable _)))
 
 (defn session-cookie [sid]
