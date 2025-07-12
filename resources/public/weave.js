@@ -1,7 +1,8 @@
 window.weave = {
-    setup: function(serverId, instanceId) {
+    setup: function(serverId, instanceId, keepAlive = false) {
 	window.weaveServerId = serverId
 	window.weaveInstanceId = instanceId
+	window.weaveKeepAlive = keepAlive
 
 	tailwind.config = {darkMode: "class"}
 
@@ -73,10 +74,22 @@ import('./datastar@v1.0.0-RC.1.js').then(({ load, apply }) => {
 		currentEl = currentEl.parentElement
             }
 
-            // If no call-with data found, just use normal post
+            // Always add weave headers to options
+            const enhancedOptions = {
+                ...options,
+                headers: {
+		    'x-server-id': window.weave.server(),
+                    'x-csrf-token': window.weave.csrf(),
+                    'x-instance-id': window.weave.instance(),
+                    'x-app-path': window.weave.path(),
+                    ...(options.headers || {})
+                }
+            }
+
+            // If no call-with data found, just use normal post with enhanced options
             if (Object.keys(callWithData).length === 0) {
 		const postAction = ctx.actions.post
-		return postAction.fn(ctx, url, options)
+		return postAction.fn(ctx, url, enhancedOptions)
             }
 
             // Create a custom filtered function that includes our call-with data
@@ -92,11 +105,19 @@ import('./datastar@v1.0.0-RC.1.js').then(({ load, apply }) => {
 		filtered: enhancedFiltered
             }
 
-            // Call the original post action with enhanced context
+            // Call the original post action with enhanced context and options
             const postAction = ctx.actions.post
-            return postAction.fn(enhancedCtx, url, options)
+            return postAction.fn(enhancedCtx, url, enhancedOptions)
 	}
     }
     
     load(CallAction)
+
+    setTimeout(() => {
+        const mainEl = document.getElementById('weave-main')
+        if (mainEl) {
+            const options = window.weaveKeepAlive ? '{openWhenHidden: true}' : '{}'
+            mainEl.setAttribute('data-on-load', `@call('/app-loader', ${options})`)
+        }
+    }, 0)
 })

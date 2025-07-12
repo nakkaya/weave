@@ -25,25 +25,25 @@
 
 (deftest request-headers-test
   (testing "Test request header options"
-    (is (= "{headers: { 'x-csrf-token': $app.csrf, 'x-instance-id': $app.instance, 'x-app-path': $app.path }}"
+    (is (= "{}"
            (clean-string
             (#'core/request-options {}))))
-    (is (= "{headers: { 'x-csrf-token': $app.csrf, 'x-instance-id': $app.instance, 'x-app-path': $app.path }, contentType: 'form'}"
+    (is (= "{contentType: 'form'}"
            (clean-string
             (#'core/request-options {:type :form}))))
-    (is (= "{headers: { 'x-csrf-token': $app.csrf, 'x-instance-id': $app.instance, 'x-app-path': $app.path }, openWhenHidden: true}"
+    (is (= "{openWhenHidden: true}"
            (clean-string
             (#'core/request-options {:keep-alive true}))))
-    (is (= "{headers: { 'x-csrf-token': $app.csrf, 'x-instance-id': $app.instance, 'x-app-path': $app.path }, contentType: 'form', openWhenHidden: true}"
+    (is (= "{contentType: 'form', openWhenHidden: true}"
            (clean-string
             (#'core/request-options {:type :form :keep-alive true}))))
-    (is (= "{headers: { 'x-csrf-token': $app.csrf, 'x-instance-id': $app.instance, 'x-app-path': $app.path }, selector: '#myform'}"
+    (is (= "{selector: '#myform'}"
            (clean-string
             (#'core/request-options {:selector "#myform"}))))
-    (is (= "{headers: { 'x-csrf-token': $app.csrf, 'x-instance-id': $app.instance, 'x-app-path': $app.path }, contentType: 'form', selector: '#myform'}"
+    (is (= "{contentType: 'form', selector: '#myform'}"
            (clean-string
             (#'core/request-options {:type :form :selector "#myform"}))))
-    (is (= "{headers: { 'x-csrf-token': $app.csrf, 'x-instance-id': $app.instance, 'x-app-path': $app.path }, contentType: 'form', openWhenHidden: true, selector: '#myform'}"
+    (is (= "{contentType: 'form', openWhenHidden: true, selector: '#myform'}"
            (clean-string
             (#'core/request-options {:type :form :keep-alive true :selector "#myform"}))))))
 

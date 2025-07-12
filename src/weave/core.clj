@@ -4,7 +4,7 @@
    [charred.api :as charred]
    [clojure.java.io :as io]
    [clojure.tools.logging :as log]
-   [compojure.core :refer [GET routes]]
+   [compojure.core :refer [GET POST routes]]
    [compojure.route :as route]
    [dev.onionpancakes.chassis.core :as c]
    [integrant.core :as ig]
@@ -113,22 +113,32 @@
    Returns:
      A datastar string containing configured options."
   [opts]
-  (let [sb (StringBuilder.)]
-    (.append sb "{headers: {
-                   'x-csrf-token': $app.csrf,
-                   'x-instance-id': $app.instance,
-                   'x-app-path': $app.path
-                  }")
-    (when (or (= (:type opts) :form)
-              (= (:type opts) :sign-in))
-      (.append sb ", contentType: 'form'"))
-    (when (:keep-alive opts)
-      (.append sb ", openWhenHidden: true"))
-    (when-let [selector (:selector opts)]
-      (.append sb ", selector: '")
-      (.append sb selector)
-      (.append sb "'"))
-    (.append sb "}")
+  (let [sb (StringBuilder.)
+        has-options? (or (= (:type opts) :form)
+                         (= (:type opts) :sign-in)
+                         (:keep-alive opts)
+                         (:selector opts))]
+    (if has-options?
+      (do
+        (.append sb "{")
+        (when (or (= (:type opts) :form)
+                  (= (:type opts) :sign-in))
+          (.append sb "contentType: 'form'"))
+        (when (:keep-alive opts)
+          (when (or (= (:type opts) :form)
+                    (= (:type opts) :sign-in))
+            (.append sb ", "))
+          (.append sb "openWhenHidden: true"))
+        (when-let [selector (:selector opts)]
+          (when (or (= (:type opts) :form)
+                    (= (:type opts) :sign-in)
+                    (:keep-alive opts))
+            (.append sb ", "))
+          (.append sb "selector: '")
+          (.append sb selector)
+          (.append sb "'"))
+        (.append sb "}"))
+      (.append sb "{}"))
     (.toString sb)))
 
 (defn- app-outer
@@ -169,22 +179,11 @@
            [:script {:src "/tailwind@3.4.16.js"}]
            [:script {:type "module" :src "/weave.js"}]
            [:script {:type "module"}
-            (str "weave.setup('" server-id "', '" (random-uuid) "');")]
+            (let [keep-alive (get-in opts [:sse :keep-alive] false)]
+              (str "weave.setup('" server-id "', '" (random-uuid) "', " keep-alive ");"))]
            (:head opts)]
-          ;;
           [:body {:class "w-full h-full"}
-           [:div {:data-signals-app.server "weave.server();"}]
-           [:div {:data-signals-app.path "weave.path();"}]
-           [:div {:data-signals-app.csrf "weave.csrf();"}]
-           [:div {:data-signals-app.instance "weave.instance();"}]
-           (let [opts (if (get-in opts [:sse :keep-alive])
-                        {:keep-alive true}
-                        {})
-                 opts (request-options opts)]
-             [:div {:id "weave-main"
-                    :class "w-full h-full"
-                    :data-on-load
-                    (str "@get('/app-loader', " opts ")")}])]]]))
+           [:div {:id "weave-main" :class "w-full h-full"}]]]]))
       (resp/content-type "text/html")
       (resp/charset "UTF-8")))
 
@@ -204,10 +203,10 @@
 
    This is the entry point for all app content rendering."
   [req server-id view options]
-  (let [signals (get-signals req)
-        valid-session? (and (= server-id (-> signals :app :server))
+  (let [headers (:headers req)
+        valid-session? (and (= server-id (headers "x-server-id"))
                             (session/verify-csrf
-                             *session-id* (-> signals :app :csrf)))]
+                              *session-id* (headers "x-csrf-token")))]
     (if valid-session?
       (app-inner req server-id view options)
       (do
@@ -611,9 +610,14 @@
         routes (routes
                 (GET "/" _req
                   (app-outer server-id options))
-                (GET "/app-loader" req
-                  (bind-vars
-                   req (app-loader req server-id view options)))
+                (POST "/app-loader" req
+                  (let [body (:body req)
+                        body (if (instance? java.io.InputStream body)
+                               (slurp body)
+                               body)
+                        req (assoc req :body body)]
+                    (bind-vars
+                     req (app-loader req server-id view options))))
                 (GET "/health" _req
                   {:status 200
                    :headers {"Content-Type" "application/json"}
