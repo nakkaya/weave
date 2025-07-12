@@ -120,7 +120,19 @@
                    :lg "max-w-lg"
                    :xl "max-w-xl"
                    :2xl "max-w-2xl"
-                   :full "max-w-full mx-4"}}})
+                   :full "max-w-full mx-4"}}
+   :table {:container "overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg dark:ring-gray-700 dark:ring-opacity-50"
+           :base "min-w-full divide-y divide-gray-300 dark:divide-gray-600"
+           :header {:bg "bg-gray-50 dark:bg-gray-800"
+                    :text "text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    :padding "px-6 py-3"}
+           :body {:bg "bg-white dark:bg-gray-900"
+                  :divider "divide-y divide-gray-200 dark:divide-gray-700"}
+           :row {:hover "hover:bg-gray-50 dark:hover:bg-gray-800"
+                 :even "bg-white dark:bg-gray-900"
+                 :odd "bg-gray-50 dark:bg-gray-800"}
+           :cell {:text "text-sm text-gray-900 dark:text-gray-100"
+                  :padding "px-6 py-4 whitespace-nowrap"}}})
 
 #_:clj-kondo/ignore
 (defn with-theme
@@ -711,3 +723,64 @@
       [:div {:class container-class}
        [:div {:class dialog-class-with-size}
         content]]]]))
+
+;;    Example:
+;;    [::table {:columns [{:name "name" :label "Name" :align :left}
+;;                        {:name "age" :label "Age" :align :right}]
+;;              :rows [{:name "Alice" :age 30}
+;;                     {:name "Bob" :age 25}]}]
+(defmethod c/resolve-alias ::table
+  [_ attrs _content]
+  (let [{:keys [id columns rows class class-table class-header class-row]} attrs
+
+        ;; Get theme classes
+        container-class (or (:container-class attrs) (get-theme-class :table :container))
+        table-class (merge-classes (or (:base-class attrs) (get-theme-class :table :base)) (or class-table class))
+        header-bg (or (:header-bg-class attrs) (get-theme-class :table :header :bg))
+        header-text (or (:header-text-class attrs) (get-theme-class :table :header :text))
+        header-padding (or (:header-padding-class attrs) (get-theme-class :table :header :padding))
+        body-bg (or (:body-bg-class attrs) (get-theme-class :table :body :bg))
+        body-divider (or (:body-divider-class attrs) (get-theme-class :table :body :divider))
+        row-hover (or (:row-hover-class attrs) (get-theme-class :table :row :hover))
+        row-even (or (:row-even-class attrs) (get-theme-class :table :row :even))
+        row-odd (or (:row-odd-class attrs) (get-theme-class :table :row :odd))
+        cell-text (or (:cell-text-class attrs) (get-theme-class :table :cell :text))
+        cell-padding (or (:cell-padding-class attrs) (get-theme-class :table :cell :padding))
+
+        filtered-attrs (dissoc attrs :container-class :base-class :header-bg-class
+                               :header-text-class :header-padding-class :body-bg-class
+                               :body-divider-class :row-hover-class :row-even-class
+                               :row-odd-class :cell-text-class :cell-padding-class
+                               :class :class-table :class-header :class-row)]
+
+    [:div {:id id :class container-class}
+     [:table (merge-attrs {:class table-class} filtered-attrs)
+      ;; Header
+      [:thead {:class (tw header-bg class-header)}
+       [:tr
+        (for [column columns]
+          [:th
+           {:key (:name column)
+            :class (tw header-padding header-text
+                       (case (:align column)
+                         :right "text-right"
+                         :left "text-left"
+                         "text-left"))}
+           (:label column)])]]
+
+      ;; Body
+      [:tbody {:class (tw body-divider body-bg)}
+       (for [[index row] (map-indexed vector rows)]
+         [:tr
+          {:class (tw row-hover
+                      (if (even? index) row-even row-odd)
+                      class-row)}
+          (for [column columns]
+            [:td
+             {:key (:name column)
+              :class (tw cell-padding cell-text
+                         (case (:align column)
+                           :right "text-right"
+                           :left "text-left"
+                           "text-left"))}
+             (get row (keyword (:name column)) "-")])])]]]))
