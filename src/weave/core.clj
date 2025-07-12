@@ -342,17 +342,71 @@
 
 (defn push-html!
   "Push HTML to the specific browser tab/window that
-   triggered the handler."
-  [html]
-  (d*/patch-elements! (sse-conn) (c/html html)))
+   triggered the handler.
+
+   Args:
+   - html: The HTML content to push
+   - opts: Optional map with the following keys:
+     - :mode - The patch mode, one of:
+         :outer (default) - Morphs the outer HTML of the elements
+         :inner - Morphs the inner HTML of the elements
+         :replace - Replaces the outer HTML of the elements
+         :prepend - Prepends the elements to the target's children
+         :append - Appends the elements to the target's children
+         :before - Inserts the elements before the target as siblings
+         :after - Inserts the elements after the target as siblings
+         :remove - Removes target elements from DOM
+     - :selector - CSS selector to target specific elements
+     - :use-view-transition - Whether to use view transitions (boolean)
+     - :id - Event ID for SSE replay functionality
+     - :retry-duration - Retry duration in milliseconds"
+  ([html]
+   (push-html! html {}))
+  ([html opts]
+   (let [mode-map {:outer d*/pm-outer
+                   :inner d*/pm-inner
+                   :replace d*/pm-replace
+                   :prepend d*/pm-prepend
+                   :append d*/pm-append
+                   :before d*/pm-before
+                   :after d*/pm-after
+                   :remove d*/pm-remove}
+         mode (get mode-map (:mode opts) d*/pm-outer)
+         patch-opts (cond-> {d*/patch-mode mode}
+                      (:selector opts) (assoc d*/selector (:selector opts))
+                      (:use-view-transition opts) (assoc d*/use-view-transition (:use-view-transition opts))
+                      (:id opts) (assoc d*/id (:id opts))
+                      (:retry-duration opts) (assoc d*/retry-duration (:retry-duration opts)))]
+
+     (d*/patch-elements! (sse-conn) (c/html html) patch-opts))))
 
 (defn broadcast-html!
   "Pushes HTML to all browser tabs/windows that share the same
-   session ID."
-  [html]
-  (let [connections (session/session-connections *session-id*)]
-    (doseq [sse connections]
-      (d*/patch-elements! sse (c/html html)))))
+   session ID.
+
+   Args:
+   - html: The HTML content to broadcast
+   - opts: Optional map with the same keys as push-html!"
+  ([html]
+   (broadcast-html! html {}))
+  ([html opts]
+   (let [mode-map {:outer d*/pm-outer
+                   :inner d*/pm-inner
+                   :replace d*/pm-replace
+                   :prepend d*/pm-prepend
+                   :append d*/pm-append
+                   :before d*/pm-before
+                   :after d*/pm-after
+                   :remove d*/pm-remove}
+         mode (get mode-map (:mode opts) d*/pm-outer)
+         patch-opts (cond-> {d*/patch-mode mode}
+                      (:selector opts) (assoc d*/selector (:selector opts))
+                      (:use-view-transition opts) (assoc d*/use-view-transition (:use-view-transition opts))
+                      (:id opts) (assoc d*/id (:id opts))
+                      (:retry-duration opts) (assoc d*/retry-duration (:retry-duration opts)))
+         connections (session/session-connections *session-id*)]
+     (doseq [sse connections]
+       (d*/patch-elements! sse (c/html html) patch-opts)))))
 
 (defn push-path!
   "Change the URL hash for the specific browser tab/window that

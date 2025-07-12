@@ -137,6 +137,107 @@
         (e/quit driver)
         (ig/halt! server)))))
 
+(defn push-html-append-view []
+  [:div#view
+   [:ul#item-list
+    [:li "Item 1"]
+    [:li "Item 2"]]
+   [:button
+    {:id "append-button"
+     :data-on-click
+     (core/handler []
+                   (core/push-html!
+                    [:li "New Item"]
+                    {:mode :append :selector "#item-list"}))}
+    "Add Item"]])
+
+(deftest push-html-append-test
+  (let [view (fn [] (push-html-append-view))
+        server (core/run view test-options)
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "push-html! with append mode adds elements to list"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :append-button})
+        (is (e/visible? driver {:id :append-button}))
+
+        (let [items (e/query-all driver {:css "#item-list li"})]
+          (is (= 2 (count items))))
+
+        (e/click driver {:id :append-button})
+
+        (e/wait-predicate
+         #(= 3 (count (e/query-all driver {:css "#item-list li"}))))
+
+        (let [items (e/query-all driver {:css "#item-list li"})]
+          (is (= 3 (count items))))
+
+        (e/click driver {:id :append-button})
+
+        (e/wait-predicate
+         #(= 4 (count (e/query-all driver {:css "#item-list li"}))))
+
+        (let [items (e/query-all driver {:css "#item-list li"})]
+          (is (= 4 (count items)))))
+      (finally
+        (e/quit driver)
+        (ig/halt! server)))))
+
+(defn broadcast-html-append-view []
+  [:div#view
+   [:ul#item-list
+    [:li "Item 1"]
+    [:li "Item 2"]]
+   [:button
+    {:id "append-button"
+     :data-on-click
+     (core/handler []
+                   (core/broadcast-html!
+                    [:li "New Item"]
+                    {:mode :append :selector "#item-list"}))}
+    "Add Item"]])
+
+(deftest broadcast-html-append-test
+  (let [view (fn [] (broadcast-html-append-view))
+        server (core/run view test-options)
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "broadcast-html! with append mode adds elements to list across tabs"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :append-button})
+
+        (e/js-execute driver "window.open(arguments[0], '_blank');" test-url)
+
+        (let [handles (e/get-window-handles driver)
+              tab1 (first handles)
+              tab2 (second handles)]
+
+          (e/switch-window driver tab1)
+          (e/wait-visible driver {:id :append-button})
+          (let [items (e/query-all driver {:css "#item-list li"})]
+            (is (= 2 (count items))))
+
+          (e/switch-window driver tab2)
+          (e/wait-visible driver {:id :append-button})
+          (let [items (e/query-all driver {:css "#item-list li"})]
+            (is (= 2 (count items))))
+
+          (e/switch-window driver tab1)
+          (e/click driver {:id :append-button})
+
+          (e/wait-predicate
+           #(= 3 (count (e/query-all driver {:css "#item-list li"}))))
+
+          (e/switch-window driver tab2)
+          (e/wait-predicate
+           #(= 3 (count (e/query-all driver {:css "#item-list li"}))))
+
+          (let [items (e/query-all driver {:css "#item-list li"})]
+            (is (= 3 (count items))))))
+      (finally
+        (e/quit driver)
+        (ig/halt! server)))))
+
 (defn form-submission-view []
   [:div {:id "view"}
    [:h1 "Form Submission Test"]
