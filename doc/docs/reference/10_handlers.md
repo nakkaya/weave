@@ -89,14 +89,14 @@ you can store state as signals in the browser and access them via
    [::c/center-hv
     [::c/card
      [:div.text-center.text-6xl.font-bold.mb-6.text-blue-600
-      {:data-signals-click-count "0"
-       :data-text "$click_count"}]
+      {:data-signals-count "0"
+       :data-text "$count"}]
      [::c/button
       {:size :xl
        :variant :primary
        :data-on-click (weave/handler []
-                        (let [current-count (or (:click-count weave/*signals*) 0)]
-                          (weave/push-signal! {:click-count (inc current-count)})))}
+                        (let [count (or (:count weave/*signals*) 0)]
+                          (weave/push-signal! {:count (inc count)})))}
       "Increment Count"]]]])
 ```
 
