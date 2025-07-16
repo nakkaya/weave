@@ -1,6 +1,7 @@
 (ns weave.core
   (:require
    [camel-snake-kebab.core :as csk]
+   [camel-snake-kebab.extras :as cske]
    [charred.api :as charred]
    [clojure.java.io :as io]
    [clojure.tools.logging :as log]
@@ -468,7 +469,9 @@
    triggered the current handler."
   [signal]
   (d*/patch-signals!
-   (sse-conn) (charred/write-json-str signal)))
+   (sse-conn) (->> signal
+                   (cske/transform-keys csk/->camelCase)
+                   (charred/write-json-str))))
 
 (defn set-cookie!
   "Send a Set-Cookie header to the specific browser tab/window that
