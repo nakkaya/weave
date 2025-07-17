@@ -1,6 +1,7 @@
 (ns weave.components
   (:require
    [dev.onionpancakes.chassis.core :as c]
+   [camel-snake-kebab.core :as csk]
    [clojure.string :as str]
    [clojure.java.io :as io]
    [weave.core :as core]
@@ -706,7 +707,7 @@
 (defmethod c/resolve-alias ::modal
   [_ attrs content]
   (let [size (or (:size attrs) :md)
-        signal (or (:id attrs) "modal")
+        signal (or (csk/->camelCase (:id attrs)) "modal")
         overlay-class (get-theme-class :modal :overlay)
         container-class (get-theme-class :modal :container)
         dialog-class (get-theme-class :modal :dialog)
