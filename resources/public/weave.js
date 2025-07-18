@@ -63,7 +63,7 @@ import('./datastar@v1.0.0-RC.1.js').then(({ load, apply }) => {
 		for (const [key, value] of Object.entries(currentEl.dataset)) {
 		    if (key.startsWith(prefix)) {
 			foundCallWith = true
-			const paramName = key.slice(prefix.length).toLowerCase()
+			const paramName = key.slice(prefix.length)
 			if (!(paramName in callWithData)) {
 			    callWithData[paramName] = value
 			}

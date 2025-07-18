@@ -668,6 +668,72 @@
         (e/quit driver)
         (ig/halt! server)))))
 
+(defn data-call-with-view []
+  [:div {:id "view"}
+   [:div#result "No action performed yet"]
+   (let [handle-action (core/handler []
+                         (let [{:keys [action item-id]} core/*signals*]
+                           (core/push-html!
+                             [:div#result (str "Action: " action ", Item: " item-id)])))]
+     [:div.button-group
+      [:button#edit-button
+       {:data-call-with-action "edit"
+        :data-call-with-item-id "123"
+        :data-on-click handle-action}
+       "Edit"]
+      [:button#delete-button
+       {:data-call-with-action "delete"
+        :data-call-with-item-id "456"
+        :data-on-click handle-action}
+       "Delete"]])])
+
+(deftest data-call-with-test-with-sse
+  (let [server (core/run data-call-with-view test-options)
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test data-call-with attribute functionality with SSE enabled"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :edit-button})
+        (is (e/visible? driver {:id :edit-button}))
+        (is (= "No action performed yet" (e/get-element-text driver {:id :result})))
+
+        (e/click driver {:id :edit-button})
+        (e/wait-predicate
+         #(= "Action: edit, Item: 123" (e/get-element-text driver {:id :result})))
+        (is (= "Action: edit, Item: 123" (e/get-element-text driver {:id :result})))
+
+        (e/click driver {:id :delete-button})
+        (e/wait-predicate
+         #(= "Action: delete, Item: 456" (e/get-element-text driver {:id :result})))
+        (is (= "Action: delete, Item: 456" (e/get-element-text driver {:id :result}))))
+      (finally
+        (e/quit driver)
+        (ig/halt! server)))))
+
+(deftest data-call-with-test-without-sse
+  (let [server (core/run data-call-with-view
+                         (assoc-in test-options [:sse :enabled] false))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test data-call-with attribute functionality with SSE disabled"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :edit-button})
+        (is (e/visible? driver {:id :edit-button}))
+        (is (= "No action performed yet" (e/get-element-text driver {:id :result})))
+
+        (e/click driver {:id :edit-button})
+        (e/wait-predicate
+         #(= "Action: edit, Item: 123" (e/get-element-text driver {:id :result})))
+        (is (= "Action: edit, Item: 123" (e/get-element-text driver {:id :result})))
+
+        (e/click driver {:id :delete-button})
+        (e/wait-predicate
+         #(= "Action: delete, Item: 456" (e/get-element-text driver {:id :result})))
+        (is (= "Action: delete, Item: 456" (e/get-element-text driver {:id :result}))))
+      (finally
+        (e/quit driver)
+        (ig/halt! server)))))
+
 (defn set-cookie-view []
   [:div {:id "view"}
    [:div#cookie-status "No cookie set"]
@@ -675,8 +741,8 @@
     {:id "set-cookie-button"
      :data-on-click
      (core/handler []
-      (core/set-cookie! "test-cookie=cookie-value; Path=/; Max-Age=3600")
-      (core/push-script! "document.getElementById('cookie-status').textContent = 'Cookie set: ' + document.cookie;"))}
+                   (core/set-cookie! "test-cookie=cookie-value; Path=/; Max-Age=3600")
+                   (core/push-script! "document.getElementById('cookie-status').textContent = 'Cookie set: ' + document.cookie;"))}
     "Set Cookie"]])
 
 (deftest set-cookie-test
@@ -713,15 +779,15 @@
     {:id "sign-in-button"
      :data-on-click
      (core/handler []
-      (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
-      (core/push-reload!))}
+                   (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
+                   (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
      :data-on-click
      (core/handler []
-      (core/set-cookie! (session/sign-out))
-      (core/push-reload!))}
+                   (core/set-cookie! (session/sign-out))
+                   (core/push-reload!))}
     "Sign Out"]])
 
 (deftest session-management-test
@@ -739,7 +805,7 @@
 
         (e/wait-visible driver {:id :sign-out-button})
         (e/wait-predicate #(= "Authenticated as TestUser"
-                             (e/get-element-text driver {:id :auth-status})))
+                              (e/get-element-text driver {:id :auth-status})))
         (is (= "Authenticated as TestUser"
                (e/get-element-text driver {:id :auth-status})))
 
@@ -747,7 +813,7 @@
 
         (e/wait-visible driver {:id :sign-in-button})
         (e/wait-predicate #(= "Not authenticated"
-                             (e/get-element-text driver {:id :auth-status})))
+                              (e/get-element-text driver {:id :auth-status})))
         (is (= "Not authenticated"
                (e/get-element-text driver {:id :auth-status}))))
       (finally
@@ -764,21 +830,21 @@
     {:id "sign-in-button"
      :data-on-click
      (core/handler []
-      (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
-      (core/push-reload!))}
+                   (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
+                   (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
      :data-on-click
      (core/handler []
-      (core/set-cookie! (session/sign-out))
-      (core/push-reload!))}
+                   (core/set-cookie! (session/sign-out))
+                   (core/push-reload!))}
     "Sign Out"]
    [:button
     {:id "protected-action-button"
      :data-on-click
      (core/handler ^{:auth-required? true} []
-      (core/push-script! "document.getElementById('protected-result').textContent = 'Protected action executed!';"))}
+                   (core/push-script! "document.getElementById('protected-result').textContent = 'Protected action executed!';"))}
     "Execute Protected Action"]
    [:div#protected-result "Protected action not executed"]])
 
@@ -803,12 +869,12 @@
 
         (e/wait-visible driver {:id :sign-out-button})
         (e/wait-predicate #(= "Authenticated as TestUser"
-                             (e/get-element-text driver {:id :auth-status})))
+                              (e/get-element-text driver {:id :auth-status})))
 
         (e/click driver {:id :protected-action-button})
 
         (e/wait-predicate #(= "Protected action executed!"
-                             (e/get-element-text driver {:id :protected-result})))
+                              (e/get-element-text driver {:id :protected-result})))
         (is (= "Protected action executed!"
                (e/get-element-text driver {:id :protected-result}))))
       (finally
@@ -868,27 +934,27 @@
     {:id "sign-in-button"
      :data-on-click
      (core/handler ^{:auth-required? false} []
-      (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
-      (core/push-reload!))}
+                   (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
+                   (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
      :data-on-click
      (core/handler ^{:auth-required? false} []
-      (core/set-cookie! (session/sign-out))
-      (core/push-reload!))}
+                   (core/set-cookie! (session/sign-out))
+                   (core/push-reload!))}
     "Sign Out"]
    [:button
     {:id "secure-action-button"
      :data-on-click
      (core/handler []
-      (core/push-script! "document.getElementById('secure-result').textContent = 'Secure action executed!';"))}
+                   (core/push-script! "document.getElementById('secure-result').textContent = 'Secure action executed!';"))}
     "Execute Secure Action"]
    [:button
     {:id "public-action-button"
      :data-on-click
      (core/handler ^{:auth-required? false} []
-      (core/push-script! "document.getElementById('public-result').textContent = 'Public action executed!';"))}
+                   (core/push-script! "document.getElementById('public-result').textContent = 'Public action executed!';"))}
     "Execute Public Action"]
    [:div#secure-result "Secure action not executed"]
    [:div#public-result "Public action not executed"]])
