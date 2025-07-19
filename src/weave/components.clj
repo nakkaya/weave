@@ -562,12 +562,41 @@
 
 (defmethod c/resolve-alias ::sidebar-group
   [_ attrs content]
-  [:div.mb-6
-   (when-let [title (:title attrs)]
-     [:h3.px-3.mb-2.text-xs.font-semibold.text-gray-400.uppercase
-      title])
-   [:ul.space-y-1
-    content]])
+  (if (contains? attrs :collapsed)
+    ;; Collapsible version when :collapsed attribute is present
+    (let [collapsed? (:collapsed attrs)
+          group-id (or (:id attrs) (str "sidebar-group-" (gensym)))]
+      [:div.mb-6
+       ;; Hidden checkbox that controls the state
+       [:input {:type "checkbox"
+                :id group-id
+                :class "peer hidden"
+                :checked (not collapsed?)}]
+
+       (when-let [title (:title attrs)]
+         [:label.px-3.mb-2.text-xs.font-semibold.text-gray-400.uppercase.cursor-pointer.flex.items-center.justify-between.select-none
+          {:for group-id}
+          title
+          ;; Chevron icon that rotates based on state
+          [:svg.w-4.h-4.transition-transform.peer-checked:rotate-180
+           {:fill "none" :stroke "currentColor" :viewBox "0 0 24 24"}
+           [:path {:stroke-linecap "round" :stroke-linejoin "round" :stroke-width "2"
+                   :d "M19 9l-7 7-7-7"}]]])
+
+       ;; Content that shows/hides based on checkbox state
+       [:ul.space-y-1.overflow-hidden.transition-all.duration-300.ease-in-out
+        {:class (if collapsed?
+                  "peer-checked:max-h-0 max-h-96"
+                  "peer-checked:max-h-96 max-h-0")}
+        content]])
+
+    ;; Static version when :collapsed attribute is not present (original behavior)
+    [:div.mb-6
+     (when-let [title (:title attrs)]
+       [:h3.px-3.mb-2.text-xs.font-semibold.text-gray-400.uppercase
+        title])
+     [:ul.space-y-1
+      content]]))
 
 (defmethod c/resolve-alias ::sidebar-item
   [_ attrs content]

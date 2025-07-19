@@ -156,9 +156,9 @@
       [::c/view#app
        (case route-name
          :sign-in (session-sign-in-view)
-         :app     [::c/center-hv
-                   [::c/card
-                    (session-app-view)]])])
+         :app [::c/center-hv
+               [::c/card
+                (session-app-view)]])])
     (session-sign-in-view)))
 
 (defn navbar-example []
@@ -171,19 +171,19 @@
      {:icon "solid-home"
       :active true
       :handler (weave/handler []
-                (println "Home clicked"))}
+                 (println "Home clicked"))}
      "Home"]
 
     [::c/navbar-item
      {:icon "solid-user"
       :handler (weave/handler []
-                (println "Profile clicked"))}
+                 (println "Profile clicked"))}
      "Profile"]
 
     [::c/navbar-item
      {:icon "solid-cog"
       :handler (weave/handler []
-                (println "Settings clicked"))}
+                 (println "Settings clicked"))}
      "Settings"]]
 
    [::c/center-hv
@@ -194,7 +194,6 @@
 (defn sidebar-example []
   [::c/view#app
    [::c/sidebar-layout
-    ;; Pre-built sidebar
     [::c/sidebar
      {:logo-url "/weave.svg"
       :title "Weave Demo"}
@@ -205,39 +204,53 @@
        {:icon "solid-home"
         :active true
         :handler (weave/handler []
-                  (println "Home clicked"))}
+                   (println "Home clicked"))}
        "Home"]
 
       [::c/sidebar-item
        {:icon "solid-user"
         :handler (weave/handler []
-                  (println "Profile clicked"))}
+                   (println "Profile clicked"))}
        "Profile"]
 
       [::c/sidebar-item
        {:icon "solid-cog"
         :handler (weave/handler []
-                  (println "Settings clicked"))}
+                   (println "Settings clicked"))}
        "Settings"]]
 
      [::c/sidebar-group
-      {:title "Content"}
+      {:title "Content"
+       :collapsed true}
       [::c/sidebar-item
        {:icon "solid-document-text"
         :handler (weave/handler []
-                  (println "Documents clicked"))}
+                   (println "Documents clicked"))}
        "Documents"]
 
       [::c/sidebar-item
        {:icon "solid-photo"
         :handler (weave/handler []
-                  (println "Photos clicked"))}
+                   (println "Photos clicked"))}
        "Photos"]]
 
-     ;; Spacer to push content to bottom
+     [::c/sidebar-group
+      {:title "Tools"
+       :collapsed false}
+      [::c/sidebar-item
+       {:icon "solid-wrench"
+        :handler (weave/handler []
+                   (println "Tools clicked"))}
+       "Tools"]
+
+      [::c/sidebar-item
+       {:icon "solid-chart-bar"
+        :handler (weave/handler []
+                   (println "Analytics clicked"))}
+       "Analytics"]]
+
      [:div.flex-1]
 
-     ;; Bottom section
      [::c/sidebar-group
       {:title "Account"}
       [::c/sidebar-item
