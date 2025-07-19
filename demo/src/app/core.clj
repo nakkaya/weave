@@ -193,69 +193,71 @@
 
 (defn sidebar-example []
   [::c/view#app
-   {:class "flex flex-row"}
-   [::c/sidebar
-    {:logo-url "/weave.svg"
-     :title "Weave Demo"}
+   [::c/sidebar-layout
+    ;; Pre-built sidebar
+    [::c/sidebar
+     {:logo-url "/weave.svg"
+      :title "Weave Demo"}
 
-    [::c/sidebar-group
-     {:title "Main"}
-     [::c/sidebar-item
-      {:icon "solid-home"
-       :active true
-       :handler (weave/handler []
-                 (println "Home clicked"))}
-      "Home"]
+     [::c/sidebar-group
+      {:title "Main"}
+      [::c/sidebar-item
+       {:icon "solid-home"
+        :active true
+        :handler (weave/handler []
+                  (println "Home clicked"))}
+       "Home"]
 
-     [::c/sidebar-item
-      {:icon "solid-user"
-       :handler (weave/handler []
-                 (println "Profile clicked"))}
-      "Profile"]
+      [::c/sidebar-item
+       {:icon "solid-user"
+        :handler (weave/handler []
+                  (println "Profile clicked"))}
+       "Profile"]
 
-     [::c/sidebar-item
-      {:icon "solid-cog"
-       :handler (weave/handler []
-                 (println "Settings clicked"))}
-      "Settings"]]
+      [::c/sidebar-item
+       {:icon "solid-cog"
+        :handler (weave/handler []
+                  (println "Settings clicked"))}
+       "Settings"]]
 
-    [::c/sidebar-group
-     {:title "Content"}
-     [::c/sidebar-item
-      {:icon "solid-document-text"
-       :handler (weave/handler []
-                 (println "Documents clicked"))}
-      "Documents"]
+     [::c/sidebar-group
+      {:title "Content"}
+      [::c/sidebar-item
+       {:icon "solid-document-text"
+        :handler (weave/handler []
+                  (println "Documents clicked"))}
+       "Documents"]
 
-     [::c/sidebar-item
-      {:icon "solid-photo"
-       :handler (weave/handler []
-                 (println "Photos clicked"))}
-      "Photos"]]
+      [::c/sidebar-item
+       {:icon "solid-photo"
+        :handler (weave/handler []
+                  (println "Photos clicked"))}
+       "Photos"]]
 
-    ;; Spacer to push content to bottom
-    [:div.flex-1]
+     ;; Spacer to push content to bottom
+     [:div.flex-1]
 
-    ;; Bottom section
-    [::c/sidebar-group
-     {:title "Account"}
-     [::c/sidebar-item
-      {:icon "solid-user-circle"
-       :handler (weave/handler []
-                 (println "Account clicked"))}
-      "My Account"]
+     ;; Bottom section
+     [::c/sidebar-group
+      {:title "Account"}
+      [::c/sidebar-item
+       {:icon "solid-user-circle"
+        :handler (weave/handler []
+                  (println "Account clicked"))}
+       "My Account"]
 
-     [::c/sidebar-item
-      {:icon "solid-arrow-right-on-rectangle"
-       :handler (weave/handler []
-                 (println "Logout clicked"))}
-      "Logout"]]]
+      [::c/sidebar-item
+       {:icon "solid-arrow-right-on-rectangle"
+        :handler (weave/handler []
+                  (println "Logout clicked"))}
+       "Logout"]]]
 
-   [:div.flex-1.ml-64
+    ;; Main content
     [::c/center-hv
      [::c/card
       [:h1.text-2xl.font-bold.mb-4 "Sidebar Example"]
-      [:p "This example demonstrates the sidebar component with multiple groups and items."]]]]])
+      [:p "This example demonstrates the sidebar component with multiple groups and items."]
+      [:p.mt-4.text-sm.text-gray-600 "Try toggling the sidebar on smaller screens to see the responsive behavior."]]]]])
 
 (defn modal-example []
   [::c/view#app

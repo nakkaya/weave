@@ -510,21 +510,23 @@
 
     [:div.flex.h-screen
      ;; Sidebar backdrop for mobile
-     [:div#sidebar-backdrop.fixed.inset-0.bg-gray-800.bg-opacity-75.z-20.hidden.md:hidden
+     [:div#sidebar-backdrop.fixed.inset-0.bg-gray-800.bg-opacity-75.z-20.hidden.lg:hidden
       {:onclick (clj->js
                  (let [sidebar (js/document.getElementById "sidebar")
-                       backdrop (js/document.getElementById "sidebar-backdrop")]
+                       backdrop (js/document.getElementById "sidebar-backdrop")
+                       content (js/document.getElementById "sidebar-content")]
                    (.add (.-classList sidebar) "-translate-x-full")
-                   (.add (.-classList backdrop) "hidden")))}]
+                   (.add (.-classList backdrop) "hidden")
+                   ;; On mobile, add ml-0 to override the margin
+                   (when content (.add (.-classList content) "ml-0"))))}]
 
-     ;; Sidebar itself
      [:aside#sidebar
       {:class (tw theme-bg
                   "fixed inset-y-0 left-0 z-30 w-64"
-                  "transform -translate-x-full md:translate-x-0"
+                  "transform -translate-x-full lg:translate-x-0"
                   "transition-transform duration-300 ease-in-out")}
 
-      ;; Sidebar header
+      ;; Header
       [:div.flex.items-center.justify-between.px-4.py-3.border-b.border-gray-700
        [:div.flex.items-center.gap-3
         [:img.h-8.w-auto
@@ -534,25 +536,38 @@
            {:class "font-medium text-lg text-gray-300 dark:text-gray-300"}
            title])]]
 
-      ;; Sidebar content - just pass through the content
       [:nav
        {:class "flex-1 px-2 py-4 overflow-y-auto flex flex-col h-[calc(100%-4rem)]"}
        content]]
 
      ;; Toggle button for mobile
-     [:div.fixed.bottom-4.left-4.md:hidden.z-30
+     [:div.fixed.bottom-4.left-4.lg:hidden.z-30
       [:button.p-2.rounded-full.bg-gray-800.text-white.shadow-lg
        {:onclick (clj->js
                   (let [sidebar (js/document.getElementById "sidebar")
-                        backdrop (js/document.getElementById "sidebar-backdrop")]
+                        backdrop (js/document.getElementById "sidebar-backdrop")
+                        content (js/document.getElementById "sidebar-content")]
                     (if (.contains (.-classList sidebar) "-translate-x-full")
                       (do
                         (.remove (.-classList sidebar) "-translate-x-full")
-                        (.remove (.-classList backdrop) "hidden"))
+                        (.remove (.-classList backdrop) "hidden")
+                        ;; On mobile, remove the ml-0 override to show the margin
+                        (when content (.remove (.-classList content) "ml-0")))
                       (do
                         (.add (.-classList sidebar) "-translate-x-full")
-                        (.add (.-classList backdrop) "hidden")))))}
+                        (.add (.-classList backdrop) "hidden")
+                        ;; On mobile, add ml-0 to override the margin
+                        (when content (.add (.-classList content) "ml-0"))))))}
        [::icon#solid-bars-3 {:class "h-6 w-6"}]]]]))
+
+(defmethod c/resolve-alias ::sidebar-group
+  [_ attrs content]
+  [:div.mb-6
+   (when-let [title (:title attrs)]
+     [:h3.px-3.mb-2.text-xs.font-semibold.text-gray-400.uppercase
+      title])
+   [:ul.space-y-1
+    content]])
 
 (defmethod c/resolve-alias ::sidebar-item
   [_ attrs content]
@@ -574,14 +589,15 @@
         [::icon {:id icon :class "h-5 w-5 mr-2"}])
       (or content (:label attrs))]]))
 
-(defmethod c/resolve-alias ::sidebar-group
+(defmethod c/resolve-alias ::sidebar-layout
   [_ attrs content]
-  [:div.mb-6
-   (when-let [title (:title attrs)]
-     [:h3.px-3.mb-2.text-xs.font-semibold.text-gray-400.uppercase
-      title])
-   [:ul.space-y-1
-    content]])
+  (let [sidebar-element (first content)
+        content-element (second content)]
+    [:div.flex.h-screen
+     sidebar-element
+     [:div#sidebar-content
+      {:class "flex-1 transition-all duration-300 ease-in-out ml-0 lg:ml-64 overflow-auto"}
+      content-element]]))
 
 (defmethod c/resolve-alias ::navbar-item
   [_ attrs content]
