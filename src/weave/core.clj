@@ -178,6 +178,7 @@
            [:title (or (:title opts) "Weave")]
            ;;
            [:script {:src "/tailwind@3.4.16.js"}]
+           [:script {:src "/squint@v0.8.147.js"}]
            [:script {:type "module" :src "/weave.js"}]
            [:script {:type "module"}
             (let [keep-alive (get-in opts [:sse :keep-alive] false)]
