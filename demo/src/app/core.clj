@@ -309,6 +309,40 @@
        :data-on-click "$demo_modal = true"}
       "Open Modal"]]]])
 
+(defn tabs-example []
+  [::c/view#app
+   [::c/col.max-w-4xl.mx-auto.p-6
+    [:h1.text-2xl.font-bold.mb-6 "Tabs Example"]
+
+    [::c/tabs
+     [::c/tab-item
+      {:icon "solid-user"
+       :active true
+       :handler (weave/handler []
+                  (weave/push-html! [:h2#message.text-xl.font-bold "My Account"]))}
+      "My Account"]
+
+     [::c/tab-item
+      {:icon "solid-building-office"
+       :handler (weave/handler []
+                  (weave/push-html! [:h2#message.text-xl.font-bold "Company"]))}
+      "Company"]
+
+     [::c/tab-item
+      {:icon "solid-users"
+       :handler (weave/handler []
+                  (weave/push-html! [:h2#message.text-xl.font-bold "Team Members"]))}
+      "Team Members"]
+
+     [::c/tab-item
+      {:icon "solid-credit-card"
+       :handler (weave/handler []
+                  (weave/push-html! [:h2#message.text-xl.font-bold "Billing"]))}
+      "Billing"]]
+
+    [::c/card#tab-content.mt-6
+     [:h2#message.text-xl.font-bold "Team Members"]]]])
+
 (defn run [options]
   (let [view (condp = (:view options)
                :click-count #'click-count-view
@@ -317,7 +351,8 @@
                :navigation #'navigation-view
                :navbar #'navbar-example
                :sidebar #'sidebar-example
-               :modal #'modal-example)]
+               :modal #'modal-example
+               :tabs #'tabs-example)]
     (weave/run view options)))
 
 (defn -main

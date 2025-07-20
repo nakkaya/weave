@@ -628,6 +628,47 @@
       {:class "flex-1 transition-all duration-300 ease-in-out ml-0 lg:ml-64 overflow-auto"}
       content-element]]))
 
+(defmethod c/resolve-alias ::tabs
+  [_ attrs content]
+  [:div
+   ;; Mobile vertical tabs (hidden on larger screens)
+   [:div.sm:hidden
+    [:nav {:aria-label "Tabs"
+           :class "flex flex-col space-y-1"}
+     content]]
+
+   ;; Desktop horizontal tabs (hidden on mobile)
+   [:div.hidden.sm:block
+    [:div.border-b.border-gray-200
+     [:nav {:aria-label "Tabs"
+            :class "-mb-px flex space-x-8"}
+      content]]]])
+
+(defmethod c/resolve-alias ::tab-item
+  [_ attrs content]
+  (let [active? (get attrs :active false)
+        icon (get attrs :icon nil)
+        handler (get attrs :handler nil)
+        label (or content (:label attrs))
+        base-classes "group inline-flex items-center text-sm font-medium"
+        desktop-classes "sm:border-b-2 sm:border-l-0 sm:px-1 sm:py-4"
+        mobile-classes "border-l-2 border-b-0 px-4 py-3 w-full sm:w-auto"
+        active-classes (if active?
+                         "border-indigo-500 text-indigo-600"
+                         "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700")
+        icon-classes (if active?
+                       "text-indigo-500"
+                       "text-gray-400 group-hover:text-gray-500")]
+    [:a {:class (tw base-classes desktop-classes mobile-classes active-classes)
+         :href "#"
+         :aria-current (when active? "page")
+         :data-on-click handler}
+     (when icon
+       [::icon {:id icon
+                :size 5
+                :class (tw "mr-2 -ml-0.5" icon-classes)}])
+     [:span label]]))
+
 (defmethod c/resolve-alias ::navbar-item
   [_ attrs content]
   (let [theme-text (or (:text-class attrs) (get-theme-class :navbar :text))
