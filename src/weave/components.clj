@@ -122,7 +122,7 @@
                    :xl "max-w-xl"
                    :2xl "max-w-2xl"
                    :full "max-w-full mx-4"}}
-   :table {:container "overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg dark:ring-gray-700 dark:ring-opacity-50"
+   :table {:container "overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg dark:ring-gray-700 dark:ring-opacity-50"
            :base "min-w-full divide-y divide-gray-300 dark:divide-gray-600"
            :header {:bg "bg-gray-50 dark:bg-gray-800"
                     :text "text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
