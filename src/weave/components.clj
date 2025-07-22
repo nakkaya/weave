@@ -630,7 +630,7 @@
 
 (defmethod c/resolve-alias ::tabs
   [_ attrs content]
-  [:div
+  [:div attrs
    ;; Mobile vertical tabs (hidden on larger screens)
    [:div.sm:hidden
     [:nav {:aria-label "Tabs"
