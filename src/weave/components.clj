@@ -659,8 +659,7 @@
         icon-classes (if active?
                        "text-indigo-500"
                        "text-gray-400 group-hover:text-gray-500")]
-    [:a {:class (tw base-classes desktop-classes mobile-classes active-classes)
-         :href "#"
+    [:a {:class (tw base-classes desktop-classes mobile-classes active-classes "cursor-pointer")
          :aria-current (when active? "page")
          :data-on-click handler}
      (when icon
