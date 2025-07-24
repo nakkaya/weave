@@ -280,7 +280,7 @@
     (let [uri (:uri request)
           method (:request-method request)]
       (if (and (= method :post)
-               (.startsWith uri "/h/"))
+               (.startsWith ^String uri "/h/"))
         (let [route-hash (subs uri 3)
               handlers @*event-handlers*
               handler-entry (get handlers route-hash)]

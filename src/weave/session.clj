@@ -42,24 +42,24 @@
 
 (defn create-jwt [payload secret-key]
   (let [header (charred/write-json-str {:alg "HS256" :typ "JWT"})
-        encoded-header (bytes->base64 (.getBytes header))
-        encoded-payload (bytes->base64 (.getBytes (charred/write-json-str payload)))
+        encoded-header (bytes->base64 (.getBytes ^String header))
+        encoded-payload (bytes->base64 (.getBytes ^String (charred/write-json-str payload)))
         signature-data (str encoded-header "." encoded-payload)
         key-spec (secret-key->hmac-sha256-keyspec secret-key)
         signature (hmac-sha256 key-spec signature-data)]
     (str encoded-header "." encoded-payload "." signature)))
 
 (defn verify-jwt [token secret-key]
-  (try
-    (let [[header-b64 payload-b64 signature] (clojure.string/split token #"\.")
-          signature-data (str header-b64 "." payload-b64)
-          key-spec (secret-key->hmac-sha256-keyspec secret-key)
-          expected-signature (hmac-sha256 key-spec signature-data)]
-      (when (= signature expected-signature)
-        (charred/read-json
-         (String. (.decode (Base64/getUrlDecoder) payload-b64))
-         :key-fn keyword)))
-    (catch Exception _ nil)))
+  (let [[header-b64 payload-b64 signature] (clojure.string/split token #"\.")
+        signature-data (str header-b64 "." payload-b64)
+        key-spec (secret-key->hmac-sha256-keyspec secret-key)
+        expected-signature (hmac-sha256 key-spec signature-data)]
+    (when (= signature expected-signature)
+      (charred/read-json
+       (String. (.decode
+                 ^java.util.Base64$Decoder (Base64/getUrlDecoder)
+                 (.getBytes ^String payload-b64)))
+       :key-fn keyword))))
 
 (defn auth-cookie [jwt]
   (str "weave-auth=" jwt "; Path=/; SameSite=Lax; Max-Age=86400"))
