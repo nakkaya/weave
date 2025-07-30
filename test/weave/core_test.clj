@@ -668,6 +668,63 @@
         (e/quit driver)
         (ig/halt! server)))))
 
+(defn local-signal-view []
+  [:div {:id "view"}
+   [:button
+    {:id "show-button"
+     :data-on-click
+     (core/handler []
+       (core/push-signal! {:_show-div true}))}
+    "Show Hidden Div"]
+   [:div {:id "hidden-div"
+          :data-show "$_showDiv"}
+    "This div was hidden but is now visible!"]])
+
+(deftest local-signal-test-with-sse
+  (let [server (core/run local-signal-view test-options)
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test local signal with underscore prefix"
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :show-button})
+        (is (e/visible? driver {:id :show-button}))
+
+        ;; Initially the div should be hidden
+        (is (not (e/visible? driver {:id :hidden-div})))
+
+        ;; Click button to show the div
+        (e/click driver {:id :show-button})
+
+        ;; Wait for the div to become visible
+        (e/wait-visible driver {:id :hidden-div})
+        (is (e/visible? driver {:id :hidden-div})))
+      (finally
+        (e/quit driver)
+        (ig/halt! server)))))
+
+(deftest local-signal-test-without-sse
+  (let [server (core/run local-signal-view
+                         (assoc-in test-options [:sse :enabled] false))
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test local signal with underscore prefix."
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :show-button})
+        (is (e/visible? driver {:id :show-button}))
+
+        ;; Initially the div should be hidden
+        (is (not (e/visible? driver {:id :hidden-div})))
+
+        ;; Click button to show the div
+        (e/click driver {:id :show-button})
+
+        ;; Wait for the div to become visible
+        (e/wait-visible driver {:id :hidden-div})
+        (is (e/visible? driver {:id :hidden-div})))
+      (finally
+        (e/quit driver)
+        (ig/halt! server)))))
+
 (defn data-call-with-view []
   [:div {:id "view"}
    [:div#result "No action performed yet"]

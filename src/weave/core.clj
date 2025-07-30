@@ -85,8 +85,14 @@
                *signals* (get-signals ~req)]
        ~@body)))
 
+(defn- from-camel-case
+  [s]
+  (if (and s (seq s) (= (first s) \_))
+    (str "_" (csk/->kebab-case (subs s 1)))
+    (csk/->kebab-case s)))
+
 (let [key-fn (fn [v]
-               (-> v csk/->kebab-case-keyword keyword))
+               (-> v from-camel-case keyword))
       read-json (charred/parse-json-fn
                  {:async? false :bufsize 1024 :key-fn key-fn})]
   (defn get-signals
@@ -465,13 +471,21 @@
     (doseq [sse connections]
       (d*/execute-script! sse script))))
 
+(defn- to-camel-case
+  [x]
+  (let [s (name x)
+        v (if (and (seq s) (= (first s) \_))
+            (str "_" (csk/->camelCase (subs s 1)))
+            (csk/->camelCase s))]
+    (if (keyword? x) (keyword v) v)))
+
 (defn push-signal!
   "Send updated signal values to the specific browser tab/window that
    triggered the current handler."
   [signal]
   (d*/patch-signals!
    (sse-conn) (->> signal
-                   (cske/transform-keys csk/->camelCase)
+                   (cske/transform-keys to-camel-case)
                    (charred/write-json-str))))
 
 (defn set-cookie!
