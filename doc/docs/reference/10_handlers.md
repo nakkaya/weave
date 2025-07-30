@@ -48,16 +48,9 @@ Options are provided as metadata (optional):
 - `:type` - Request content type (use `:form` for form submissions)
 - `:selector` - CSS selector for the form to submit (e.g. `"#myform"`)
 
-## Example
+## Examples
 
-```clojure
-{:data-on-click
- (weave/handler []
-  ;; This code runs on the server when the button is clicked
-  (weave/push-html! [:div#message "Button clicked!"]))}
-```
-
-## Example with Variables
+## With Variables
 
 ```clojure
 (let [message "Hello from server!"]
@@ -74,14 +67,12 @@ When this handler is registered, Weave:
  - Returns client-side code that will POST to that route when the
    click event occurs
 
-## Handlers with Signals
+## With Signals
 
 Signals provide a powerful alternative to variable capture for
 managing dynamic state. Instead of capturing variables in closures,
 you can store state as signals in the browser and access them via
 `weave/*signals*`.
-
-### Basic `:data-signals-*` Example
 
 ```clojure
 (defn click-count-view []
@@ -103,10 +94,10 @@ you can store state as signals in the browser and access them via
 In this example:
 
 - `data-signals-click-count="0"` initializes the signal with value 0
-- `data-text="$click_count"` displays the signal value reactively
+- `data-text="$click"` displays the signal value reactively
 - The handler reads the current value from `weave/*signals*` and updates it with `push-signal!`
 
-### Basic `:data-call-with-*` Example
+## With `:data-call-with-*`
 
 The `:data-call-with-*` attribute is a Weave-specific feature that
 provides way to pass arguments to handlers while avoiding variable
@@ -134,7 +125,7 @@ capture.
        "Delete"]])])
 ```
 
-#### Scoping Rules
+### Scoping Rules
 
 ```clojure
 ;; Example showing inheritance
@@ -146,7 +137,7 @@ capture.
 ;; Result: signals will be {:action "edit", :id "123"}
 ```
 
-### Problem: Route Explosion with Closures
+## Problem: Route Explosion with Closures
 
 When using variable capture, each unique combination of captured
 variables creates a separate route. This becomes problematic with
@@ -175,7 +166,7 @@ nothing shared:
 ;; With 100 users × 2 actions = 200 different routes registered!
 ```
 
-#### Solution: Shared Handlers with `:data-call-with-*`
+### Solution: Shared Handlers with `:data-call-with-*`
 
 ```clojure
 ;; GOOD: Only 1 handler total, regardless of number of users
