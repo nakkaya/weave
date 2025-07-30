@@ -48,6 +48,47 @@ Options are provided as metadata (optional):
 - `:type` - Request content type (use `:form` for form submissions)
 - `:selector` - CSS selector for the form to submit (e.g. `"#myform"`)
 
+## Signal Naming Conventions
+
+Weave automatically converts signal names between Clojure's kebab-case
+convention and JavaScript's camelCase convention:
+
+### Clojure to JavaScript (Outgoing Signals)
+
+When you use `push-signal!` or similar functions, signal names are
+converted from kebab-case keywords to camelCase:
+
+```clojure
+;; In your handler
+(weave/push-signal! {:user-name "John"
+                     :is-active true
+                     :item-count 42})
+
+;; JavaScript receives:
+;; {userName: "John", isActive: true, itemCount: 42}
+```
+
+### JavaScript to Clojure (Incoming Signals)
+
+When signals are sent from the browser (via Datastar), they are
+converted from camelCase to kebab-case keywords:
+
+```html
+<!-- In your HTML -->
+<div data-signals-userName="John"
+     data-signals-isActive="true"
+     data-signals-itemCount="42">
+```
+
+```clojure
+;; In your handler, signals are accessible as:
+(let [{:keys [user-name is-active item-count]} weave/*signals*]
+  ;; user-name = "John"
+  ;; is-active = true
+  ;; item-count = 42
+  )
+```
+
 ## Examples
 
 ## With Variables
@@ -95,7 +136,8 @@ In this example:
 
 - `data-signals-click-count="0"` initializes the signal with value 0
 - `data-text="$click"` displays the signal value reactively
-- The handler reads the current value from `weave/*signals*` and updates it with `push-signal!`
+- The handler reads the current value from `weave/*signals*` and
+  updates it with `push-signal!`
 
 ## With `:data-call-with-*`
 
