@@ -1,7 +1,36 @@
+// https://gist.githubusercontent.com/scwood/3bff42cc005cc20ab7ec98f0d8e1d59d/raw/32aaada5e4493efc8c728a571341821025190fa5/uuidV4.js
+function uuidV4() {
+    const uuid = new Array(36);
+    for (let i = 0; i < 36; i++) {
+	uuid[i] = Math.floor(Math.random() * 16);
+    }
+    uuid[14] = 4;
+    uuid[19] = uuid[19] &= ~(1 << 2);
+    uuid[19] = uuid[19] |= (1 << 3);
+    uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
+    return uuid.map((x) => x.toString(16)).join('');
+}
+
+function getOrCreateInstanceId() {
+    let tabId;
+
+    if (window.opener && sessionStorage.getItem("weave-tab-id")) {
+	tabId = uuidV4();
+    } else {
+	tabId = sessionStorage.getItem("weave-tab-id");
+	if (!tabId) {
+	    tabId = uuidV4();
+	}
+    }
+
+    sessionStorage.setItem("weave-tab-id", tabId);
+    return tabId;
+}
+
 window.weave = {
-    setup: function(serverId, instanceId, keepAlive = false) {
+    setup: function(serverId, keepAlive = false) {
 	window.weaveServerId = serverId
-	window.weaveInstanceId = instanceId
+	window.weaveInstanceId = getOrCreateInstanceId()
 	window.weaveKeepAlive = keepAlive
 
 	tailwind.config = {darkMode: "class"}
@@ -110,7 +139,7 @@ import('./datastar@v1.0.0-RC.1.js').then(({ load, apply }) => {
             return postAction.fn(enhancedCtx, url, enhancedOptions)
 	}
     }
-    
+
     load(CallAction)
 
     setTimeout(() => {

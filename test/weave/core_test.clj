@@ -57,6 +57,86 @@
                    :sse {:enabled true
                          :keep-alive true}})
 
+(defn instance-id-test-view []
+  [:div
+   [:h1#content "Instance ID Test"]
+   [:div#instance-display
+    [:p "Instance ID: " [:span#instance-id "Loading..."]]
+    [:p "Session Storage: " [:span#session-storage-id "Loading..."]]]
+   [:button
+    {:id "get-instance-id"
+     :data-on-click
+     (core/handler []
+       (core/push-script!
+         (str "document.getElementById('instance-id').textContent = window.weave.instance();"
+              "document.getElementById('session-storage-id').textContent = sessionStorage.getItem('weave-tab-id');")))}
+    "Get Instance ID"]])
+
+(deftest multiple-tabs-different-instance-ids-test
+  (let [server (core/run instance-id-test-view test-options)
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test that multiple tabs get different instance IDs"
+        ;; Open first tab
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :get-instance-id})
+        (is (e/visible? driver {:id :get-instance-id}))
+
+        ;; Get instance ID from first tab
+        (e/click driver {:id :get-instance-id})
+        (e/wait-predicate #(not= "Loading..." (e/get-element-text driver {:id :instance-id})))
+        (let [tab1-instance-id (e/get-element-text driver {:id :instance-id})]
+          (is (not (str/blank? tab1-instance-id)))
+
+          ;; Open second tab
+          (e/js-execute driver "window.open(arguments[0], '_blank');" test-url)
+          (let [handles (e/get-window-handles driver)
+                tab1 (first handles)
+                tab2 (second handles)]
+
+            ;; Switch to second tab and get its instance ID
+            (e/switch-window driver tab2)
+            (e/wait-visible driver {:id :get-instance-id})
+            (e/click driver {:id :get-instance-id})
+            (e/wait-predicate #(not= "Loading..." (e/get-element-text driver {:id :instance-id})))
+            (let [tab2-instance-id (e/get-element-text driver {:id :instance-id})]
+              (is (not (str/blank? tab2-instance-id)))
+
+              ;; Verify that the two tabs have different instance IDs
+              (is (not= tab1-instance-id tab2-instance-id)
+                  (str "Tab 1 ID: " tab1-instance-id ", Tab 2 ID: " tab2-instance-id))))))
+      (finally
+        (e/quit driver)
+        (ig/halt! server)))))
+
+(deftest page-reload-preserves-instance-id-test
+  (let [server (core/run instance-id-test-view test-options)
+        driver (e/chrome-headless (driver-options))]
+    (try
+      (testing "Test that page reloads preserve the same instance ID"
+        ;; Open tab and get initial instance ID
+        (e/go driver test-url)
+        (e/wait-visible driver {:id :get-instance-id})
+        (e/click driver {:id :get-instance-id})
+        (e/wait-predicate #(not= "Loading..." (e/get-element-text driver {:id :instance-id})))
+        (let [initial-instance-id (e/get-element-text driver {:id :instance-id})]
+          (is (not (str/blank? initial-instance-id)))
+
+          ;; Reload the page
+          (e/refresh driver)
+          (e/wait-visible driver {:id :get-instance-id})
+          (e/click driver {:id :get-instance-id})
+          (e/wait-predicate #(not= "Loading..." (e/get-element-text driver {:id :instance-id})))
+          (let [reloaded-instance-id (e/get-element-text driver {:id :instance-id})]
+            (is (not (str/blank? reloaded-instance-id)))
+
+            ;; Verify that the instance ID is preserved across reload
+            (is (= initial-instance-id reloaded-instance-id)
+                (str "Initial ID: " initial-instance-id ", Reloaded ID: " reloaded-instance-id)))))
+      (finally
+        (e/quit driver)
+        (ig/halt! server)))))
+
 (defn simple-view []
   [:div
    [:h1#content "Hello, Weave!"]])

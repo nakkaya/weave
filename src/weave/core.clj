@@ -188,7 +188,7 @@
            [:script {:type "module" :src "/weave.js"}]
            [:script {:type "module"}
             (let [keep-alive (get-in opts [:sse :keep-alive] false)]
-              (str "weave.setup('" server-id "', '" (random-uuid) "', " keep-alive ");"))]
+              (str "weave.setup('" server-id "', " keep-alive ");"))]
            (:head opts)]
           [:body {:class "w-full h-full"}
            [:div {:id "weave-main" :class "w-full h-full"}]]]]))
