@@ -68,8 +68,8 @@
      :data-on-click
      (core/handler []
        (core/push-script!
-         (str "document.getElementById('instance-id').textContent = window.weave.instance();"
-              "document.getElementById('session-storage-id').textContent = sessionStorage.getItem('weave-tab-id');")))}
+        (str "document.getElementById('instance-id').textContent = window.weave.instance();"
+             "document.getElementById('session-storage-id').textContent = sessionStorage.getItem('weave-tab-id');")))}
     "Get Instance ID"]])
 
 (deftest multiple-tabs-different-instance-ids-test
@@ -156,7 +156,7 @@
 
 (deftest page-load-test-without-sse
   (let [server (core/run simple-view
-                 (assoc-in test-options [:sse :enabled] false))
+                         (assoc-in test-options [:sse :enabled] false))
         driver (e/chrome-headless (driver-options))]
     (try
       (testing "App renders with SSE disabled"
@@ -175,9 +175,9 @@
     {:id "increment-button"
      :data-on-click
      (core/handler [click-count]
-      (swap! click-count inc)
-      (core/push-html!
-       (push-click-count-view click-count)))}
+       (swap! click-count inc)
+       (core/push-html!
+        (push-click-count-view click-count)))}
     "Click Me"]])
 
 (deftest push-html-test-with-sse
@@ -202,7 +202,7 @@
   (let [counter (atom 41)
         view (fn [] (push-click-count-view counter))
         server (core/run view
-                 (assoc-in test-options [:sse :enabled] false))
+                         (assoc-in test-options [:sse :enabled] false))
         driver (e/chrome-headless (driver-options))]
     (try
       (testing "push-html! updates the view with SSE disabled"
@@ -226,9 +226,9 @@
     {:id "append-button"
      :data-on-click
      (core/handler []
-                   (core/push-html!
-                    [:li "New Item"]
-                    {:mode :append :selector "#item-list"}))}
+       (core/push-html!
+        [:li "New Item"]
+        {:mode :append :selector "#item-list"}))}
     "Add Item"]])
 
 (deftest push-html-append-test
@@ -272,9 +272,9 @@
     {:id "append-button"
      :data-on-click
      (core/handler []
-                   (core/broadcast-html!
-                    [:li "New Item"]
-                    {:mode :append :selector "#item-list"}))}
+       (core/broadcast-html!
+        [:li "New Item"]
+        {:mode :append :selector "#item-list"}))}
     "Add Item"]])
 
 (deftest broadcast-html-append-test
@@ -328,10 +328,10 @@
                    name (:name form-data)
                    email (:email form-data)]
                (core/push-html!
-                 [:div#view
-                  [:div#result
-                   [:p (str "Hello " name "!")]
-                   [:p (str "Email: " email)]]])))}
+                [:div#view
+                 [:div#result
+                  [:p (str "Hello " name "!")]
+                  [:p (str "Email: " email)]]])))}
     [:div
      [:label {:for "name"} "Name:"]
      [:input {:type "text" :id "name" :name "name" :required true}]]
@@ -393,9 +393,9 @@
     {:id "increment-button"
      :data-on-click
      (core/handler [click-count]
-      (swap! click-count inc)
-      (core/broadcast-html!
-       (broadcast-click-count-view click-count)))}
+       (swap! click-count inc)
+       (core/broadcast-html!
+        (broadcast-click-count-view click-count)))}
     "Click Me"]])
 
 (deftest broadcast-html-test
@@ -451,12 +451,12 @@
     [:a {:id "trigger-view-one"
          :data-on-click
          (core/handler []
-          (core/push-path! "/views/one" push-path-view))}
+           (core/push-path! "/views/one" push-path-view))}
      "Page One"]
     [:a {:id "trigger-view-two"
          :data-on-click
          (core/handler []
-          (core/push-path! "/views/two" push-path-view))}
+           (core/push-path! "/views/two" push-path-view))}
      "Page Two"]]
 
    [:div#content
@@ -486,7 +486,7 @@
 
 (deftest push-path-test-without-sse
   (let [server (core/run push-path-view
-                 (assoc-in test-options [:sse :enabled] false))
+                         (assoc-in test-options [:sse :enabled] false))
         driver (e/chrome-headless (driver-options))]
     (try
       (testing "Test push-path! functionality with SSE disabled"
@@ -507,12 +507,12 @@
     [:a {:id "trigger-view-one"
          :data-on-click
          (core/handler []
-          (core/broadcast-path! "/views/one" broadcast-path-view))}
+           (core/broadcast-path! "/views/one" broadcast-path-view))}
      "Page One"]
     [:a {:id "trigger-view-two"
          :data-on-click
          (core/handler []
-          (core/broadcast-path! "/views/two" broadcast-path-view))}
+           (core/broadcast-path! "/views/two" broadcast-path-view))}
      "Page Two"]]
 
    [:div#content
@@ -608,8 +608,8 @@
     {:id "execute-script-button"
      :data-on-click
      (core/handler []
-      (core/push-script!
-       "document.getElementById('content').textContent = 'Script executed!';"))}
+       (core/push-script!
+        "document.getElementById('content').textContent = 'Script executed!';"))}
     "Execute Script"]])
 
 (deftest push-script-test-with-sse
@@ -631,7 +631,7 @@
 
 (deftest push-script-test-without-sse
   (let [server (core/run push-script-view
-                 (assoc-in test-options [:sse :enabled] false))
+                         (assoc-in test-options [:sse :enabled] false))
         driver (e/chrome-headless (driver-options))]
     (try
       (testing "Test push-script! functionality with SSE disabled"
@@ -654,8 +654,8 @@
     {:id "execute-script-button"
      :data-on-click
      (core/handler []
-      (core/broadcast-script!
-       "document.getElementById('content').textContent = 'Broadcast script executed!';"))}
+       (core/broadcast-script!
+        "document.getElementById('content').textContent = 'Broadcast script executed!';"))}
     "Execute Script"]])
 
 (deftest broadcast-script-test
@@ -706,7 +706,7 @@
     {:id "increment-button"
      :data-on-click
      (core/handler []
-      (core/push-signal! {:foo 42}))}
+       (core/push-signal! {:foo 42}))}
     "Update Signal"]
    [:div {:data-signals-foo "0"}
     [:input#signal-value {:data-bind-foo true}]]])
@@ -731,7 +731,7 @@
 
 (deftest push-signal-test-without-sse
   (let [server (core/run push-signal-view
-                 (assoc-in test-options [:sse :enabled] false))
+                         (assoc-in test-options [:sse :enabled] false))
         driver (e/chrome-headless (driver-options))]
     (try
       (testing "Test push-signal! functionality with SSE disabled"
@@ -811,7 +811,7 @@
    (let [handle-action (core/handler []
                          (let [{:keys [action item-id]} core/*signals*]
                            (core/push-html!
-                             [:div#result (str "Action: " action ", Item: " item-id)])))]
+                            [:div#result (str "Action: " action ", Item: " item-id)])))]
      [:div.button-group
       [:button#edit-button
        {:data-call-with-action "edit"
@@ -878,8 +878,8 @@
     {:id "set-cookie-button"
      :data-on-click
      (core/handler []
-                   (core/set-cookie! "test-cookie=cookie-value; Path=/; Max-Age=3600")
-                   (core/push-script! "document.getElementById('cookie-status').textContent = 'Cookie set: ' + document.cookie;"))}
+       (core/set-cookie! "test-cookie=cookie-value; Path=/; Max-Age=3600")
+       (core/push-script! "document.getElementById('cookie-status').textContent = 'Cookie set: ' + document.cookie;"))}
     "Set Cookie"]])
 
 (deftest set-cookie-test
@@ -916,15 +916,15 @@
     {:id "sign-in-button"
      :data-on-click
      (core/handler []
-                   (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
-                   (core/push-reload!))}
+       (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
+       (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
      :data-on-click
      (core/handler []
-                   (core/set-cookie! (session/sign-out))
-                   (core/push-reload!))}
+       (core/set-cookie! (session/sign-out))
+       (core/push-reload!))}
     "Sign Out"]])
 
 (deftest session-management-test
@@ -967,21 +967,21 @@
     {:id "sign-in-button"
      :data-on-click
      (core/handler []
-                   (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
-                   (core/push-reload!))}
+       (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
+       (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
      :data-on-click
      (core/handler []
-                   (core/set-cookie! (session/sign-out))
-                   (core/push-reload!))}
+       (core/set-cookie! (session/sign-out))
+       (core/push-reload!))}
     "Sign Out"]
    [:button
     {:id "protected-action-button"
      :data-on-click
      (core/handler ^{:auth-required? true} []
-                   (core/push-script! "document.getElementById('protected-result').textContent = 'Protected action executed!';"))}
+       (core/push-script! "document.getElementById('protected-result').textContent = 'Protected action executed!';"))}
     "Execute Protected Action"]
    [:div#protected-result "Protected action not executed"]])
 
@@ -1071,27 +1071,27 @@
     {:id "sign-in-button"
      :data-on-click
      (core/handler ^{:auth-required? false} []
-                   (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
-                   (core/push-reload!))}
+       (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
+       (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
      :data-on-click
      (core/handler ^{:auth-required? false} []
-                   (core/set-cookie! (session/sign-out))
-                   (core/push-reload!))}
+       (core/set-cookie! (session/sign-out))
+       (core/push-reload!))}
     "Sign Out"]
    [:button
     {:id "secure-action-button"
      :data-on-click
      (core/handler []
-                   (core/push-script! "document.getElementById('secure-result').textContent = 'Secure action executed!';"))}
+       (core/push-script! "document.getElementById('secure-result').textContent = 'Secure action executed!';"))}
     "Execute Secure Action"]
    [:button
     {:id "public-action-button"
      :data-on-click
      (core/handler ^{:auth-required? false} []
-                   (core/push-script! "document.getElementById('public-result').textContent = 'Public action executed!';"))}
+       (core/push-script! "document.getElementById('public-result').textContent = 'Public action executed!';"))}
     "Execute Public Action"]
    [:div#secure-result "Secure action not executed"]
    [:div#public-result "Public action not executed"]])
