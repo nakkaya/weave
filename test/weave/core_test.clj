@@ -18,35 +18,23 @@
 
 (use-fixtures :each event-handler-fixture)
 
-(defn clean-string [s]
-  (-> s
-      (str/replace #"\n" " ")
-      (str/replace #"\s+" " ")
-      str/trim))
-
 (deftest request-headers-test
   (testing "Test request header options"
     (is (= "{}"
-           (clean-string
-            (#'core/request-options {}))))
+           (#'core/request-options {})))
     (is (= "{contentType: 'form'}"
-           (clean-string
-            (#'core/request-options {:type :form}))))
+           (#'core/request-options {:type :form})))
     (is (= "{openWhenHidden: true}"
-           (clean-string
-            (#'core/request-options {:keep-alive true}))))
+           (#'core/request-options {:keep-alive true})))
     (is (= "{contentType: 'form', openWhenHidden: true}"
-           (clean-string
-            (#'core/request-options {:type :form :keep-alive true}))))
+           (#'core/request-options {:type :form :keep-alive true})))
     (is (= "{selector: '#myform'}"
-           (clean-string
-            (#'core/request-options {:selector "#myform"}))))
+           (#'core/request-options {:selector "#myform"})))
     (is (= "{contentType: 'form', selector: '#myform'}"
-           (clean-string
-            (#'core/request-options {:type :form :selector "#myform"}))))
+           (#'core/request-options {:type :form :selector "#myform"})))
     (is (= "{contentType: 'form', openWhenHidden: true, selector: '#myform'}"
-           (clean-string
-            (#'core/request-options {:type :form :keep-alive true :selector "#myform"}))))))
+           (#'core/request-options
+            {:type :form :keep-alive true :selector "#myform"})))))
 
 (defn instance-id-test-view []
   [:div
