@@ -6,9 +6,10 @@
    [compojure.core :refer [GET]]
    [etaoin.api :as e]
    [integrant.core :as ig]
-   [weave.browser :refer [*browser* with-browser url weave-options] :as browser]
+   [weave.browser :refer [*browser* with-browser url weave-options visible? fill click el-text new-tab tabs switch-tab] :as browser]
    [weave.core :as core]
-   [weave.session :as session]))
+   [weave.session :as session]
+   [weave.squint :as squint]))
 
 (defn event-handler-fixture
   "Test fixture that binds a fresh event-handlers atom for each test."
@@ -20,19 +21,19 @@
 
 (defmacro test-with-sse-variants
   "Creates two test variants, one with SSE enabled and one with SSE disabled.
-   Usage: (test-with-sse-variants test-name view weave-options
+   Usage: (test-with-sse-variants test-name view
             ;; test body with access to *browser* binding)"
-  [test-name view weave-options & test-body]
+  [test-name view & test-body]
   (let [test-symbol (if (and (seq? test-name) (= 'quote (first test-name)))
                       (second test-name)
                       test-name)]
     `(do
        (deftest ~(symbol (str test-symbol "-with-sse"))
-         (with-browser ~view ~weave-options
+         (with-browser ~view weave-options
            (testing ~(str (name test-symbol) " with SSE enabled")
              ~@test-body)))
        (deftest ~(symbol (str test-symbol "-without-sse"))
-         (with-browser ~view (assoc-in ~weave-options [:sse :enabled] false)
+         (with-browser ~view (assoc-in weave-options [:sse :enabled] false)
            (testing ~(str (name test-symbol) " with SSE disabled")
              ~@test-body))))))
 
@@ -65,31 +66,35 @@
      :data-on-click
      (core/handler []
        (core/push-script!
-        (str "document.getElementById('instance-id').textContent = window.weave.instance();"
-             "document.getElementById('session-storage-id').textContent = sessionStorage.getItem('weave-tab-id');")))}
+        (squint/clj->js
+         (set! (-> js/document
+                   (.getElementById "instance-id")
+                   (.-textContent))
+               (.instance js/window.weave))
+         (set! (-> js/document
+                   (.getElementById "session-storage-id")
+                   (.-textContent))
+               (.getItem js/sessionStorage "weave-tab-id")))))}
     "Get Instance ID"]])
 
 (deftest multiple-tabs-different-instance-ids-test
   (with-browser instance-id-test-view weave-options
     (testing "Test that multiple tabs get different instance IDs"
-      (e/wait-visible *browser* {:id :get-instance-id})
-      (is (e/visible? *browser* {:id :get-instance-id}))
+      (visible? :get-instance-id)
 
-      (e/click *browser* {:id :get-instance-id})
-      (e/wait-predicate #(not= "Loading..." (e/get-element-text *browser* {:id :instance-id})))
-      (let [tab1-instance-id (e/get-element-text *browser* {:id :instance-id})]
+      (click :get-instance-id)
+      (e/wait-predicate #(not= "Loading..." (el-text :instance-id)))
+      (let [tab1-instance-id (el-text :instance-id)]
         (is (not (str/blank? tab1-instance-id)))
 
-        (e/js-execute *browser* "window.open(arguments[0], '_blank');" url)
-        (let [handles (e/get-window-handles *browser*)
-              tab1 (first handles)
-              tab2 (second handles)]
+        (new-tab)
+        (let [[tab1 tab2] (tabs)]
 
-          (e/switch-window *browser* tab2)
-          (e/wait-visible *browser* {:id :get-instance-id})
-          (e/click *browser* {:id :get-instance-id})
-          (e/wait-predicate #(not= "Loading..." (e/get-element-text *browser* {:id :instance-id})))
-          (let [tab2-instance-id (e/get-element-text *browser* {:id :instance-id})]
+          (switch-tab tab2)
+          (visible? :get-instance-id)
+          (click :get-instance-id)
+          (e/wait-predicate #(not= "Loading..." (el-text :instance-id)))
+          (let [tab2-instance-id (el-text :instance-id)]
             (is (not (str/blank? tab2-instance-id)))
 
             (is (not= tab1-instance-id tab2-instance-id)
@@ -98,17 +103,17 @@
 (deftest page-reload-preserves-instance-id-test
   (with-browser instance-id-test-view weave-options
     (testing "Test that page reloads preserve the same instance ID"
-      (e/wait-visible *browser* {:id :get-instance-id})
-      (e/click *browser* {:id :get-instance-id})
-      (e/wait-predicate #(not= "Loading..." (e/get-element-text *browser* {:id :instance-id})))
-      (let [initial-instance-id (e/get-element-text *browser* {:id :instance-id})]
+      (visible? :get-instance-id)
+      (click :get-instance-id)
+      (e/wait-predicate #(not= "Loading..." (el-text :instance-id)))
+      (let [initial-instance-id (el-text :instance-id)]
         (is (not (str/blank? initial-instance-id)))
 
         (e/refresh *browser*)
-        (e/wait-visible *browser* {:id :get-instance-id})
-        (e/click *browser* {:id :get-instance-id})
-        (e/wait-predicate #(not= "Loading..." (e/get-element-text *browser* {:id :instance-id})))
-        (let [reloaded-instance-id (e/get-element-text *browser* {:id :instance-id})]
+        (visible? :get-instance-id)
+        (click :get-instance-id)
+        (e/wait-predicate #(not= "Loading..." (el-text :instance-id)))
+        (let [reloaded-instance-id (el-text :instance-id)]
           (is (not (str/blank? reloaded-instance-id)))
 
           (is (= initial-instance-id reloaded-instance-id)
@@ -119,13 +124,13 @@
    [:h1#content "Hello, Weave!"]])
 
 (test-with-sse-variants
- 'page-load-test page-load-test-view weave-options
+ 'page-load-test
+ page-load-test-view
 
- (e/wait-visible *browser* {:id :content})
- (is (e/visible? *browser* {:id :content}))
+ (visible? :content)
 
  (is (= "Hello, Weave!"
-        (e/get-element-text *browser* {:id :content}))))
+        (el-text :content))))
 
 (defn push-html-test-view [click-count]
   [:div#view
@@ -141,18 +146,15 @@
 
 (test-with-sse-variants
  'push-html-test
-
  (let [counter (atom 41)]
    (fn [] (push-html-test-view counter)))
- weave-options
 
- (e/wait-visible *browser* {:id :increment-button})
- (is (e/visible? *browser* {:id :increment-button}))
- (is (= "41" (e/get-element-text *browser* {:id :count})))
+ (visible? :increment-button)
+ (is (= "41" (el-text :count)))
 
- (e/click *browser* {:id :increment-button})
- (e/wait-predicate #(= "42" (e/get-element-text *browser* {:id :count})))
- (is (= "42" (e/get-element-text *browser* {:id :count}))))
+ (click :increment-button)
+ (e/wait-predicate #(= "42" (el-text :count)))
+ (is (= "42" (el-text :count))))
 
 (defn push-html-append-test-view []
   [:div#view
@@ -171,13 +173,12 @@
 (deftest push-html-append-test
   (with-browser push-html-append-test-view weave-options
     (testing "push-html! with append mode adds elements to list"
-      (e/wait-visible *browser* {:id :append-button})
-      (is (e/visible? *browser* {:id :append-button}))
+      (visible? :append-button)
 
       (let [items (e/query-all *browser* {:css "#item-list li"})]
         (is (= 2 (count items))))
 
-      (e/click *browser* {:id :append-button})
+      (click :append-button)
 
       (e/wait-predicate
        #(= 3 (count (e/query-all *browser* {:css "#item-list li"}))))
@@ -185,7 +186,7 @@
       (let [items (e/query-all *browser* {:css "#item-list li"})]
         (is (= 3 (count items))))
 
-      (e/click *browser* {:id :append-button})
+      (click :append-button)
 
       (e/wait-predicate
        #(= 4 (count (e/query-all *browser* {:css "#item-list li"}))))
@@ -210,31 +211,29 @@
 (deftest broadcast-html-append-test
   (with-browser broadcast-html-append-test-view weave-options
     (testing "broadcast-html! with append mode adds elements to list across tabs"
-      (e/wait-visible *browser* {:id :append-button})
+      (visible? :append-button)
 
-      (e/js-execute *browser* "window.open(arguments[0], '_blank');" url)
+      (new-tab)
 
-      (let [handles (e/get-window-handles *browser*)
-            tab1 (first handles)
-            tab2 (second handles)]
+      (let [[tab1 tab2] (tabs)]
 
-        (e/switch-window *browser* tab1)
-        (e/wait-visible *browser* {:id :append-button})
+        (switch-tab tab1)
+        (visible? :append-button)
         (let [items (e/query-all *browser* {:css "#item-list li"})]
           (is (= 2 (count items))))
 
-        (e/switch-window *browser* tab2)
-        (e/wait-visible *browser* {:id :append-button})
+        (switch-tab tab2)
+        (visible? :append-button)
         (let [items (e/query-all *browser* {:css "#item-list li"})]
           (is (= 2 (count items))))
 
-        (e/switch-window *browser* tab1)
-        (e/click *browser* {:id :append-button})
+        (switch-tab tab1)
+        (click :append-button)
 
         (e/wait-predicate
          #(= 3 (count (e/query-all *browser* {:css "#item-list li"}))))
 
-        (e/switch-window *browser* tab2)
+        (switch-tab tab2)
         (e/wait-predicate
          #(= 3 (count (e/query-all *browser* {:css "#item-list li"}))))
 
@@ -264,24 +263,23 @@
     [:button {:type "submit" :id "submit-btn"} "Submit"]]])
 
 (test-with-sse-variants
- 'form-submission-test form-submission-test-view weave-options
+ 'form-submission-test
+ form-submission-test-view
 
- (e/wait-visible *browser* {:id :test-form})
- (is (e/visible? *browser* {:id :test-form}))
+ (visible? :test-form)
 
- (e/fill *browser* {:id :name} "John Doe")
- (e/fill *browser* {:id :email} "john@example.com")
+ (fill :name "John Doe")
+ (fill :email "john@example.com")
 
- (e/click *browser* {:id :submit-btn})
+ (click :submit-btn)
 
- (e/wait-visible *browser* {:id :result})
- (is (e/visible? *browser* {:id :result}))
+ (visible? :result)
 
  (is (str/includes?
-      (e/get-element-text *browser* {:id :result})
+      (el-text :result)
       "Hello John Doe!"))
  (is (str/includes?
-      (e/get-element-text *browser* {:id :result})
+      (el-text :result)
       "Email: john@example.com")))
 
 (defn broadcast-html-test-view [click-count]
@@ -301,31 +299,27 @@
         view (fn [] (broadcast-html-test-view counter))]
     (with-browser view weave-options
       (testing "broadcast-html! updates all connected tabs"
-        (e/wait-visible *browser* {:id :increment-button})
-        (e/js-execute *browser* "window.open(arguments[0], '_blank');" url)
+        (visible? :increment-button)
+        (new-tab)
 
-        (let [handles (e/get-window-handles *browser*)
-              tab1 (first handles)
-              tab2 (second handles)]
+        (let [[tab1 tab2] (tabs)]
 
-          (e/switch-window *browser* tab1)
-          (e/wait-visible *browser* {:id :increment-button})
-          (is (e/visible? *browser* {:id :increment-button}))
+          (switch-tab tab1)
+          (visible? :increment-button)
 
-          (e/switch-window *browser* tab2)
-          (e/wait-visible *browser* {:id :increment-button})
-          (is (e/visible? *browser* {:id :increment-button}))
+          (switch-tab tab2)
+          (visible? :increment-button)
 
-          (is (= "0" (e/get-element-text *browser* {:id :count})))
-          (e/switch-window *browser* tab1)
-          (is (= "0" (e/get-element-text *browser* {:id :count})))
+          (is (= "0" (el-text :count)))
+          (switch-tab tab1)
+          (is (= "0" (el-text :count)))
 
-          (e/click *browser* {:id :increment-button})
-          (e/wait-predicate #(= "1" (e/get-element-text *browser* {:id :count})))
+          (click :increment-button)
+          (e/wait-predicate #(= "1" (el-text :count)))
 
-          (e/switch-window *browser* tab2)
-          (e/wait-predicate #(= "1" (e/get-element-text *browser* {:id :count})))
-          (is (= "1" (e/get-element-text *browser* {:id :count}))))))))
+          (switch-tab tab2)
+          (e/wait-predicate #(= "1" (el-text :count)))
+          (is (= "1" (el-text :count))))))))
 
 (defn push-path-test-view []
   [:div {:id "view"}
@@ -351,17 +345,17 @@
        "Select a page from the navigation above"])]])
 
 (test-with-sse-variants
- 'push-path-test push-path-test-view weave-options
+ 'push-path-test
+ push-path-test-view
 
- (e/wait-visible *browser* {:id :default-content})
- (is (e/visible? *browser* {:id :default-content}))
+ (visible? :default-content)
 
- (e/click *browser* {:id :trigger-view-two})
+ (click :trigger-view-two)
  (e/wait-predicate
   #(= "Page Two Content"
-      (e/get-element-text *browser* {:id :page-two-content})))
+      (el-text :page-two-content)))
  (is (= "Page Two Content"
-        (e/get-element-text *browser* {:id :page-two-content}))))
+        (el-text :page-two-content))))
 
 (defn broadcast-path-test-view []
   [:div {:id "view"}
@@ -389,43 +383,38 @@
 (deftest broadcast-path-test
   (with-browser broadcast-path-test-view weave-options
     (testing "Test broadcast-path! functionality across multiple tabs"
-      (e/wait-visible *browser* {:id :default-content})
-      (is (e/visible? *browser* {:id :default-content}))
+      (visible? :default-content)
 
-      (e/js-execute *browser* "window.open(arguments[0], '_blank');" url)
+      (new-tab)
 
-      (let [handles (e/get-window-handles *browser*)
-            tab1 (first handles)
-            tab2 (second handles)]
+      (let [[tab1 tab2] (tabs)]
 
-        (e/switch-window *browser* tab1)
-        (e/wait-visible *browser* {:id :default-content})
-        (is (e/visible? *browser* {:id :default-content}))
+        (switch-tab tab1)
+        (visible? :default-content)
 
-        (e/switch-window *browser* tab2)
-        (e/wait-visible *browser* {:id :default-content})
-        (is (e/visible? *browser* {:id :default-content}))
+        (switch-tab tab2)
+        (visible? :default-content)
 
-        (e/switch-window *browser* tab1)
-        (e/click *browser* {:id :trigger-view-one})
+        (switch-tab tab1)
+        (click :trigger-view-one)
         (e/wait-predicate
-         #(= "Page One Content" (e/get-element-text *browser* {:id :page-one-content})))
-        (is (= "Page One Content" (e/get-element-text *browser* {:id :page-one-content})))
+         #(= "Page One Content" (el-text :page-one-content)))
+        (is (= "Page One Content" (el-text :page-one-content)))
 
-        (e/switch-window *browser* tab2)
+        (switch-tab tab2)
         (e/wait-predicate
-         #(= "Page One Content" (e/get-element-text *browser* {:id :page-one-content})))
-        (is (= "Page One Content" (e/get-element-text *browser* {:id :page-one-content})))
+         #(= "Page One Content" (el-text :page-one-content)))
+        (is (= "Page One Content" (el-text :page-one-content)))
 
-        (e/click *browser* {:id :trigger-view-two})
+        (click :trigger-view-two)
         (e/wait-predicate
-         #(= "Page Two Content" (e/get-element-text *browser* {:id :page-two-content})))
-        (is (= "Page Two Content" (e/get-element-text *browser* {:id :page-two-content})))
+         #(= "Page Two Content" (el-text :page-two-content)))
+        (is (= "Page Two Content" (el-text :page-two-content)))
 
-        (e/switch-window *browser* tab1)
+        (switch-tab tab1)
         (e/wait-predicate
-         #(= "Page Two Content" (e/get-element-text *browser* {:id :page-two-content})))
-        (is (= "Page Two Content" (e/get-element-text *browser* {:id :page-two-content})))))))
+         #(= "Page Two Content" (el-text :page-two-content)))
+        (is (= "Page Two Content" (el-text :page-two-content)))))))
 
 (defn manual-hash-change-test-view []
   [:div {:id "view"}
@@ -441,14 +430,16 @@
 (deftest manual-hash-change-test
   (with-browser manual-hash-change-test-view weave-options
     (testing "Test manual hash change detection"
-      (e/wait-visible *browser* {:id :default-content})
-      (is (e/visible? *browser* {:id :default-content}))
+      (visible? :default-content)
 
       (e/js-execute
-       *browser* "window.location.hash = '#/views/one'; window.location.reload();")
+       *browser*
+       (squint/clj->js
+        (set! (-> js/window .-location .-hash) "#/views/one")
+        (-> js/window .-location .reload)))
 
-      (e/wait-visible *browser* {:id :page-one-content})
-      (is (= "Page One Content" (e/get-element-text *browser* {:id :page-one-content}))))))
+      (visible? :page-one-content)
+      (is (= "Page One Content" (el-text :page-one-content))))))
 
 (defn push-script-test-view []
   [:div {:id "view"}
@@ -458,21 +449,25 @@
      :data-on-click
      (core/handler []
        (core/push-script!
-        "document.getElementById('content').textContent = 'Script executed!';"))}
+        (squint/clj->js
+         (set! (-> js/document
+                   (.getElementById "content")
+                   (.-textContent))
+               "Script executed!"))))}
     "Execute Script"]])
 
 (test-with-sse-variants
- 'push-script-test push-script-test-view weave-options
+ 'push-script-test
+ push-script-test-view
 
- (e/wait-visible *browser* {:id :execute-script-button})
- (is (e/visible? *browser* {:id :execute-script-button}))
+ (visible? :execute-script-button)
  (is (= "Initial content"
-        (e/get-element-text *browser* {:id :content})))
+        (el-text :content)))
 
- (e/click *browser* {:id :execute-script-button})
+ (click :execute-script-button)
  (e/wait-predicate
-  #(= "Script executed!" (e/get-element-text *browser* {:id :content})))
- (is (= "Script executed!" (e/get-element-text *browser* {:id :content}))))
+  #(= "Script executed!" (el-text :content)))
+ (is (= "Script executed!" (el-text :content))))
 
 (defn broadcast-script-test-view []
   [:div {:id "view"}
@@ -482,44 +477,43 @@
      :data-on-click
      (core/handler []
        (core/broadcast-script!
-        "document.getElementById('content').textContent = 'Broadcast script executed!';"))}
+        (squint/clj->js
+         (set! (-> js/document
+                   (.getElementById "content")
+                   (.-textContent))
+               "Broadcast script executed!"))))}
     "Execute Script"]])
 
 (deftest broadcast-script-test
   (with-browser broadcast-script-test-view weave-options
     (testing "Test broadcast-script! functionality across multiple tabs"
-      (e/wait-visible *browser* {:id :execute-script-button})
-      (is (e/visible? *browser* {:id :execute-script-button}))
-      (is (= "Initial content" (e/get-element-text *browser* {:id :content})))
+      (visible? :execute-script-button)
+      (is (= "Initial content" (el-text :content)))
 
-      (e/js-execute *browser* "window.open(arguments[0], '_blank');" url)
+      (new-tab)
 
-      (let [handles (e/get-window-handles *browser*)
-            tab1 (first handles)
-            tab2 (second handles)]
+      (let [[tab1 tab2] (tabs)]
 
-        (e/switch-window *browser* tab1)
-        (e/wait-visible *browser* {:id :execute-script-button})
-        (is (e/visible? *browser* {:id :execute-script-button}))
+        (switch-tab tab1)
+        (visible? :execute-script-button)
 
-        (e/switch-window *browser* tab2)
-        (e/wait-visible *browser* {:id :execute-script-button})
-        (is (e/visible? *browser* {:id :execute-script-button}))
+        (switch-tab tab2)
+        (visible? :execute-script-button)
 
-        (is (= "Initial content" (e/get-element-text *browser* {:id :content})))
+        (is (= "Initial content" (el-text :content)))
 
-        (e/switch-window *browser* tab1)
-        (is (= "Initial content" (e/get-element-text *browser* {:id :content})))
+        (switch-tab tab1)
+        (is (= "Initial content" (el-text :content)))
 
-        (e/click *browser* {:id :execute-script-button})
+        (click :execute-script-button)
         (e/wait-predicate
-         #(= "Broadcast script executed!" (e/get-element-text *browser* {:id :content})))
-        (is (= "Broadcast script executed!" (e/get-element-text *browser* {:id :content})))
+         #(= "Broadcast script executed!" (el-text :content)))
+        (is (= "Broadcast script executed!" (el-text :content)))
 
-        (e/switch-window *browser* tab2)
+        (switch-tab tab2)
         (e/wait-predicate
-         #(= "Broadcast script executed!" (e/get-element-text *browser* {:id :content})))
-        (is (= "Broadcast script executed!" (e/get-element-text *browser* {:id :content})))))))
+         #(= "Broadcast script executed!" (el-text :content)))
+        (is (= "Broadcast script executed!" (el-text :content)))))))
 
 (defn push-signal-test-view []
   [:div {:id "view"}
@@ -533,12 +527,12 @@
     [:input#signal-value {:data-bind-foo true}]]])
 
 (test-with-sse-variants
- 'push-signal-test push-signal-test-view weave-options
+ 'push-signal-test
+ push-signal-test-view
 
- (e/wait-visible *browser* {:id :increment-button})
- (is (e/visible? *browser* {:id :increment-button}))
+ (visible? :increment-button)
 
- (e/click *browser* {:id :increment-button})
+ (click :increment-button)
 
  (e/wait-predicate
   #(= "42" (e/get-element-value *browser* {:id :signal-value})))
@@ -557,17 +551,16 @@
     "This div was hidden but is now visible!"]])
 
 (test-with-sse-variants
- 'local-signal-test local-signal-test-view weave-options
+ 'local-signal-test
+ local-signal-test-view
 
- (e/wait-visible *browser* {:id :show-button})
- (is (e/visible? *browser* {:id :show-button}))
+ (visible? :show-button)
 
  (is (not (e/visible? *browser* {:id :hidden-div})))
 
- (e/click *browser* {:id :show-button})
+ (click :show-button)
 
- (e/wait-visible *browser* {:id :hidden-div})
- (is (e/visible? *browser* {:id :hidden-div})))
+ (visible? :hidden-div))
 
 (defn data-call-with-test-view []
   [:div {:id "view"}
@@ -589,26 +582,26 @@
        "Delete"]])])
 
 (test-with-sse-variants
- 'data-call-with-test data-call-with-test-view weave-options
+ 'data-call-with-test
+ data-call-with-test-view
 
- (e/wait-visible *browser* {:id :edit-button})
- (is (e/visible? *browser* {:id :edit-button}))
+ (visible? :edit-button)
  (is (= "No action performed yet"
-        (e/get-element-text *browser* {:id :result})))
+        (el-text :result)))
 
- (e/click *browser* {:id :edit-button})
+ (click :edit-button)
  (e/wait-predicate
   #(= "Action: edit, Item: 123"
-      (e/get-element-text *browser* {:id :result})))
+      (el-text :result)))
  (is (= "Action: edit, Item: 123"
-        (e/get-element-text *browser* {:id :result})))
+        (el-text :result)))
 
- (e/click *browser* {:id :delete-button})
+ (click :delete-button)
  (e/wait-predicate
   #(= "Action: delete, Item: 456"
-      (e/get-element-text *browser* {:id :result})))
+      (el-text :result)))
  (is (= "Action: delete, Item: 456"
-        (e/get-element-text *browser* {:id :result}))))
+        (el-text :result))))
 
 (defn set-cookie-test-view []
   [:div {:id "view"}
@@ -618,24 +611,28 @@
      :data-on-click
      (core/handler []
        (core/set-cookie! "test-cookie=cookie-value; Path=/; Max-Age=3600")
-       (core/push-script! "document.getElementById('cookie-status').textContent = 'Cookie set: ' + document.cookie;"))}
+       (core/push-script!
+        (squint/clj->js
+         (set! (-> js/document
+                   (.getElementById "cookie-status")
+                   (.-textContent))
+               (str "Cookie set: " js/document.cookie)))))}
     "Set Cookie"]])
 
 (deftest set-cookie-test
   (with-browser set-cookie-test-view weave-options
     (testing "Test set-cookie! functionality"
-      (e/wait-visible *browser* {:id :set-cookie-button})
-      (is (e/visible? *browser* {:id :set-cookie-button}))
-      (is (= "No cookie set" (e/get-element-text *browser* {:id :cookie-status})))
+      (visible? :set-cookie-button)
+      (is (= "No cookie set" (el-text :cookie-status)))
 
-      (e/click *browser* {:id :set-cookie-button})
+      (click :set-cookie-button)
 
       (e/wait-predicate #(str/includes?
-                          (e/get-element-text *browser* {:id :cookie-status})
+                          (el-text :cookie-status)
                           "test-cookie=cookie-value"))
 
       (is (str/includes?
-           (e/get-element-text *browser* {:id :cookie-status})
+           (el-text :cookie-status)
            "test-cookie=cookie-value")))))
 
 (defn session-management-test-view []
@@ -661,27 +658,29 @@
     "Sign Out"]])
 
 (deftest session-management-test
-  (with-browser session-management-test-view (assoc weave-options :jwt-secret "test-jwt-secret")
+  (with-browser
+    session-management-test-view
+    (assoc weave-options :jwt-secret "test-jwt-secret")
+
     (testing "Test session management functionality"
-      (e/wait-visible *browser* {:id :sign-in-button})
-      (is (e/visible? *browser* {:id :sign-in-button}))
-      (is (= "Not authenticated" (e/get-element-text *browser* {:id :auth-status})))
+      (visible? :sign-in-button)
+      (is (= "Not authenticated" (el-text :auth-status)))
 
-      (e/click *browser* {:id :sign-in-button})
+      (click :sign-in-button)
 
-      (e/wait-visible *browser* {:id :sign-out-button})
+      (visible? :sign-out-button)
       (e/wait-predicate #(= "Authenticated as TestUser"
-                            (e/get-element-text *browser* {:id :auth-status})))
+                            (el-text :auth-status)))
       (is (= "Authenticated as TestUser"
-             (e/get-element-text *browser* {:id :auth-status})))
+             (el-text :auth-status)))
 
-      (e/click *browser* {:id :sign-out-button})
+      (click :sign-out-button)
 
-      (e/wait-visible *browser* {:id :sign-in-button})
+      (visible? :sign-in-button)
       (e/wait-predicate #(= "Not authenticated"
-                            (e/get-element-text *browser* {:id :auth-status})))
+                            (el-text :auth-status)))
       (is (= "Not authenticated"
-             (e/get-element-text *browser* {:id :auth-status}))))))
+             (el-text :auth-status))))))
 
 (defn auth-required-handler-test-view []
   [:div {:id "view"}
@@ -707,35 +706,42 @@
     {:id "protected-action-button"
      :data-on-click
      (core/handler ^{:auth-required? true} []
-       (core/push-script! "document.getElementById('protected-result').textContent = 'Protected action executed!';"))}
+       (core/push-script!
+        (squint/clj->js
+         (set! (-> js/document
+                   (.getElementById "protected-result")
+                   (.-textContent))
+               "Protected action executed!"))))}
     "Execute Protected Action"]
    [:div#protected-result "Protected action not executed"]])
 
 (deftest auth-required-handler-test
-  (with-browser auth-required-handler-test-view (assoc weave-options :jwt-secret "test-jwt-secret")
-    (testing "Test auth-required handler functionality"
-      (e/wait-visible *browser* {:id :protected-action-button})
-      (is (e/visible? *browser* {:id :protected-action-button}))
-      (is (= "Not authenticated" (e/get-element-text *browser* {:id :auth-status})))
+  (with-browser
+    auth-required-handler-test-view
+    (assoc weave-options :jwt-secret "test-jwt-secret")
 
-      (e/click *browser* {:id :protected-action-button})
+    (testing "Test auth-required handler functionality"
+      (visible? :protected-action-button)
+      (is (= "Not authenticated" (el-text :auth-status)))
+
+      (click :protected-action-button)
       (Thread/sleep 500)
 
       (is (= "Protected action not executed"
-             (e/get-element-text *browser* {:id :protected-result})))
+             (el-text :protected-result)))
 
-      (e/click *browser* {:id :sign-in-button})
+      (click :sign-in-button)
 
-      (e/wait-visible *browser* {:id :sign-out-button})
+      (visible? :sign-out-button)
       (e/wait-predicate #(= "Authenticated as TestUser"
-                            (e/get-element-text *browser* {:id :auth-status})))
+                            (el-text :auth-status)))
 
-      (e/click *browser* {:id :protected-action-button})
+      (click :protected-action-button)
 
       (e/wait-predicate #(= "Protected action executed!"
-                            (e/get-element-text *browser* {:id :protected-result})))
+                            (el-text :protected-result)))
       (is (= "Protected action executed!"
-             (e/get-element-text *browser* {:id :protected-result}))))))
+             (el-text :protected-result))))))
 
 (deftest custom-handlers-test
   (testing "Test custom handlers functionality"
@@ -744,13 +750,18 @@
                       {:status 200
                        :headers {"Content-Type" "text/plain"}
                        :body response-body})]]
-      (with-browser (fn [] [:div "Test view"])
+      (with-browser
+        (fn [] [:div "Test view"])
         (assoc weave-options :handlers handlers)
+
         (let [response (slurp (str url "/custom-route"))]
           (is (= response-body response)))))))
 
 (deftest authenticated-test
-  (with-browser (fn [] [:div]) weave-options
+  (with-browser
+    (fn [] [:div])
+    weave-options
+
     (testing "authenticated? returns true when identity is present"
       (let [request-with-identity {:identity {:name "TestUser"}}
             request-without-identity {}]
@@ -759,7 +770,10 @@
         (is (false? (core/authenticated? nil)))))))
 
 (deftest throw-unauthorized-test
-  (with-browser (fn [] [:div]) weave-options
+  (with-browser
+    (fn [] [:div])
+    weave-options
+
     (testing "throw-unauthorized throws exception with expected data"
       (try
         (core/throw-unauthorized)
@@ -803,61 +817,75 @@
     {:id "secure-action-button"
      :data-on-click
      (core/handler []
-       (core/push-script! "document.getElementById('secure-result').textContent = 'Secure action executed!';"))}
+       (core/push-script!
+        (squint/clj->js
+         (set! (-> js/document
+                   (.getElementById "secure-result")
+                   (.-textContent))
+               "Secure action executed!"))))}
     "Execute Secure Action"]
    [:button
     {:id "public-action-button"
      :data-on-click
      (core/handler ^{:auth-required? false} []
-       (core/push-script! "document.getElementById('public-result').textContent = 'Public action executed!';"))}
+       (core/push-script!
+        (squint/clj->js
+         (set! (-> js/document
+                   (.getElementById "public-result")
+                   (.-textContent))
+               "Public action executed!"))))}
     "Execute Public Action"]
    [:div#secure-result "Secure action not executed"]
    [:div#public-result "Public action not executed"]])
 
 (deftest secure-handlers-test
-  (with-browser secure-handlers-test-view (assoc weave-options
-                                                 :jwt-secret "test-jwt-secret"
-                                                 :secure-handlers true)
-    (testing "Test secure-handlers functionality"
-      (e/wait-visible *browser* {:id :secure-action-button})
-      (is (e/visible? *browser* {:id :secure-action-button}))
-      (is (= "Not authenticated"
-             (e/get-element-text *browser* {:id :auth-status})))
+  (with-browser
+    secure-handlers-test-view
+    (assoc weave-options
+           :jwt-secret "test-jwt-secret"
+           :secure-handlers true)
 
-      (e/click *browser* {:id :secure-action-button})
+    (testing "Test secure-handlers functionality"
+      (visible? :secure-action-button)
+      (is (= "Not authenticated"
+             (el-text :auth-status)))
+
+      (click :secure-action-button)
       (Thread/sleep 100)
       (is (= "Secure action not executed"
-             (e/get-element-text *browser* {:id :secure-result})))
+             (el-text :secure-result)))
 
-      (e/click *browser* {:id :public-action-button})
+      (click :public-action-button)
       (e/wait-predicate
        #(= "Public action executed!"
-           (e/get-element-text *browser* {:id :public-result})))
+           (el-text :public-result)))
       (is (= "Public action executed!"
-             (e/get-element-text *browser* {:id :public-result})))
+             (el-text :public-result)))
 
-      (e/click *browser* {:id :sign-in-button})
-      (e/wait-visible *browser* {:id :sign-out-button})
+      (click :sign-in-button)
+      (visible? :sign-out-button)
       (e/wait-predicate
        #(= "Authenticated as TestUser"
-           (e/get-element-text *browser* {:id :auth-status})))
+           (el-text :auth-status)))
 
-      (e/click *browser* {:id :secure-action-button})
+      (click :secure-action-button)
       (e/wait-predicate
        #(= "Secure action executed!"
-           (e/get-element-text *browser* {:id :secure-result})))
+           (el-text :secure-result)))
       (is (= "Secure action executed!"
-             (e/get-element-text *browser* {:id :secure-result}))))))
+             (el-text :secure-result))))))
 
 (def read-json
   (charred/parse-json-fn
    {:async? false :bufsize 1024 :key-fn keyword}))
 
 (deftest with-icon-options-test
-  (with-browser (fn [] [:div "Icon Test"])
+  (with-browser
+    (fn [] [:div "Icon Test"])
     (assoc weave-options
            :icon "public/weave.png"
            :title "Icon Test App")
+
     (testing "Test icon options in HTML when icon is provided"
 
       (is (= "Icon Test App" (e/get-title *browser*)))
@@ -884,7 +912,10 @@
         (is (= "/icon-512.png" (-> manifest :icons second :src)))))))
 
 (deftest without-icon-options-test
-  (with-browser (fn [] [:div "No Icon Test"]) (assoc weave-options :title "No Icon Test App")
+  (with-browser
+    (fn [] [:div "No Icon Test"])
+    (assoc weave-options :title "No Icon Test App")
+
     (testing "Test that icon elements are not generated when no icon is provided"
 
       (is (= "No Icon Test App" (e/get-title *browser*)))
@@ -909,9 +940,12 @@
                      :background-color "#ff0000"
                      :theme-color "#00ff00"
                      :start-url "/start"}]
-    (with-browser (fn [] [:div "PWA Test"]) (assoc weave-options
-                                                   :icon "public/weave.png"
-                                                   :pwa pwa-options)
+    (with-browser
+      (fn [] [:div "PWA Test"])
+      (assoc weave-options
+             :icon "public/weave.png"
+             :pwa pwa-options)
+
       (testing "Test PWA options in manifest when PWA options are provided"
 
         (is (e/js-execute
@@ -929,9 +963,12 @@
           (is (= "/start" (:start_url manifest))))))))
 
 (deftest without-pwa-options-test
-  (with-browser (fn [] [:div "No PWA Test"]) (assoc weave-options
-                                                    :icon "public/weave.png"
-                                                    :title "No PWA Test App")
+  (with-browser
+    (fn [] [:div "No PWA Test"])
+    (assoc weave-options
+           :icon "public/weave.png"
+           :title "No PWA Test App")
+
     (testing "Test default PWA options in manifest when no PWA options are provided"
 
       (is (e/js-execute
