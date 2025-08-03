@@ -18,6 +18,24 @@
 
 (use-fixtures :each event-handler-fixture)
 
+(defmacro test-with-sse-variants
+  "Creates two test variants, one with SSE enabled and one with SSE disabled.
+   Usage: (test-with-sse-variants test-name view weave-options
+            ;; test body with access to *browser* binding)"
+  [test-name view weave-options & test-body]
+  (let [test-symbol (if (and (seq? test-name) (= 'quote (first test-name)))
+                      (second test-name)
+                      test-name)]
+    `(do
+       (deftest ~(symbol (str test-symbol "-with-sse"))
+         (with-browser ~view ~weave-options
+           (testing ~(str (name test-symbol) " with SSE enabled")
+             ~@test-body)))
+       (deftest ~(symbol (str test-symbol "-without-sse"))
+         (with-browser ~view (assoc-in ~weave-options [:sse :enabled] false)
+           (testing ~(str (name test-symbol) " with SSE disabled")
+             ~@test-body))))))
+
 (deftest request-headers-test
   (testing "Test request header options"
     (is (= "{}"
@@ -100,21 +118,14 @@
   [:div
    [:h1#content "Hello, Weave!"]])
 
-(deftest page-load-test-with-sse
-  (with-browser page-load-test-view weave-options
-    (testing "App renders with SSE enabled"
-      (e/wait-visible *browser* {:id :content})
-      (is (e/visible? *browser* {:id :content}))
-      (is (= "Hello, Weave!"
-             (e/get-element-text *browser* {:id :content}))))))
+(test-with-sse-variants
+ 'page-load-test page-load-test-view weave-options
 
-(deftest page-load-test-without-sse
-  (with-browser page-load-test-view (assoc-in weave-options [:sse :enabled] false)
-    (testing "App renders with SSE disabled"
-      (e/wait-visible *browser* {:id :content})
-      (is (e/visible? *browser* {:id :content}))
-      (is (= "Hello, Weave!"
-             (e/get-element-text *browser* {:id :content}))))))
+ (e/wait-visible *browser* {:id :content})
+ (is (e/visible? *browser* {:id :content}))
+
+ (is (= "Hello, Weave!"
+        (e/get-element-text *browser* {:id :content}))))
 
 (defn push-html-test-view [click-count]
   [:div#view
@@ -128,29 +139,20 @@
         (push-html-test-view click-count)))}
     "Click Me"]])
 
-(deftest push-html-test-with-sse
-  (let [counter (atom 41)
-        view (fn [] (push-html-test-view counter))]
-    (with-browser view weave-options
-      (testing "push-html! updates the view with SSE enabled"
-        (e/wait-visible *browser* {:id :increment-button})
-        (is (e/visible? *browser* {:id :increment-button}))
-        (is (= "41" (e/get-element-text *browser* {:id :count})))
-        (e/click *browser* {:id :increment-button})
-        (e/wait-predicate #(= "42" (e/get-element-text *browser* {:id :count})))
-        (is (= "42" (e/get-element-text *browser* {:id :count})))))))
+(test-with-sse-variants
+ 'push-html-test
 
-(deftest push-html-test-without-sse
-  (let [counter (atom 41)
-        view (fn [] (push-html-test-view counter))]
-    (with-browser view (assoc-in weave-options [:sse :enabled] false)
-      (testing "push-html! updates the view with SSE disabled"
-        (e/wait-visible *browser* {:id :increment-button})
-        (is (e/visible? *browser* {:id :increment-button}))
-        (is (= "41" (e/get-element-text *browser* {:id :count})))
-        (e/click *browser* {:id :increment-button})
-        (e/wait-predicate #(= "42" (e/get-element-text *browser* {:id :count})))
-        (is (= "42" (e/get-element-text *browser* {:id :count})))))))
+ (let [counter (atom 41)]
+   (fn [] (push-html-test-view counter)))
+ weave-options
+
+ (e/wait-visible *browser* {:id :increment-button})
+ (is (e/visible? *browser* {:id :increment-button}))
+ (is (= "41" (e/get-element-text *browser* {:id :count})))
+
+ (e/click *browser* {:id :increment-button})
+ (e/wait-predicate #(= "42" (e/get-element-text *browser* {:id :count})))
+ (is (= "42" (e/get-element-text *browser* {:id :count}))))
 
 (defn push-html-append-test-view []
   [:div#view
@@ -261,39 +263,26 @@
      [:input {:type "email" :id "email" :name "email" :required true}]]
     [:button {:type "submit" :id "submit-btn"} "Submit"]]])
 
-(deftest form-submission-test-with-sse
-  (with-browser form-submission-test-view weave-options
-    (testing "Test form submission with SSE enabled"
-      (e/wait-visible *browser* {:id :test-form})
-      (is (e/visible? *browser* {:id :test-form}))
+(test-with-sse-variants
+ 'form-submission-test form-submission-test-view weave-options
 
-      (e/fill *browser* {:id :name} "John Doe")
-      (e/fill *browser* {:id :email} "john@example.com")
+ (e/wait-visible *browser* {:id :test-form})
+ (is (e/visible? *browser* {:id :test-form}))
 
-      (e/click *browser* {:id :submit-btn})
+ (e/fill *browser* {:id :name} "John Doe")
+ (e/fill *browser* {:id :email} "john@example.com")
 
-      (e/wait-visible *browser* {:id :result})
-      (is (e/visible? *browser* {:id :result}))
+ (e/click *browser* {:id :submit-btn})
 
-      (is (str/includes? (e/get-element-text *browser* {:id :result}) "Hello John Doe!"))
-      (is (str/includes? (e/get-element-text *browser* {:id :result}) "Email: john@example.com")))))
+ (e/wait-visible *browser* {:id :result})
+ (is (e/visible? *browser* {:id :result}))
 
-(deftest form-submission-test-without-sse
-  (with-browser form-submission-test-view (assoc-in weave-options [:sse :enabled] false)
-    (testing "Test form submission without SSE"
-      (e/wait-visible *browser* {:id :test-form})
-      (is (e/visible? *browser* {:id :test-form}))
-
-      (e/fill *browser* {:id :name} "Jane Smith")
-      (e/fill *browser* {:id :email} "jane@example.com")
-
-      (e/click *browser* {:id :submit-btn})
-
-      (e/wait-visible *browser* {:id :result})
-      (is (e/visible? *browser* {:id :result}))
-
-      (is (str/includes? (e/get-element-text *browser* {:id :result}) "Hello Jane Smith!"))
-      (is (str/includes? (e/get-element-text *browser* {:id :result}) "Email: jane@example.com")))))
+ (is (str/includes?
+      (e/get-element-text *browser* {:id :result})
+      "Hello John Doe!"))
+ (is (str/includes?
+      (e/get-element-text *browser* {:id :result})
+      "Email: john@example.com")))
 
 (defn broadcast-html-test-view [click-count]
   [:div#view
@@ -361,25 +350,18 @@
       [:div#default-content
        "Select a page from the navigation above"])]])
 
-(deftest push-path-test-with-sse
-  (with-browser push-path-test-view weave-options
-    (testing "Test push-path! functionality with SSE enabled"
-      (e/wait-visible *browser* {:id :default-content})
-      (is (e/visible? *browser* {:id :default-content}))
-      (e/click *browser* {:id :trigger-view-two})
-      (e/wait-predicate
-       #(= "Page Two Content" (e/get-element-text *browser* {:id :page-two-content})))
-      (is (= "Page Two Content" (e/get-element-text *browser* {:id :page-two-content}))))))
+(test-with-sse-variants
+ 'push-path-test push-path-test-view weave-options
 
-(deftest push-path-test-without-sse
-  (with-browser push-path-test-view (assoc-in weave-options [:sse :enabled] false)
-    (testing "Test push-path! functionality with SSE disabled"
-      (e/wait-visible *browser* {:id :default-content})
-      (is (e/visible? *browser* {:id :default-content}))
-      (e/click *browser* {:id :trigger-view-two})
-      (e/wait-predicate
-       #(= "Page Two Content" (e/get-element-text *browser* {:id :page-two-content})))
-      (is (= "Page Two Content" (e/get-element-text *browser* {:id :page-two-content}))))))
+ (e/wait-visible *browser* {:id :default-content})
+ (is (e/visible? *browser* {:id :default-content}))
+
+ (e/click *browser* {:id :trigger-view-two})
+ (e/wait-predicate
+  #(= "Page Two Content"
+      (e/get-element-text *browser* {:id :page-two-content})))
+ (is (= "Page Two Content"
+        (e/get-element-text *browser* {:id :page-two-content}))))
 
 (defn broadcast-path-test-view []
   [:div {:id "view"}
@@ -479,27 +461,18 @@
         "document.getElementById('content').textContent = 'Script executed!';"))}
     "Execute Script"]])
 
-(deftest push-script-test-with-sse
-  (with-browser push-script-test-view weave-options
-    (testing "Test push-script! functionality with SSE enabled"
-      (e/wait-visible *browser* {:id :execute-script-button})
-      (is (e/visible? *browser* {:id :execute-script-button}))
-      (is (= "Initial content" (e/get-element-text *browser* {:id :content})))
+(test-with-sse-variants
+ 'push-script-test push-script-test-view weave-options
 
-      (e/click *browser* {:id :execute-script-button})
-      (e/wait-predicate #(= "Script executed!" (e/get-element-text *browser* {:id :content})))
-      (is (= "Script executed!" (e/get-element-text *browser* {:id :content}))))))
+ (e/wait-visible *browser* {:id :execute-script-button})
+ (is (e/visible? *browser* {:id :execute-script-button}))
+ (is (= "Initial content"
+        (e/get-element-text *browser* {:id :content})))
 
-(deftest push-script-test-without-sse
-  (with-browser push-script-test-view (assoc-in weave-options [:sse :enabled] false)
-    (testing "Test push-script! functionality with SSE disabled"
-      (e/wait-visible *browser* {:id :execute-script-button})
-      (is (e/visible? *browser* {:id :execute-script-button}))
-      (is (= "Initial content" (e/get-element-text *browser* {:id :content})))
-
-      (e/click *browser* {:id :execute-script-button})
-      (e/wait-predicate #(= "Script executed!" (e/get-element-text *browser* {:id :content})))
-      (is (= "Script executed!" (e/get-element-text *browser* {:id :content}))))))
+ (e/click *browser* {:id :execute-script-button})
+ (e/wait-predicate
+  #(= "Script executed!" (e/get-element-text *browser* {:id :content})))
+ (is (= "Script executed!" (e/get-element-text *browser* {:id :content}))))
 
 (defn broadcast-script-test-view []
   [:div {:id "view"}
@@ -559,29 +532,17 @@
    [:div {:data-signals-foo "0"}
     [:input#signal-value {:data-bind-foo true}]]])
 
-(deftest push-signal-test-with-sse
-  (with-browser push-signal-test-view weave-options
-    (testing "Test push-signal! functionality with SSE enabled"
-      (e/wait-visible *browser* {:id :increment-button})
-      (is (e/visible? *browser* {:id :increment-button}))
+(test-with-sse-variants
+ 'push-signal-test push-signal-test-view weave-options
 
-      (e/click *browser* {:id :increment-button})
+ (e/wait-visible *browser* {:id :increment-button})
+ (is (e/visible? *browser* {:id :increment-button}))
 
-      (e/wait-predicate
-       #(= "42" (e/get-element-value *browser* {:id :signal-value})))
-      (is (= "42" (e/get-element-value *browser* {:id :signal-value}))))))
+ (e/click *browser* {:id :increment-button})
 
-(deftest push-signal-test-without-sse
-  (with-browser push-signal-test-view (assoc-in weave-options [:sse :enabled] false)
-    (testing "Test push-signal! functionality with SSE disabled"
-      (e/wait-visible *browser* {:id :increment-button})
-      (is (e/visible? *browser* {:id :increment-button}))
-
-      (e/click *browser* {:id :increment-button})
-
-      (e/wait-predicate
-       #(= "42" (e/get-element-value *browser* {:id :signal-value})))
-      (is (= "42" (e/get-element-value *browser* {:id :signal-value}))))))
+ (e/wait-predicate
+  #(= "42" (e/get-element-value *browser* {:id :signal-value})))
+ (is (= "42" (e/get-element-value *browser* {:id :signal-value}))))
 
 (defn local-signal-test-view []
   [:div {:id "view"}
@@ -595,31 +556,18 @@
           :data-show "$_showDiv"}
     "This div was hidden but is now visible!"]])
 
-(deftest local-signal-test-with-sse
-  (with-browser local-signal-test-view weave-options
-    (testing "Test local signal with underscore prefix"
-      (e/wait-visible *browser* {:id :show-button})
-      (is (e/visible? *browser* {:id :show-button}))
+(test-with-sse-variants
+ 'local-signal-test local-signal-test-view weave-options
 
-      (is (not (e/visible? *browser* {:id :hidden-div})))
+ (e/wait-visible *browser* {:id :show-button})
+ (is (e/visible? *browser* {:id :show-button}))
 
-      (e/click *browser* {:id :show-button})
+ (is (not (e/visible? *browser* {:id :hidden-div})))
 
-      (e/wait-visible *browser* {:id :hidden-div})
-      (is (e/visible? *browser* {:id :hidden-div})))))
+ (e/click *browser* {:id :show-button})
 
-(deftest local-signal-test-without-sse
-  (with-browser local-signal-test-view (assoc-in weave-options [:sse :enabled] false)
-    (testing "Test local signal with underscore prefix."
-      (e/wait-visible *browser* {:id :show-button})
-      (is (e/visible? *browser* {:id :show-button}))
-
-      (is (not (e/visible? *browser* {:id :hidden-div})))
-
-      (e/click *browser* {:id :show-button})
-
-      (e/wait-visible *browser* {:id :hidden-div})
-      (is (e/visible? *browser* {:id :hidden-div})))))
+ (e/wait-visible *browser* {:id :hidden-div})
+ (is (e/visible? *browser* {:id :hidden-div})))
 
 (defn data-call-with-test-view []
   [:div {:id "view"}
@@ -640,39 +588,27 @@
         :data-on-click handle-action}
        "Delete"]])])
 
-(deftest data-call-with-test-with-sse
-  (with-browser data-call-with-test-view weave-options
-    (testing "Test data-call-with attribute functionality with SSE enabled"
-      (e/wait-visible *browser* {:id :edit-button})
-      (is (e/visible? *browser* {:id :edit-button}))
-      (is (= "No action performed yet" (e/get-element-text *browser* {:id :result})))
+(test-with-sse-variants
+ 'data-call-with-test data-call-with-test-view weave-options
 
-      (e/click *browser* {:id :edit-button})
-      (e/wait-predicate
-       #(= "Action: edit, Item: 123" (e/get-element-text *browser* {:id :result})))
-      (is (= "Action: edit, Item: 123" (e/get-element-text *browser* {:id :result})))
+ (e/wait-visible *browser* {:id :edit-button})
+ (is (e/visible? *browser* {:id :edit-button}))
+ (is (= "No action performed yet"
+        (e/get-element-text *browser* {:id :result})))
 
-      (e/click *browser* {:id :delete-button})
-      (e/wait-predicate
-       #(= "Action: delete, Item: 456" (e/get-element-text *browser* {:id :result})))
-      (is (= "Action: delete, Item: 456" (e/get-element-text *browser* {:id :result}))))))
+ (e/click *browser* {:id :edit-button})
+ (e/wait-predicate
+  #(= "Action: edit, Item: 123"
+      (e/get-element-text *browser* {:id :result})))
+ (is (= "Action: edit, Item: 123"
+        (e/get-element-text *browser* {:id :result})))
 
-(deftest data-call-with-test-without-sse
-  (with-browser data-call-with-test-view (assoc-in weave-options [:sse :enabled] false)
-    (testing "Test data-call-with attribute functionality with SSE disabled"
-      (e/wait-visible *browser* {:id :edit-button})
-      (is (e/visible? *browser* {:id :edit-button}))
-      (is (= "No action performed yet" (e/get-element-text *browser* {:id :result})))
-
-      (e/click *browser* {:id :edit-button})
-      (e/wait-predicate
-       #(= "Action: edit, Item: 123" (e/get-element-text *browser* {:id :result})))
-      (is (= "Action: edit, Item: 123" (e/get-element-text *browser* {:id :result})))
-
-      (e/click *browser* {:id :delete-button})
-      (e/wait-predicate
-       #(= "Action: delete, Item: 456" (e/get-element-text *browser* {:id :result})))
-      (is (= "Action: delete, Item: 456" (e/get-element-text *browser* {:id :result}))))))
+ (e/click *browser* {:id :delete-button})
+ (e/wait-predicate
+  #(= "Action: delete, Item: 456"
+      (e/get-element-text *browser* {:id :result})))
+ (is (= "Action: delete, Item: 456"
+        (e/get-element-text *browser* {:id :result}))))
 
 (defn set-cookie-test-view []
   [:div {:id "view"}
