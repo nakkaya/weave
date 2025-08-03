@@ -53,7 +53,17 @@
            (#'core/request-options {:type :form :selector "#myform"})))
     (is (= "{contentType: 'form', openWhenHidden: true, selector: '#myform'}"
            (#'core/request-options
-            {:type :form :keep-alive true :selector "#myform"})))))
+            {:type :form :keep-alive true :selector "#myform"})))
+    (is (= "{}"
+           (#'core/request-options {:filter-signals {}})))
+    (is (= "{filterSignals: { include: /.*test.*/, exclude: /(^|\\.)_/ }}"
+           (#'core/request-options {:filter-signals {:include ".*test.*"}})))
+    (is (= "{filterSignals: { include: /.*public.*/, exclude: /.*private.*/ }}"
+           (#'core/request-options
+            {:filter-signals {:include ".*public.*" :exclude ".*private.*"}})))
+    (is (= "{contentType: 'form', filterSignals: { include: /.*/, exclude: /.*private.*/ }}"
+           (#'core/request-options
+            {:type :form :filter-signals {:exclude ".*private.*"}})))))
 
 (defn instance-id-test-view []
   [:div
@@ -561,6 +571,63 @@
  (click :show-button)
 
  (visible? :hidden-div))
+
+(defn filter-signals-test-view []
+  [:div {:id "view"
+         :data-signals-public-data "1"
+         :data-signals-other-field "-1"
+         :data-signals-public-name "2"}
+   [:div#result "No signals received"]
+   [:button
+    {:id "send-signals-button"
+     :data-on-click
+     (core/handler ^{:filter-signals {:include ".*public.*"
+                                      :exclude ".*private.*"}} []
+       (let [signals core/*signals*]
+         (core/push-html!
+          [:div#result
+           [:p "Received signals:"]
+           [:ul
+            (for [[k v] signals]
+              [:li (str (name k) ": " v)])]])))}
+    "Send Signals"]
+   [:button
+    {:id "send-all-signals-button"
+     :data-on-click
+     (core/handler [] ;; no filter
+       (let [signals core/*signals*]
+         (core/push-html!
+          [:div#result
+           [:p "All signals received:"]
+           [:ul
+            (for [[k v] signals]
+              [:li (str (name k) ": " v)])]])))}
+    "Send All Signals"]])
+
+(test-with-sse-variants
+ 'filter-signals-test
+ filter-signals-test-view
+
+ (visible? :send-signals-button)
+ (is (= "No signals received" (el-text :result)))
+
+ (click :send-signals-button)
+ (e/wait-predicate
+  #(str/includes? (el-text :result) "Received signals:"))
+
+ (let [result-text (el-text :result)]
+   (is (str/includes? result-text "public-data: 1"))
+   (is (str/includes? result-text "public-name: 2"))
+   (is (not (str/includes? result-text "-1"))))
+
+ (click :send-all-signals-button)
+ (e/wait-predicate
+  #(str/includes? (el-text :result) "All signals received:"))
+
+ (let [result-text (el-text :result)]
+   (is (str/includes? result-text "public-data: 1"))
+   (is (str/includes? result-text "other-field: -1"))
+   (is (str/includes? result-text "public-name: 2"))))
 
 (defn data-call-with-test-view []
   [:div {:id "view"}

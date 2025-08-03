@@ -116,6 +116,7 @@
             :type - The content type (:form for form data)
             :keep-alive - Whether to keep the connection alive when tab is hidden
             :selector - CSS selector for the form to submit (e.g. \"#myform\")
+            :filter-signals - Map with :include and :exclude regex patterns
 
    Returns:
      A datastar string containing configured options."
@@ -124,7 +125,8 @@
         has-options? (or (= (:type opts) :form)
                          (= (:type opts) :sign-in)
                          (:keep-alive opts)
-                         (:selector opts))]
+                         (:selector opts)
+                         (:filter-signals opts))]
     (if has-options?
       (do
         (.append sb "{")
@@ -144,6 +146,22 @@
           (.append sb "selector: '")
           (.append sb selector)
           (.append sb "'"))
+        (when-let [filter-signals (:filter-signals opts)]
+          (when (or (:include filter-signals) (:exclude filter-signals))
+            (when (or (= (:type opts) :form)
+                      (= (:type opts) :sign-in)
+                      (:keep-alive opts)
+                      (:selector opts))
+              (.append sb ", "))
+            (.append sb "filterSignals: { include: ")
+            (.append sb (if-let [include (:include filter-signals)]
+                          (str "/" include "/")
+                          "/.*/"))
+            (.append sb ", exclude: ")
+            (.append sb (if-let [exclude (:exclude filter-signals)]
+                          (str "/" exclude "/")
+                          "/(^|\\.)_/"))
+            (.append sb " }")))
         (.append sb "}"))
       (.append sb "{}"))
     (.toString sb)))
