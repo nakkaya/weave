@@ -36,38 +36,6 @@ jobs:
 
       - run: clojure -X:test
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: success()
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Install Clojure
-        run: |
-          curl -O https://download.clojure.org/install/linux-install-1.11.1.1237.sh
-          chmod +x linux-install-1.11.1.1237.sh
-          sudo ./linux-install-1.11.1.1237.sh
-
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/deps.edn') }}
-          restore-keys: |
-            ${{ runner.os }}-m2-
-
-      - name: Build JAR
-        run: clojure -X:build
-
-      - name: Deploy to S3
-        run: clojure -X:deploy
-        env:
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
   docs:
     needs: test
     runs-on: ubuntu-latest
