@@ -1,4 +1,4 @@
-(ns weave.browser
+(ns weave.test.browser
   (:require
    [clojure.test :refer [is]]
    [etaoin.api :as e]

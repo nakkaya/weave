@@ -6,7 +6,7 @@
    [compojure.core :refer [GET]]
    [etaoin.api :as e]
    [integrant.core :as ig]
-   [weave.browser :refer [*browser* with-browser url weave-options visible? fill click el-text new-tab tabs switch-tab] :as browser]
+   [weave.test.browser :refer [*browser* with-browser url weave-options visible? fill click el-text new-tab tabs switch-tab] :as browser]
    [weave.core :as core]
    [weave.session :as session]
    [weave.squint :as squint]))
