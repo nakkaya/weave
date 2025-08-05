@@ -48,7 +48,7 @@ Add Weave to your `deps.edn` file:
     "CLICK ME"]])
 
 (defn -main []
-  (weave/run view {:port 8080}))
+  (weave/run view {}))
 #+end_src
 
 ** Examples
