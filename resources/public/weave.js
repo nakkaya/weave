@@ -123,7 +123,6 @@ import('./datastar@v1.0.0-RC.1.js').then(({ load, apply }) => {
 		    'x-server-id': window.weave.server(),
                     'x-csrf-token': window.weave.csrf(),
                     'x-instance-id': window.weave.instance(),
-                    'x-app-path': window.weave.path(),
                     ...(options.headers || {})
                 }
             }
@@ -161,5 +160,9 @@ import('./datastar@v1.0.0-RC.1.js').then(({ load, apply }) => {
             const options = window.weaveKeepAlive ? '{openWhenHidden: true}' : '{}'
             mainEl.setAttribute('data-on-load', `@call('/app-loader', ${options})`)
         }
+
+	// document.addEventListener('datastar-signal-patch', (event) => {
+	//     console.log('signal change:', event.detail)
+	// })
     }, 0)
 })

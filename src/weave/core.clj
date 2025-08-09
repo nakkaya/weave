@@ -77,12 +77,13 @@
          headers# (:headers ~req)
          csrf-token# (get headers# "x-csrf-token")
          instance-id# (get headers# "x-instance-id")
-         app-path# (get headers# "x-app-path")]
+         signals# (get-signals ~req)
+         app-path# (get signals# :weave-app-path)]
      (binding [*session-id* session-id#
                *instance-id* instance-id#
                *app-path* app-path#
                *request* ~req
-               *signals* (get-signals ~req)]
+               *signals* signals#]
        ~@body)))
 
 (defn- from-camel-case
@@ -209,6 +210,7 @@
               (str "weave.setup('" server-id "', " keep-alive ");"))]
            (:head opts)]
           [:body {:class "w-full h-full"}
+           [:div {:data-signals-weave-app-path "weave.path()"}]
            [:div {:id "weave-main" :class "w-full h-full"}]]]]))
       (resp/content-type "text/html")
       (resp/charset "UTF-8")))
@@ -434,41 +436,6 @@
      (doseq [sse connections]
        (d*/patch-elements! sse (c/html html) patch-opts)))))
 
-(defn push-path!
-  "Change the URL hash for the specific browser tab/window that
-   triggered the current handler."
-  ([url]
-   (push-path! url nil))
-  ([url view-fn]
-   (let [sse (sse-conn)
-         cmd (str "weave.pushHistoryState('" url "');")]
-
-     (d*/patch-signals!
-      sse
-      (charred/write-json-str {:app {:path url}}))
-     (d*/execute-script! sse cmd)
-     (when view-fn
-       (binding [*app-path* url]
-         (push-html! (view-fn)))))))
-
-(defn broadcast-path!
-  "Change the URL hash for all browser tabs/windows that share the same
-   session ID."
-  ([url]
-   (broadcast-path! url nil))
-  ([url view-fn]
-   (let [connections (session/session-connections *session-id*)
-         cmd (str "weave.pushHistoryState('" url "');")]
-     (doseq [sse connections]
-       (d*/patch-signals!
-        sse
-        (charred/write-json-str {:app {:path url}}))
-       (d*/execute-script! sse cmd))
-     (when view-fn
-       (binding [*app-path* url]
-         (doseq [sse connections]
-           (d*/patch-elements! sse (c/html (view-fn)))))))))
-
 (defn push-script!
   "Send JavaScript to the specific browser tab/window that
    triggered the current handler for execution."
@@ -505,6 +472,34 @@
    (sse-conn) (->> signal
                    (cske/transform-keys to-camel-case)
                    (charred/write-json-str))))
+
+(defn push-path!
+  "Change the URL hash for the specific browser tab/window that
+   triggered the current handler."
+  ([url]
+   (push-path! url nil))
+  ([url view-fn]
+   (push-signal! {:weave-app-path url})
+   (push-script! (str "weave.pushHistoryState('" url "');"))
+   (when view-fn
+     (binding [*app-path* url]
+       (push-html! (view-fn))))))
+
+(defn broadcast-path!
+  "Change the URL hash for all browser tabs/windows that share the same
+   session ID."
+  ([url]
+   (broadcast-path! url nil))
+  ([url view-fn]
+   (let [connections (session/session-connections *session-id*)]
+     (doseq [sse connections]
+       (binding [*sse-gen* sse]
+         (push-signal! {:weave-app-path url})
+         (push-script! (str "weave.pushHistoryState('" url "');"))))
+     (when view-fn
+       (binding [*app-path* url]
+         (doseq [sse connections]
+           (d*/patch-elements! sse (c/html (view-fn)))))))))
 
 (defn set-cookie!
   "Send a Set-Cookie header to the specific browser tab/window that
