@@ -88,7 +88,7 @@ window.weave = {
     }
 }
 
-import('./datastar@v1.0.0-RC.1.js').then(({ load, apply }) => {
+import('./datastar@v1.0.0-RC.4.js').then(({ load, apply }) => {
     // Define and load the CallAction
     const CallAction = {
 	type: 'action',
