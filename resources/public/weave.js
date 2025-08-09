@@ -65,12 +65,25 @@ window.weave = {
 	if (!hashPath) {
             return "/"
 	}
-	return hashPath.startsWith("/") ? hashPath : "/" + hashPath
+	let normalizedPath = hashPath.startsWith("/") ? hashPath : "/" + hashPath
+
+	if (normalizedPath !== "/" && normalizedPath.endsWith("/")) {
+	    normalizedPath = normalizedPath.slice(0, -1)
+	    window.__pushHashChange = true
+	    history.replaceState(null, null, "#" + normalizedPath)
+	    window.__pushHashChange = false
+	}
+	return normalizedPath
     },
 
     pushHistoryState: function(url) {
 	window.__pushHashChange = true
-	history.pushState(null, null, "#" + url)
+
+	let normalizedUrl = url
+	if (normalizedUrl !== "/" && normalizedUrl.endsWith("/")) {
+	    normalizedUrl = normalizedUrl.slice(0, -1)
+	}
+	history.pushState(null, null, "#" + normalizedUrl)
 	window.__pushHashChange = false
     }
 }
