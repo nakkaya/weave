@@ -254,7 +254,8 @@
        (c/html
         [:div {:id "weave-main"
                :class "w-full h-full"}
-         (view)]))
+         (binding [*sse-gen* sse-gen]
+           (view))]))
       (session/add-connection!
        *session-id* *instance-id* sse-gen))
 
@@ -273,7 +274,8 @@
        (c/html
         [:div {:id "weave-main"
                :class "w-full h-full"}
-         (view)]))
+         (binding [*sse-gen* sse-gen]
+           (view))]))
       (d*/close-sse! sse-gen))}))
 
 (defn authenticated?
