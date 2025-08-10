@@ -28,10 +28,11 @@ function getOrCreateInstanceId() {
 }
 
 window.weave = {
-    setup: function(serverId, keepAlive = false) {
+    setup: function(serverId, keepAlive = false, devMode = false) {
 	window.weaveServerId = serverId
 	window.weaveInstanceId = getOrCreateInstanceId()
 	window.weaveKeepAlive = keepAlive
+	window.weaveDevMode = devMode
 
 	tailwind.config = {darkMode: "class"}
 
@@ -161,8 +162,10 @@ import('./datastar@v1.0.0-RC.4.js').then(({ load, apply }) => {
             mainEl.setAttribute('data-on-load', `@call('/app-loader', ${options})`)
         }
 
-	// document.addEventListener('datastar-signal-patch', (event) => {
-	//     console.log('signal change:', event.detail)
-	// })
+	if (window.weaveDevMode) {
+	    document.addEventListener('datastar-signal-patch', (event) => {
+		console.log('signal change:', event.detail)
+	    })
+	}
     }, 0)
 })

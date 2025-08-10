@@ -181,7 +181,8 @@
             :icon - Path to an icon file in the classpath (PNG format)
             :head - Additional HTML to include in the head section
             :view-port - The viewport meta tag
-            :keep-alive - Whether to keep SSE connections alive when tab is hidden"
+            :keep-alive - Whether to keep SSE connections alive when tab is hidden
+            :dev-mode - When true, enables additional development features like signal change logging"
   [server-id opts]
   (-> (resp/response
        (c/html
@@ -206,11 +207,25 @@
            [:script {:src "/squint@v0.8.147.js"}]
            [:script {:type "module" :src "/weave.js"}]
            [:script {:type "module"}
-            (let [keep-alive (get-in opts [:sse :keep-alive] false)]
-              (str "weave.setup('" server-id "', " keep-alive ");"))]
+            (let [keep-alive (get-in opts [:sse :keep-alive] false)
+                  dev-mode (get opts :dev-mode false)]
+              (str "weave.setup('" server-id "', " keep-alive ", " dev-mode ");"))]
            (:head opts)]
           [:body {:class "w-full h-full"}
            [:div {:data-signals-weave-app-path "weave.path()"}]
+           (when (:dev-mode opts)
+             [:div {:id "weave-dev-debug"
+                    :class "fixed top-1 right-1 z-50 flex flex-col items-end gap-2"
+                    :data-signals-weave-signals "false"}
+              [:button {:class "bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded shadow-lg border border-blue-500"
+                        :data-on-click "$weaveSignals = !$weaveSignals"}
+               "↖"]
+              [:div {:class "bg-gray-900 text-green-400 text-xs p-3 rounded shadow-lg max-w-md max-h-96 overflow-auto"
+                     :data-show "$weaveSignals"
+                     :style "display: none;"}
+               [:div {:class "flex justify-between items-center mb-2"}]
+               [:pre {:data-json-signals ""
+                      :class "whitespace-pre-wrap break-words text-xs"}]]])
            [:div {:id "weave-main" :class "w-full h-full"}]]]]))
       (resp/content-type "text/html")
       (resp/charset "UTF-8")))
@@ -651,6 +666,7 @@
               :sse - Server-Sent Events options map:
                     :enabled - Whether to enable SSE (default: true)
                     :keep-alive - Whether to keep SSE connections alive when tab is hidden (default: false)
+              :dev-mode - When true, enables additional development features like signal change logging (default: false)
               :handlers - A vector of custom route handlers (Compojure routes) that
                           will be included in the application's routing system
               :middleware - A sequence of middleware functions to apply to the handler chain
