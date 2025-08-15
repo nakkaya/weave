@@ -117,6 +117,11 @@
             :keep-alive - Whether to keep the connection alive when tab is hidden
             :selector - CSS selector for the form to submit (e.g. \"#myform\")
             :filter-signals - Map with :include and :exclude regex patterns
+            :retry-interval - The retry interval in milliseconds
+            :retry-scaler - A numeric multiplier applied to scale retry wait times
+            :retry-max-wait-ms - The maximum allowable wait time in milliseconds between retries
+            :retry-max-count - The maximum number of retry attempts
+            :request-cancellation - Controls request cancellation behavior
 
    Returns:
      A datastar string containing configured options."
@@ -126,7 +131,12 @@
                          (= (:type opts) :sign-in)
                          (:keep-alive opts)
                          (:selector opts)
-                         (:filter-signals opts))]
+                         (:filter-signals opts)
+                         (:retry-interval opts)
+                         (:retry-scaler opts)
+                         (:retry-max-wait-ms opts)
+                         (:retry-max-count opts)
+                         (:request-cancellation opts))]
     (if has-options?
       (do
         (.append sb "{")
@@ -162,6 +172,62 @@
                           (str "/" exclude "/")
                           "/(^|\\.)_/"))
             (.append sb " }")))
+        (when-let [retry-interval (:retry-interval opts)]
+          (when (or (= (:type opts) :form)
+                    (= (:type opts) :sign-in)
+                    (:keep-alive opts)
+                    (:selector opts)
+                    (:filter-signals opts))
+            (.append sb ", "))
+          (.append sb "retryInterval: ")
+          (.append sb retry-interval))
+        (when-let [retry-scaler (:retry-scaler opts)]
+          (when (or (= (:type opts) :form)
+                    (= (:type opts) :sign-in)
+                    (:keep-alive opts)
+                    (:selector opts)
+                    (:filter-signals opts)
+                    (:retry-interval opts))
+            (.append sb ", "))
+          (.append sb "retryScaler: ")
+          (.append sb retry-scaler))
+        (when-let [retry-max-wait-ms (:retry-max-wait-ms opts)]
+          (when (or (= (:type opts) :form)
+                    (= (:type opts) :sign-in)
+                    (:keep-alive opts)
+                    (:selector opts)
+                    (:filter-signals opts)
+                    (:retry-interval opts)
+                    (:retry-scaler opts))
+            (.append sb ", "))
+          (.append sb "retryMaxWaitMs: ")
+          (.append sb retry-max-wait-ms))
+        (when-let [retry-max-count (:retry-max-count opts)]
+          (when (or (= (:type opts) :form)
+                    (= (:type opts) :sign-in)
+                    (:keep-alive opts)
+                    (:selector opts)
+                    (:filter-signals opts)
+                    (:retry-interval opts)
+                    (:retry-scaler opts)
+                    (:retry-max-wait-ms opts))
+            (.append sb ", "))
+          (.append sb "retryMaxCount: ")
+          (.append sb retry-max-count))
+        (when-let [request-cancellation (:request-cancellation opts)]
+          (when (or (= (:type opts) :form)
+                    (= (:type opts) :sign-in)
+                    (:keep-alive opts)
+                    (:selector opts)
+                    (:filter-signals opts)
+                    (:retry-interval opts)
+                    (:retry-scaler opts)
+                    (:retry-max-wait-ms opts)
+                    (:retry-max-count opts))
+            (.append sb ", "))
+          (.append sb "requestCancellation: '")
+          (.append sb request-cancellation)
+          (.append sb "'"))
         (.append sb "}"))
       (.append sb "{}"))
     (.toString sb)))

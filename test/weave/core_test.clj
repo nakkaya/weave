@@ -63,7 +63,49 @@
             {:filter-signals {:include ".*public.*" :exclude ".*private.*"}})))
     (is (= "{contentType: 'form', filterSignals: { include: /.*/, exclude: /.*private.*/ }}"
            (#'core/request-options
-            {:type :form :filter-signals {:exclude ".*private.*"}})))))
+            {:type :form :filter-signals {:exclude ".*private.*"}})))
+
+    (is (= "{retryInterval: 2000}"
+           (#'core/request-options {:retry-interval 2000})))
+    (is (= "{retryScaler: 1.5}"
+           (#'core/request-options {:retry-scaler 1.5})))
+    (is (= "{retryMaxWaitMs: 60000}"
+           (#'core/request-options {:retry-max-wait-ms 60000})))
+    (is (= "{retryMaxCount: 5}"
+           (#'core/request-options {:retry-max-count 5})))
+    (is (= "{requestCancellation: 'disabled'}"
+           (#'core/request-options {:request-cancellation "disabled"})))
+
+    (is (= "{contentType: 'form', retryInterval: 3000}"
+           (#'core/request-options {:type :form :retry-interval 3000})))
+    (is (= "{openWhenHidden: true, retryScaler: 2}"
+           (#'core/request-options {:keep-alive true :retry-scaler 2})))
+
+    (is (= "{retryInterval: 1000, retryScaler: 2, retryMaxWaitMs: 30000}"
+           (#'core/request-options {:retry-interval 1000
+                                    :retry-scaler 2
+                                    :retry-max-wait-ms 30000})))
+
+    (is (= "{contentType: 'form', openWhenHidden: true, selector: '#form', retryInterval: 1500, retryScaler: 2.5, retryMaxWaitMs: 45000, retryMaxCount: 8, requestCancellation: 'auto'}"
+           (#'core/request-options {:type :form
+                                    :keep-alive true
+                                    :selector "#form"
+                                    :retry-interval 1500
+                                    :retry-scaler 2.5
+                                    :retry-max-wait-ms 45000
+                                    :retry-max-count 8
+                                    :request-cancellation "auto"})))
+
+    (is (= "{contentType: 'form', openWhenHidden: true, selector: '#form', filterSignals: { include: /.*test.*/, exclude: /(^|\\.)_/ }, retryInterval: 1500, retryScaler: 2.5, retryMaxWaitMs: 45000, retryMaxCount: 8, requestCancellation: 'auto'}"
+           (#'core/request-options {:type :form
+                                    :keep-alive true
+                                    :selector "#form"
+                                    :filter-signals {:include ".*test.*"}
+                                    :retry-interval 1500
+                                    :retry-scaler 2.5
+                                    :retry-max-wait-ms 45000
+                                    :retry-max-count 8
+                                    :request-cancellation "auto"})))))
 
 (defn instance-id-test-view []
   [:div
