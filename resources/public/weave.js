@@ -90,6 +90,19 @@ window.weave = {
 }
 
 import('./datastar@v1.0.0-RC.4.js').then(({ load, apply }) => {
+    // Monkey patch fetch to dynamically add app path header on every d* request
+    const originalFetch = window.fetch;
+    window.fetch = (input, init) => {
+        if (init?.headers?.['Datastar-Request']) {
+            const updatedHeaders = {
+                ...init.headers,
+                'x-app-path': window.weave.path()
+            };
+            return originalFetch(input, { ...init, headers: updatedHeaders });
+        }
+        return originalFetch(input, init);
+    };
+
     // Define and load the CallAction
     const CallAction = {
 	type: 'action',

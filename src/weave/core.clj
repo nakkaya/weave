@@ -77,13 +77,12 @@
          headers# (:headers ~req)
          csrf-token# (get headers# "x-csrf-token")
          instance-id# (get headers# "x-instance-id")
-         signals# (get-signals ~req)
-         app-path# (get signals# :weave-app-path)]
+         app-path# (get headers# "x-app-path")]
      (binding [*session-id* session-id#
                *instance-id* instance-id#
                *app-path* app-path#
                *request* ~req
-               *signals* signals#]
+               *signals* (get-signals ~req)]
        ~@body)))
 
 (defn- from-camel-case
@@ -212,7 +211,6 @@
               (str "weave.setup('" server-id "', " keep-alive ", " dev-mode ");"))]
            (:head opts)]
           [:body {:class "w-full h-full"}
-           [:div {:data-signals-weave-app-path "weave.path()"}]
            (when (:dev-mode opts)
              [:div {:id "weave-dev-debug"
                     :class "fixed top-1 right-1 z-50 flex flex-col items-end gap-2"
@@ -496,7 +494,6 @@
   ([url]
    (push-path! url nil))
   ([url view-fn]
-   (push-signal! {:weave-app-path url})
    (push-script! (str "weave.pushHistoryState('" url "');"))
    (when view-fn
      (binding [*app-path* url]
@@ -511,7 +508,6 @@
    (let [connections (session/session-connections *session-id*)]
      (doseq [sse connections]
        (binding [*sse-gen* sse]
-         (push-signal! {:weave-app-path url})
          (push-script! (str "weave.pushHistoryState('" url "');"))))
      (when view-fn
        (binding [*app-path* url]
