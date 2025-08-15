@@ -337,8 +337,9 @@
          (binding [*sse-gen* sse-gen]
            (view))]))
       (session/add-connection!
-       *session-id* *instance-id* sse-gen))
-
+       *session-id* *instance-id* sse-gen)
+      (session/record-activity!
+        *session-id* *instance-id*))
     hk-gen/on-close
     (fn [_sse-gen _status]
       (session/remove-connection!
