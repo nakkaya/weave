@@ -952,9 +952,9 @@
     secure-handlers-test-view
     (assoc weave-options
            :jwt-secret "test-jwt-secret"
-           :secure-handlers true)
+           :handler-options {:auth-required? true})
 
-    (testing "Test secure-handlers functionality"
+    (testing "Test handler-options functionality"
       (visible? :secure-action-button)
       (is (= "Not authenticated"
              (el-text :auth-status)))

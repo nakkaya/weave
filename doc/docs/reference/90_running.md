@@ -76,7 +76,7 @@ server with all the necessary components for your application.
 (weave/run my-view
   {:csrf-secret "my-secret-key"        ; Secret for CSRF token generation
    :jwt-secret "my-jwt-secret"         ; Secret for JWT token generation/validation
-   :secure-handlers true})             ; Require authentication for all handlers by default
+   :handler-options {:auth-required? true}}) ; Require authentication for all handlers by default
 ```
 
 ### Custom Routes and Middleware

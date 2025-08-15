@@ -44,7 +44,7 @@ caching and ensures handlers work correctly with closures:
 Options are provided as metadata (optional):
 
 - `:auth-required?` - Whether authentication is required (defaults to
-  the value of `*secure-handlers*`)
+  the value from `:handler-options` in the run configuration)
 - `:type` - Request content type (use `:form` for form submissions)
 - `:selector` - CSS selector for the form to submit (e.g. `"#myform"`)
 

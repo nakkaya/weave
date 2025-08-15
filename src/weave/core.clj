@@ -55,10 +55,11 @@
    similar to form data but for real-time applications."
   nil)
 
-(def ^:dynamic *secure-handlers*
-  "When true, all handlers require authentication by default
-   unless :auth-required? is explicitly set to false."
-  false)
+
+(def ^:dynamic *handler-options*
+  "Default options that will be merged with handler-specific options.
+   Handler-specific options (provided via metadata) will override these defaults."
+  {})
 
 (def ^:dynamic *sse-gen*
   "Current Server-Sent Events (SSE) generator instance."
@@ -401,11 +402,12 @@
 (defmacro handler
   "Create a handler that process client-side events."
   [args & body]
-  (let [opts (or (meta args) {})
+  (let [explicit-opts (or (meta args) {})
         body-hash (hash body)]
     `(let [arg-hash# (mapv hash ~args)
            cache-key# [~body-hash arg-hash#]
-           route-hash# (Integer/toUnsignedString (hash cache-key#))]
+           route-hash# (Integer/toUnsignedString (hash cache-key#))
+           merged-opts# (merge *handler-options* ~explicit-opts)]
        (if-let [cached-route# (get @#'*event-handlers* route-hash#)]
          (:dstar-expr cached-route#)
          (let [handler-fn#
@@ -417,9 +419,7 @@
                        req# (assoc req# :body body#)]
                    (bind-vars
                     req#
-                    (let [auth-required?# (if (contains? ~opts :auth-required?)
-                                            (:auth-required? ~opts)
-                                            *secure-handlers*)]
+                    (let [auth-required?# (:auth-required? merged-opts#)]
                       (if (and auth-required?#
                                (not (authenticated? *request*)))
                         {:status 403, :headers {}, :body nil}
@@ -430,7 +430,7 @@
                                                     ~@body)
                                                   (d*/close-sse! sse-gen#))}))))))
                route# (str "/h/" route-hash#)
-               dstar-expr# (str "@call('" route# "', " (#'request-options ~opts) ")")]
+               dstar-expr# (str "@call('" route# "', " (#'request-options merged-opts#) ")")]
            (#'add-route! route# route-hash# handler-fn# dstar-expr#)
            dstar-expr#)))))
 
@@ -734,8 +734,11 @@
               :middleware - A sequence of middleware functions to apply to the handler chain
               :csrf-secret - Secret for CSRF token generation
               :jwt-secret - Secret for JWT token generation/validation
-              :secure-handlers - When true, all handlers require authentication by default
-                                 unless :auth-required? is explicitly set to false
+              :handler-options - A map of default options that will be merged with handler-specific options.
+                                Handler-specific options (provided via metadata) will override these defaults.
+              :secure-handlers - DEPRECATED. Use :handler-options {:auth-required? true} instead.
+                                When true, all handlers require authentication by default
+                                unless :auth-required? is explicitly set to false
               :icon - Path to an icon file in the classpath (PNG format)
               :pwa - A map of Progressive Web App manifest options:
                       :name - Application name (defaults to :title)
@@ -801,11 +804,13 @@
                                 handler-chain
                                 (reverse (:middleware options)))
                         handler-chain)
+        _ (when (:secure-handlers options)
+            (println "WARNING: :secure-handlers is deprecated. Use :handler-options {:auth-required? true} instead."))
         handler
         (fn [request]
           (binding [*view* view
                     session/*csrf-keyspec* csrf-keyspec
-                    *secure-handlers* (:secure-handlers options)]
+                    *handler-options* (or (:handler-options options) {})]
             (handler-chain request)))]
 
     (ig/init
