@@ -55,6 +55,11 @@ jobs:
           cd doc
           pip install -r requirements.txt
 
+      - name: Replace commit SHA in docs
+        run: |
+          cd doc
+          sed -i "s/<<latest-commit-sha>>/${{ github.sha }}/g" docs/create_a_project.md
+
       - name: Deploy documentation
         run: |
           cd doc

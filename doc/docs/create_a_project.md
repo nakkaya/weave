@@ -17,7 +17,7 @@ Create a file called `deps.edn`,
 
  :deps    {org.clojure/clojure {:mvn/version "1.12.0"}
 		   weave/core {:git/url "https://github.com/nakkaya/weave/"
-					   :git/sha "d9338ac9576a8bb098aa51938c5d3926c487376e"}}
+					   :git/sha "<<latest-commit-sha>>"}}
 
  :aliases {:dev {:exec-fn app.core/run}}}
 ```
