@@ -124,6 +124,7 @@ import('./datastar@v1.0.0-RC.4.js').then(({ load, apply }) => {
 		    'x-server-id': window.weave.server(),
                     'x-csrf-token': window.weave.csrf(),
                     'x-instance-id': window.weave.instance(),
+		    'X-Accel-Buffering': 'no',
                     ...(options.headers || {})
                 }
             }
