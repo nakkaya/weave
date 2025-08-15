@@ -151,3 +151,9 @@
   "Gets all activity data for a session"
   [session-id]
   (@!activity session-id))
+
+(defn all-sessions
+  "Gets all session activity data.
+   Returns a map of {session-id -> {instance-id -> timestamp}}"
+  []
+  @!activity)

@@ -1153,6 +1153,12 @@
         (is (map? session-act))
         (is (contains? session-act instance-id)))
 
+      ;; Test all-sessions function
+      (let [all-sessions (session/all-sessions)]
+        (is (map? all-sessions))
+        (is (contains? all-sessions session-id))
+        (is (contains? (get all-sessions session-id) instance-id)))
+
       (session/remove-connection! session-id instance-id)
 
       (is (nil? (session/last-activity session-id instance-id))))))

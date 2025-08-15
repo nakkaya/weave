@@ -100,6 +100,12 @@ session instance whenever a handler is called. This enables you to:
 ;; Returns a map of {instance-id -> timestamp}
 (session/session-activity session-id)
 ;; => {"instance-123" 1672531200000, "instance-456" 1672531150000}
+
+;; Get all session activity data
+;; Returns a map of {session-id -> {instance-id -> timestamp}}
+(session/all-sessions)
+;; => {"session-abc" {"instance-123" 1672531200000}
+;;     "session-def" {"instance-456" 1672531150000}}
 ```
 
 ## Configuration
