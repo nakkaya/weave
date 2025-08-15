@@ -128,8 +128,14 @@
                nil
                new-activity)))))
 
-(defn session-connections [session-id]
-  (vals (@!connections session-id)))
+(defn session-connections
+  "Gets session connections.
+   With no arguments: returns all connections {session-id -> {instance-id -> sse-generator}}
+   With session-id: returns connections for that session as a seq of sse-generators"
+  ([]
+   @!connections)
+  ([session-id]
+   (vals (@!connections session-id))))
 
 (defn instance-connection [session-id instance-id]
   ((@!connections session-id) instance-id))
@@ -152,8 +158,11 @@
   [session-id]
   (@!activity session-id))
 
-(defn all-sessions
-  "Gets all session activity data.
-   Returns a map of {session-id -> {instance-id -> timestamp}}"
-  []
-  @!activity)
+(defn session-activities
+  "Gets session activity data.
+   With no arguments: returns all session activities {session-id -> {instance-id -> timestamp}}
+   With session-id: returns activity data for that session {instance-id -> timestamp}"
+  ([]
+   @!activity)
+  ([session-id]
+   (@!activity session-id)))
