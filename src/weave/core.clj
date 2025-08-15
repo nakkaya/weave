@@ -423,12 +423,14 @@
                       (if (and auth-required?#
                                (not (authenticated? *request*)))
                         {:status 403, :headers {}, :body nil}
-                        (hk-gen/->sse-response *request*
-                                               {hk-gen/on-open
-                                                (fn [sse-gen#]
-                                                  (binding [*sse-gen* sse-gen#]
-                                                    ~@body)
-                                                  (d*/close-sse! sse-gen#))}))))))
+                        (do
+                          (session/record-activity! *session-id* *instance-id*)
+                          (hk-gen/->sse-response *request*
+                                                 {hk-gen/on-open
+                                                  (fn [sse-gen#]
+                                                    (binding [*sse-gen* sse-gen#]
+                                                      ~@body)
+                                                    (d*/close-sse! sse-gen#))})))))))
                route# (str "/h/" route-hash#)
                dstar-expr# (str "@call('" route# "', " (#'request-options merged-opts#) ")")]
            (#'add-route! route# route-hash# handler-fn# dstar-expr#)

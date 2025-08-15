@@ -1137,3 +1137,22 @@
             (is (= "applied" (first (get headers "X-Middleware-2"))))))
         (finally
           (ig/halt! server))))))
+
+(deftest session-activity-test
+  (testing "Test session activity tracking"
+    (let [session-id (str "test-session-" (random-uuid))
+          instance-id (str "test-instance-" (random-uuid))]
+
+      (session/record-activity! session-id instance-id)
+
+      (let [activity (session/last-activity session-id instance-id)]
+        (is (number? activity))
+        (is (> activity 0)))
+
+      (let [session-act (session/session-activity session-id)]
+        (is (map? session-act))
+        (is (contains? session-act instance-id)))
+
+      (session/remove-connection! session-id instance-id)
+
+      (is (nil? (session/last-activity session-id instance-id))))))

@@ -78,6 +78,30 @@ in the browser.
   (weave/push-path! "/sign-in"))
 ```
 
+## Session Activity Tracking
+
+Weave automatically tracks the last activity timestamp for each
+session instance whenever a handler is called. This enables you to:
+
+1. Monitor when users were last active
+2. Automatically logout stale sessions
+3. Build features like "active users" displays
+
+### Activity Tracking Functions
+
+```clojure
+(require '[weave.session :as session])
+
+;; Get the last activity timestamp for a specific session instance
+(session/last-activity session-id instance-id)
+;; => 1672531200000 (timestamp in milliseconds)
+
+;; Get all activity data for a session
+;; Returns a map of {instance-id -> timestamp}
+(session/session-activity session-id)
+;; => {"instance-123" 1672531200000, "instance-456" 1672531150000}
+```
+
 ## Configuration
 
 When starting a Weave application, you can configure session security:

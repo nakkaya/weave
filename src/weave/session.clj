@@ -106,6 +106,9 @@
 ;; Maps {session-id -> {instance-id -> sse-generator}}
 (def ^{:private true} !connections (atom {}))
 
+;; Maps {session-id -> {instance-id -> last-activity-timestamp}}
+(def ^{:private true} !activity (atom {}))
+
 (defn add-connection! [session-id instance-id sse-gen]
   (swap! !connections update session-id
          (fn [session-connections]
@@ -117,10 +120,34 @@
            (let [new-connections (dissoc (or session-connections {}) instance-id)]
              (if (empty? new-connections)
                nil
-               new-connections)))))
+               new-connections))))
+  (swap! !activity update session-id
+         (fn [session-activity]
+           (let [new-activity (dissoc (or session-activity {}) instance-id)]
+             (if (empty? new-activity)
+               nil
+               new-activity)))))
 
 (defn session-connections [session-id]
   (vals (@!connections session-id)))
 
 (defn instance-connection [session-id instance-id]
   ((@!connections session-id) instance-id))
+
+(defn record-activity!
+  "Records the current timestamp as the last activity for the given session instance"
+  [session-id instance-id]
+  (let [now (System/currentTimeMillis)]
+    (swap! !activity update session-id
+           (fn [session-activity]
+             (assoc (or session-activity {}) instance-id now)))))
+
+(defn last-activity
+  "Gets the last activity timestamp for a session instance"
+  [session-id instance-id]
+  (get-in @!activity [session-id instance-id]))
+
+(defn session-activity
+  "Gets all activity data for a session"
+  [session-id]
+  (@!activity session-id))
