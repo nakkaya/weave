@@ -47,6 +47,67 @@ Options are provided as metadata (optional):
   the value from `:handler-options` in the run configuration)
 - `:type` - Request content type (use `:form` for form submissions)
 - `:selector` - CSS selector for the form to submit (e.g. `"#myform"`)
+- `:request-cancellation` - Controls request cancellation behavior
+  (see [Request Cancellation](#request-cancellation))
+
+
+### Request Cancellation
+
+Weave provides different modes for handling duplicate or rapid
+requests to the same handler route:
+
+#### Auto Mode (Default)
+
+```clojure
+;; Default behavior - no need to specify
+(weave/handler []
+  (weave/push-html! [:div "Processing..."]))
+
+;; Explicitly specified
+(weave/handler ^{:request-cancellation "auto"} []
+  (weave/push-html! [:div "Processing..."]))
+```
+
+**Behavior**: When a user rapidly clicks the same button:
+
+- The first request starts processing
+- If a second click occurs before the first request completes, the
+  first request is **cancelled**
+- The second request proceeds normally
+- Only the **latest** request will complete
+
+**Use case**: Standard UI interactions where only the most recent user
+action matters.
+
+#### Serialize Mode
+
+```clojure
+(weave/handler ^{:request-cancellation "serialize"} []
+  ;; This operation will be serialized per route
+  (Thread/sleep 2000) ; Simulate slow operation
+  (weave/push-html! [:div "Operation completed"]))
+```
+
+**Behavior**: When a user rapidly clicks the same button:
+
+- The first request starts processing and **completes fully**
+- Additional clicks are **silently ignored** until the first request finishes
+- Once the first request completes, new requests are allowed
+- Ensures **no duplicate operations** occur
+
+**Use case**: Critical operations like database writes, payments, or
+any action that should not be duplicated.
+
+#### Disabled Mode
+
+```clojure
+(weave/handler ^{:request-cancellation "disabled"} []
+  (weave/push-html! [:div "Processing..."]))
+```
+
+**Behavior**: All requests are allowed to proceed concurrently.
+
+**Use case**: When you want to allow multiple simultaneous requests to the same handler.
 
 ## Signal Naming Conventions
 
@@ -237,3 +298,22 @@ nothing shared:
 
 ;; Only 1 handler registered total - shared across all rows and actions!
 ```
+
+### Request Cancellation with `:data-call-with-*`
+
+When using `:data-call-with-*` attributes, the request cancellation behavior is controlled by the handler's metadata:
+
+```clojure
+(defn payment-view []
+  (let [payment-handler (weave/handler ^{:request-cancellation "serialize"} []
+                          (let [{:keys [action amount]} weave/*signals*]
+                            (process-payment! amount)
+                            (weave/push-html! [:div "Payment processed"])))]
+    [:button
+     {:data-call-with-action "process-payment"
+      :data-call-with-amount "100"
+      :data-on-click payment-handler}
+     "Process Payment"]))
+```
+
+The serialize behavior ensures that even with rapid clicking, only one payment operation will execute.

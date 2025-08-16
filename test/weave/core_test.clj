@@ -140,7 +140,7 @@
         (is (not (str/blank? tab1-instance-id)))
 
         (new-tab)
-        (let [[tab1 tab2] (tabs)]
+        (let [[_ tab2] (tabs)]
 
           (switch-tab tab2)
           (visible? :get-instance-id)
@@ -1165,3 +1165,65 @@
       (session/remove-connection! session-id instance-id)
 
       (is (nil? (session/last-activity session-id instance-id))))))
+
+(defn request-cancellation-test-auto-view [count]
+  [:div#view
+   [:div#count @count]
+   [:button#auto-button
+    {:data-on-click (core/handler [count]
+                      (try
+                        (swap! count inc)
+                        (core/push-html!
+                          [:div#count @count])
+                        (Thread/sleep 2000)
+                        (catch Exception _)))}
+    "Auto Mode"]])
+
+(deftest request-cancellation-auto-mode-test
+  (let [count (atom 0)
+        view (fn []
+               (request-cancellation-test-auto-view count))]
+    (with-browser view weave-options
+      (testing "Auto mode cancels previous requests when new ones are made"
+        (visible? :auto-button)
+
+        ;;; Click button rapidly twice
+        (click :auto-button)
+        ;;; Small delay to ensure first request starts
+        (Thread/sleep 250)
+        (click :auto-button)
+
+        ;;; Wait for completion
+        (e/wait-predicate
+         #(str/includes? (el-text :count) "2"))))))
+
+(defn request-cancellation-test-serialize-view [count]
+  [:div#view
+   [:div#count @count]
+   [:button#serialize-button
+    {:data-on-click (core/handler ^{:request-cancellation "serialize"} [count]
+                      (try
+                        (swap! count inc)
+                        (core/push-html!
+                          [:div#count @count])
+                        (Thread/sleep 2000)
+                        (catch Exception _)))}
+    "Serialize Mode"]])
+
+(deftest request-cancellation-serialize-mode-test
+  (let [count (atom 0)
+        view (fn []
+               (request-cancellation-test-serialize-view count))]
+    (with-browser view weave-options
+      (testing "Serialize mode will not fire unless previous request to route completes"
+        (visible? :serialize-button)
+
+        ;;; Click button rapidly twice
+        (click :serialize-button)
+        ;;; Small delay to ensure first request starts
+        (Thread/sleep 250)
+        (click :serialize-button)
+
+        ;;; Wait for completion
+        (e/wait-predicate
+         #(str/includes? (el-text :count) "1"))))))

@@ -103,6 +103,10 @@ import('./datastar@v1.0.0-RC.4.js').then(({ load, apply }) => {
         return originalFetch(input, init);
     };
 
+    // Global store for active requests per route to prevent duplicate
+    // requests in serialize mode
+    const activeRouteRequests = new Map()
+
     // Define and load the CallAction
     const CallAction = {
 	type: 'action',
@@ -130,7 +134,19 @@ import('./datastar@v1.0.0-RC.4.js').then(({ load, apply }) => {
 		currentEl = currentEl.parentElement
             }
 
-            // Always add weave headers to options
+            // Handle different request cancellation modes
+            const requestCancellation = options?.requestCancellation ?? 'auto'
+
+            if (requestCancellation === 'serialize') {
+                // Check if there's already an active request for this route
+                if (activeRouteRequests.has(url)) {
+                    return Promise.resolve()
+                }
+
+                // Mark this route as having an active request
+                activeRouteRequests.set(url, true)
+            }
+
             const enhancedOptions = {
                 ...options,
                 headers: {
@@ -142,28 +158,35 @@ import('./datastar@v1.0.0-RC.4.js').then(({ load, apply }) => {
                 }
             }
 
-            // If no call-with data found, just use normal post with enhanced options
-            if (Object.keys(callWithData).length === 0) {
-		const postAction = ctx.actions.post
-		return postAction.fn(ctx, url, enhancedOptions)
-            }
+            try {
+                // If no call-with data found, just use normal post with enhanced options
+                if (Object.keys(callWithData).length === 0) {
+		    const postAction = ctx.actions.post
+		    return await postAction.fn(ctx, url, enhancedOptions)
+                }
 
-            // Create a custom filtered function that includes our call-with data
-            const originalFiltered = ctx.filtered
-            const enhancedFiltered = (filterOptions) => {
-		const signals = originalFiltered(filterOptions)
-		return { ...signals, ...callWithData }
-            }
+                // Create a custom filtered function that includes our call-with data
+                const originalFiltered = ctx.filtered
+                const enhancedFiltered = (filterOptions) => {
+		    const signals = originalFiltered(filterOptions)
+		    return { ...signals, ...callWithData }
+                }
 
-            // Create enhanced context with our custom filtered function
-            const enhancedCtx = {
-		...ctx,
-		filtered: enhancedFiltered
-            }
+                // Create enhanced context with our custom filtered function
+                const enhancedCtx = {
+		    ...ctx,
+		    filtered: enhancedFiltered
+                }
 
-            // Call the original post action with enhanced context and options
-            const postAction = ctx.actions.post
-            return postAction.fn(enhancedCtx, url, enhancedOptions)
+                // Call the original post action with enhanced context and options
+                const postAction = ctx.actions.post
+                return await postAction.fn(enhancedCtx, url, enhancedOptions)
+            } finally {
+                // Clean up the route lock when request completes (success or error)
+                if (requestCancellation === 'serialize') {
+                    activeRouteRequests.delete(url)
+                }
+            }
 	}
     }
 
