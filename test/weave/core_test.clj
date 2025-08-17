@@ -6,7 +6,7 @@
    [compojure.core :refer [GET]]
    [etaoin.api :as e]
    [integrant.core :as ig]
-   [weave.test.browser :refer [*browser* with-browser url weave-options visible? fill click el-text new-tab tabs switch-tab] :as browser]
+   [weave.test.browser :refer [*browser* with-browser url weave-options visible? fill click el-text new-tab tabs switch-tab has-alert? accept-alert] :as browser]
    [weave.core :as core]
    [weave.session :as session]
    [weave.squint :as squint]))
@@ -711,6 +711,30 @@
       (el-text :result)))
  (is (= "Action: delete, Item: 456"
         (el-text :result))))
+
+(defn confirm-test-view []
+  [:div#view
+   [:div#status "Ready"]
+   [:button
+    {:id "confirm-button"
+     :data-on-click
+     (core/handler ^{:confirm "Are you sure?"} []
+                   (core/push-html! [:div#status "Confirmed!"]))}
+    "Delete Item"]])
+
+(test-with-sse-variants
+ 'confirm-prompt-test
+ confirm-test-view
+
+ (testing "Test confirm prompt appears and can be accepted"
+   (visible? :confirm-button)
+   (click :confirm-button)
+   ;; Check that prompt appears
+   (e/wait-predicate has-alert?)
+   ;; Accept the prompt
+   (accept-alert)
+   ;; Verify action proceeded
+   (e/wait-predicate #(= "Confirmed!" (el-text :status)))))
 
 (defn set-cookie-test-view []
   [:div {:id "view"}

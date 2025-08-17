@@ -433,7 +433,11 @@
                                                       ~@body)
                                                     (d*/close-sse! sse-gen#))})))))))
                route# (str "/h/" route-hash#)
-               dstar-expr# (str "@call('" route# "', " (#'request-options merged-opts#) ")")]
+               base-expr# (str "@call('" route# "', " (#'request-options merged-opts#) ")")
+               dstar-expr# (if-let [confirm-msg# (:confirm merged-opts#)]
+                             (let [escaped-msg# (clojure.string/replace confirm-msg# "'" "\\'")]
+                               (str "confirm('" escaped-msg# "') && " base-expr#))
+                             base-expr#)]
            (#'add-route! route# route-hash# handler-fn# dstar-expr#)
            dstar-expr#)))))
 

@@ -49,6 +49,9 @@ Options are provided as metadata (optional):
 - `:selector` - CSS selector for the form to submit (e.g. `"#myform"`)
 - `:request-cancellation` - Controls request cancellation behavior
   (see [Request Cancellation](#request-cancellation))
+- `:confirm` - String message for confirmation dialog. When present,
+  shows a browser `confirm()` dialog before executing the handler.
+  Example: `^{:confirm "Are you sure you want to delete this item?"} []`
 
 
 ### Request Cancellation
@@ -239,6 +242,20 @@ capture.
   "Edit User"]]
 ;; Result: signals will be {:action "edit", :id "123"}
 ```
+
+### With Confirmation Dialog
+
+```clojure
+;; Simple delete confirmation
+{:data-on-click
+ (weave/handler ^{:confirm "Are you sure you want to delete this item?"} []
+   (delete-item!)
+   (weave/push-html! [:div "Item deleted"]))}
+```
+
+The `:confirm` option generates JavaScript that shows a browser
+confirmation dialog before executing the handler. If the user clicks
+"Cancel", the handler will not execute.
 
 ## Problem: Route Explosion with Closures
 

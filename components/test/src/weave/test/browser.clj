@@ -58,3 +58,13 @@
 
 (defn switch-tab [tab-handle]
   (e/switch-window *browser* tab-handle))
+
+(defn has-alert?
+  "Check if there's currently an alert or confirm dialog present."
+  []
+  (e/has-alert? *browser*))
+
+(defn accept-alert
+  "Accept an alert or confirm dialog that appears."
+  []
+  (e/accept-alert *browser*))
