@@ -243,7 +243,7 @@ capture.
 ;; Result: signals will be {:action "edit", :id "123"}
 ```
 
-### With Confirmation Dialog
+## With Confirmation Dialog
 
 ```clojure
 ;; Simple delete confirmation
