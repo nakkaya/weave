@@ -409,6 +409,36 @@
  (is (= "Page Two Content"
         (el-text :page-two-content))))
 
+(defn push-path-with-push-html-test-view []
+  (let []
+    [:div {:id "view"}
+     [:button
+      {:id "render"
+       :data-on-click
+       (core/handler []
+         (core/push-path!
+           "/new-path")
+         (core/push-html!
+           (push-path-with-push-html-test-view)))}
+      "Update Path"]
+     [:div
+      [:input#value {:value core/*app-path*}]]]))
+
+(test-with-sse-variants
+ 'push-signal-with-push-html-test
+ push-path-with-push-html-test-view
+
+ (visible? :render)
+
+ (e/wait-predicate
+  #(= "/" (e/get-element-value *browser* {:id :value})))
+
+ (click :render)
+
+ (e/wait-predicate
+  #(= "/new-path" (e/get-element-value *browser* {:id :value})))
+ (is (= "/new-path" (e/get-element-value *browser* {:id :value}))))
+
 (defn broadcast-path-test-view []
   [:div {:id "view"}
    [:div
@@ -589,6 +619,36 @@
  (e/wait-predicate
   #(= "42" (e/get-element-value *browser* {:id :signal-value})))
  (is (= "42" (e/get-element-value *browser* {:id :signal-value}))))
+
+(defn push-signal-with-push-html-test-view []
+  (let [{:keys [foo]} core/*signals*]
+    [:div {:id "view"}
+     [:button
+      {:id "render"
+       :data-on-click
+       (core/handler []
+         (core/push-signal!
+           {:foo 42})
+         (core/push-html!
+           (push-signal-with-push-html-test-view)))}
+      "Update Signal"]
+     [:div
+      [:input#value {:value (or foo 21)}]]]))
+
+(test-with-sse-variants
+ 'push-signal-with-push-html-test
+ push-signal-with-push-html-test-view
+
+ (visible? :render)
+
+ (e/wait-predicate
+  #(= "21" (e/get-element-value *browser* {:id :value})))
+
+ (click :render)
+
+ (e/wait-predicate
+  #(= "42" (e/get-element-value *browser* {:id :value})))
+ (is (= "42" (e/get-element-value *browser* {:id :value}))))
 
 (defn local-signal-test-view []
   [:div {:id "view"}

@@ -556,6 +556,7 @@
   "Send updated signal values to the specific browser tab/window that
    triggered the current handler."
   [signal]
+  (set! *signals* (merge *signals* signal))
   (d*/patch-signals!
    (sse-conn) (->> signal
                    (cske/transform-keys to-camel-case)
@@ -567,10 +568,10 @@
   ([url]
    (push-path! url nil))
   ([url view-fn]
+   (set! *app-path* url)
    (push-script! (str "weave.pushHistoryState('" url "');"))
    (when view-fn
-     (binding [*app-path* url]
-       (push-html! (view-fn))))))
+     (push-html! (view-fn)))))
 
 (defn broadcast-path!
   "Change the URL hash for all browser tabs/windows that share the same
@@ -579,13 +580,13 @@
    (broadcast-path! url nil))
   ([url view-fn]
    (let [connections (session/session-connections *session-id*)]
+     (set! *app-path* url)
      (doseq [sse connections]
        (binding [*sse-gen* sse]
          (push-script! (str "weave.pushHistoryState('" url "');"))))
      (when view-fn
-       (binding [*app-path* url]
-         (doseq [sse connections]
-           (d*/patch-elements! sse (c/html (view-fn)))))))))
+       (doseq [sse connections]
+         (d*/patch-elements! sse (c/html (view-fn))))))))
 
 (defn set-cookie!
   "Send a Set-Cookie header to the specific browser tab/window that
