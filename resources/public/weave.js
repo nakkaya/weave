@@ -62,29 +62,33 @@ window.weave = {
     },
 
     path: function() {
-	const hashPath = window.location.hash.substring(1)
-	if (!hashPath) {
+	let appPath = window.location.hash.substring(1)
+
+	if (!appPath) {
             return "/"
 	}
-	let normalizedPath = hashPath.startsWith("/") ? hashPath : "/" + hashPath
 
-	if (normalizedPath !== "/" && normalizedPath.endsWith("/")) {
-	    normalizedPath = normalizedPath.slice(0, -1)
+	appPath = appPath.split('?')[0]
+
+	appPath = appPath.startsWith("/") ? appPath : "/" + appPath
+
+	if (appPath !== "/" && appPath.endsWith("/")) {
+	    appPath = appPath.slice(0, -1)
 	    window.__pushHashChange = true
-	    history.replaceState(null, null, "#" + normalizedPath)
+	    history.replaceState(null, null, "#" + appPath)
 	    window.__pushHashChange = false
 	}
-	return normalizedPath
+	return appPath
     },
 
     pushHistoryState: function(url) {
 	window.__pushHashChange = true
 
-	let normalizedUrl = url
-	if (normalizedUrl !== "/" && normalizedUrl.endsWith("/")) {
-	    normalizedUrl = normalizedUrl.slice(0, -1)
+	let appPath = url
+	if (appPath !== "/" && appPath.endsWith("/")) {
+	    appPath = appPath.slice(0, -1)
 	}
-	history.pushState(null, null, "#" + normalizedUrl)
+	history.pushState(null, null, "#" + appPath)
 	window.__pushHashChange = false
     }
 }
