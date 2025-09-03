@@ -80,15 +80,29 @@
                               (re-find #"weave-auth=([^;^ ]+)")
                               second)
           auth-data (when auth-token
-                      (verify-jwt auth-token jwt-secret))]
+                      (verify-jwt auth-token jwt-secret))
+          uri (:uri req)
+          method (:request-method req)
+          internal? (and (= method :post)
+                         (or (= uri "/app-loader")
+                             (.startsWith ^String uri "/h/")))]
 
       (cond
-        (verify-csrf sid csrf-token)
+        (and internal? (verify-csrf sid csrf-token))
         (handler (assoc req :identity auth-data))
 
-        (= (:request-method req) :get)
+        (not internal?)
         (let [new-sid (or sid (str (UUID/randomUUID)))
-              csrf    (hmac-sha256 *csrf-keyspec* new-sid)]
+              csrf (hmac-sha256 *csrf-keyspec* new-sid)]
+          (if (= method :get)
+            (-> (handler (assoc req :identity auth-data))
+                (assoc-in [:headers "Set-Cookie"]
+                          [(session-cookie new-sid) (csrf-cookie csrf)]))
+            (handler (assoc req :identity auth-data))))
+
+        (= method :get)
+        (let [new-sid (or sid (str (UUID/randomUUID)))
+              csrf (hmac-sha256 *csrf-keyspec* new-sid)]
           (-> (handler (assoc req :identity auth-data))
               (assoc-in [:headers "Set-Cookie"]
                         [(session-cookie new-sid) (csrf-cookie csrf)])))

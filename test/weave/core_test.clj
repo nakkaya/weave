@@ -3,7 +3,8 @@
    [charred.api :as charred]
    [clojure.string :as str]
    [clojure.test :refer [deftest is testing use-fixtures]]
-   [compojure.core :refer [GET]]
+   [compojure.core :refer [GET POST]]
+   [clj-http.client :as http]
    [etaoin.api :as e]
    [integrant.core :as ig]
    [weave.test.browser :refer [*browser* with-browser url weave-options visible? fill click el-text new-tab tabs switch-tab has-alert? accept-alert] :as browser]
@@ -417,9 +418,9 @@
        :data-on-click
        (core/handler []
          (core/push-path!
-           "/new-path")
+          "/new-path")
          (core/push-html!
-           (push-path-with-push-html-test-view)))}
+          (push-path-with-push-html-test-view)))}
       "Update Path"]
      [:div
       [:input#value {:value core/*app-path*}]]]))
@@ -628,9 +629,9 @@
        :data-on-click
        (core/handler []
          (core/push-signal!
-           {:foo 42})
+          {:foo 42})
          (core/push-html!
-           (push-signal-with-push-html-test-view)))}
+          (push-signal-with-push-html-test-view)))}
       "Update Signal"]
      [:div
       [:input#value {:value (or foo 21)}]]]))
@@ -779,7 +780,7 @@
     {:id "confirm-button"
      :data-on-click
      (core/handler ^{:confirm "Are you sure?"} []
-                   (core/push-html! [:div#status "Confirmed!"]))}
+       (core/push-html! [:div#status "Confirmed!"]))}
     "Delete Item"]])
 
 (test-with-sse-variants
@@ -937,18 +938,44 @@
              (el-text :protected-result))))))
 
 (deftest custom-handlers-test
-  (testing "Test custom handlers functionality"
-    (let [response-body (str (random-uuid))
-          handlers [(GET "/custom-route" []
+  (testing "Test custom handlers functionality and CSRF behavior"
+    (let [get-response-body (str (random-uuid))
+          post-response-body (str (random-uuid))
+          handlers [(GET "/custom-get-route" []
                       {:status 200
                        :headers {"Content-Type" "text/plain"}
-                       :body response-body})]]
+                       :body get-response-body})
+                    (POST "/custom-post-route" []
+                      {:status 200
+                       :headers {"Content-Type" "text/plain"}
+                       :body post-response-body})]]
       (with-browser
         (fn [] [:div "Test view"])
         (assoc weave-options :handlers handlers)
 
-        (let [response (slurp (str url "/custom-route"))]
-          (is (= response-body response)))))))
+        (testing "GET requests to custom handlers work"
+          (let [response (slurp (str url "/custom-get-route"))]
+            (is (= get-response-body response))))
+
+        (testing "POST requests to custom handlers work without CSRF"
+          (let [response (http/post (str url "/custom-post-route")
+                                    {:throw-exceptions false})]
+            (is (= 200 (:status response)))
+            (is (= post-response-body (:body response)))))
+
+        (testing "POST requests to Weave internal /app-loader require CSRF"
+          (let [response (http/post (str url "/app-loader")
+                                    {:throw-exceptions false
+                                     :headers {"Content-Type" "application/x-www-form-urlencoded"}
+                                     :form-params {"test" "data"}})]
+            (is (= 403 (:status response)))))
+
+        (testing "POST requests to Weave handler routes require CSRF"
+          (let [response (http/post (str url "/h/test-handler")
+                                    {:throw-exceptions false
+                                     :headers {"Content-Type" "application/x-www-form-urlencoded"}
+                                     :form-params {"test" "data"}})]
+            (is (= 403 (:status response)))))))))
 
 (deftest authenticated-test
   (with-browser
@@ -1258,7 +1285,7 @@
                       (try
                         (swap! count inc)
                         (core/push-html!
-                          [:div#count @count])
+                         [:div#count @count])
                         (Thread/sleep 2000)
                         (catch Exception _)))}
     "Auto Mode"]])
@@ -1289,7 +1316,7 @@
                       (try
                         (swap! count inc)
                         (core/push-html!
-                          [:div#count @count])
+                         [:div#count @count])
                         (Thread/sleep 2000)
                         (catch Exception _)))}
     "Serialize Mode"]])
