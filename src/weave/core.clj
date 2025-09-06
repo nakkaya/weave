@@ -80,7 +80,7 @@
   [query-string]
   (if (or (nil? query-string) (empty? query-string))
     {}
-    (let [params-str (if (.startsWith query-string "?")
+    (let [params-str (if (.startsWith ^String query-string "?")
                        (subs query-string 1)
                        query-string)]
       (if (empty? params-str)
