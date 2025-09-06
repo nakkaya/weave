@@ -153,6 +153,37 @@ converted from camelCase to kebab-case keywords:
   )
 ```
 
+## Accessing URL Query Parameters
+
+Weave automatically parses URL query parameters and makes them
+available to handlers through the `weave/*query-params*` dynamic
+variable. Query parameters are extracted from the URL hash and parsed
+into a map with keyword keys.
+
+### URL Structure
+
+Query parameters can be included in the URL hash:
+```
+https://your-app.com/#/dashboard?tab=settings&view=compact&debug
+```
+
+### Accessing Query Parameters in Handlers
+
+```clojure
+(defn dashboard-view []
+  [:div
+   [:button
+    {:data-on-click
+     (weave/handler []
+       (let [{:keys [tab view debug]} weave/*query-params*]
+         (weave/push-html!
+          [:div
+           [:p "Current tab: " (or tab "default")]
+           [:p "View mode: " (or view "normal")]
+           [:p "Debug mode: " (if debug "enabled" "disabled")]])))}
+    "Show Query Params"]])
+```
+
 ## Examples
 
 ## With Variables

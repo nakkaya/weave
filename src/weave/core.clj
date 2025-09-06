@@ -43,6 +43,11 @@
    client-side routing."
   nil)
 
+(def ^:dynamic *query-params*
+  "The current query parameters parsed into a map. This is used for
+   accessing URL query parameters from handlers and views."
+  nil)
+
 (def ^:dynamic *request*
   "Current Ring request map.  Contains all HTTP request information
    including headers, parameters, and the authenticated user identity."
@@ -55,7 +60,6 @@
    similar to form data but for real-time applications."
   nil)
 
-
 (def ^:dynamic *handler-options*
   "Default options that will be merged with handler-specific options.
    Handler-specific options (provided via metadata) will override these defaults."
@@ -65,9 +69,39 @@
   "Current Server-Sent Events (SSE) generator instance."
   nil)
 
+(defn- parse-query-params
+  "Parse query parameter string into a map.
+   Examples:
+   - \"\" -> {}
+   - \"?foo=bar&baz=123\" -> {:foo \"bar\", :baz \"123\"}
+   - \"?foo=bar&foo=baz\" -> {:foo [\"bar\" \"baz\"]}
+   - \"?foo\" -> {:foo \"\"}
+   "
+  [query-string]
+  (if (or (nil? query-string) (empty? query-string))
+    {}
+    (let [params-str (if (.startsWith query-string "?")
+                       (subs query-string 1)
+                       query-string)]
+      (if (empty? params-str)
+        {}
+        (->> (clojure.string/split params-str #"&")
+             (map #(let [parts (clojure.string/split % #"=" 2)]
+                     [(keyword (first parts))
+                      (if (> (count parts) 1)
+                        (java.net.URLDecoder/decode (second parts) "UTF-8")
+                        "")]))
+             (reduce (fn [acc [k v]]
+                       (let [existing (get acc k)]
+                         (cond
+                           (nil? existing) (assoc acc k v)
+                           (vector? existing) (assoc acc k (conj existing v))
+                           :else (assoc acc k [existing v]))))
+                     {}))))))
+
 (defmacro bind-vars
   "Bind the dynamic variables *session-id*, *instance-id*,
-   *app-path*, and *request* to values extracted from the request map
+   *app-path*, *query-params*, and *request* to values extracted from the request map
    for the duration of body execution.
 
    This macro is used internally to ensure that handlers and views
@@ -78,10 +112,13 @@
          headers# (:headers ~req)
          csrf-token# (get headers# "x-csrf-token")
          instance-id# (get headers# "x-instance-id")
-         app-path# (get headers# "x-app-path")]
+         app-path# (get headers# "x-app-path")
+         query-params-str# (get headers# "x-query-params")
+         query-params# (#'parse-query-params query-params-str#)]
      (binding [*session-id* session-id#
                *instance-id* instance-id#
                *app-path* app-path#
+               *query-params* query-params#
                *request* ~req
                *signals* (get-signals ~req)]
        ~@body)))
@@ -339,7 +376,7 @@
       (session/add-connection!
        *session-id* *instance-id* sse-gen)
       (session/record-activity!
-        *session-id* *instance-id*))
+       *session-id* *instance-id*))
     hk-gen/on-close
     (fn [_sse-gen _status]
       (session/remove-connection!

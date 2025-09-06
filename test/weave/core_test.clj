@@ -1338,3 +1338,38 @@
         ;;; Wait for completion
         (e/wait-predicate
          #(str/includes? (el-text :count) "1"))))))
+
+(defn query-params-test-view []
+  [:div#view
+   [:h1 "Query Parameters Test"]
+   [:button
+    {:id "get-query-params"
+     :data-on-click
+     (core/handler []
+       (core/push-html!
+         [:div#view
+          [:div#params-display
+           [:p "Query Params: " (pr-str core/*query-params*)]]
+          [:div#individual-params
+           [:p#tab-param
+            (get core/*query-params* :tab "not-found")]
+           [:p#view-param
+            (get core/*query-params* :view "not-found")]]]))}
+    "Get Query Params"]])
+
+(test-with-sse-variants
+ 'query-params-test query-params-test-view
+ (testing "Query parameters are accessible in handlers"
+   (e/go *browser* (str url "#/test?tab=settings&view=compact"))
+
+   (visible? :get-query-params)
+   (click :get-query-params)
+
+   (visible? :params-display)
+
+   (is (= "settings" (el-text :tab-param))
+       "tab parameter should be accessible")
+
+   (is (= "compact"
+          (el-text :view-param))
+       "view parameter should be accessible")))

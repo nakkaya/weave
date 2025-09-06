@@ -81,6 +81,17 @@ window.weave = {
 	return appPath
     },
 
+    queryParams: function() {
+	const hash = window.location.hash.substring(1)
+	const queryIndex = hash.indexOf('?')
+
+	if (queryIndex === -1) {
+	    return window.location.search || ""
+	}
+
+	return '?' + hash.substring(queryIndex + 1)
+    },
+
     pushHistoryState: function(url) {
 	window.__pushHashChange = true
 
@@ -94,13 +105,14 @@ window.weave = {
 }
 
 import('./datastar@v1.0.0-RC.4.js').then(({ load, apply }) => {
-    // Monkey patch fetch to dynamically add app path header on every d* request
+    // Monkey patch fetch to dynamically add app path and query params header on every d* request
     const originalFetch = window.fetch;
     window.fetch = (input, init) => {
         if (init?.headers?.['Datastar-Request']) {
             const updatedHeaders = {
                 ...init.headers,
-                'x-app-path': window.weave.path()
+                'x-app-path': window.weave.path(),
+                'x-query-params': window.weave.queryParams()
             };
             return originalFetch(input, { ...init, headers: updatedHeaders });
         }
