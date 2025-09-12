@@ -41,6 +41,9 @@
   (e/wait-visible *browser* {:id id})
   (is (e/visible? *browser* {:id id})))
 
+(defn clear [id]
+  (e/clear *browser* {:id id}))
+
 (defn fill [id value]
   (e/fill *browser* {:id id} value))
 
