@@ -4,6 +4,7 @@
    [camel-snake-kebab.extras :as cske]
    [charred.api :as charred]
    [clojure.java.io :as io]
+   [clojure.string :as s]
    [clojure.tools.logging :as log]
    [compojure.core :refer [GET POST routes]]
    [compojure.route :as route]
@@ -85,8 +86,8 @@
                        query-string)]
       (if (empty? params-str)
         {}
-        (->> (clojure.string/split params-str #"&")
-             (map #(let [parts (clojure.string/split % #"=" 2)]
+        (->> (s/split params-str #"&")
+             (map #(let [parts (s/split % #"=" 2)]
                      [(keyword (first parts))
                       (if (> (count parts) 1)
                         (java.net.URLDecoder/decode (second parts) "UTF-8")

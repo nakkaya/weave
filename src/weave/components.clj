@@ -410,8 +410,6 @@
 (defmethod c/resolve-alias ::navbar
   [_ attrs content]
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :navbar :bg))
-        theme-text (or (:text-class attrs) (get-theme-class :navbar :text))
-        theme-hover (or (:hover-class attrs) (get-theme-class :navbar :hover))
         logo-url (or (:logo-url attrs) "/weave.svg")
         title (or (:title attrs) nil)
         base-attrs {:id "app-header"
@@ -619,7 +617,7 @@
       (or content (:label attrs))]]))
 
 (defmethod c/resolve-alias ::sidebar-layout
-  [_ attrs content]
+  [_ _ content]
   (let [sidebar-element (first content)
         content-element (second content)]
     [:div.flex.h-screen

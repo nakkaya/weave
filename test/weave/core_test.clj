@@ -411,19 +411,18 @@
         (el-text :page-two-content))))
 
 (defn push-path-with-push-html-test-view []
-  (let []
-    [:div {:id "view"}
-     [:button
-      {:id "render"
-       :data-on-click
-       (core/handler []
-         (core/push-path!
-          "/new-path")
-         (core/push-html!
-          (push-path-with-push-html-test-view)))}
-      "Update Path"]
-     [:div
-      [:input#value {:value core/*app-path*}]]]))
+  [:div {:id "view"}
+   [:button
+    {:id "render"
+     :data-on-click
+     (core/handler []
+                   (core/push-path!
+                    "/new-path")
+                   (core/push-html!
+                    (push-path-with-push-html-test-view)))}
+    "Update Path"]
+   [:div
+    [:input#value {:value core/*app-path*}]]])
 
 (test-with-sse-variants
  'push-signal-with-push-html-test
