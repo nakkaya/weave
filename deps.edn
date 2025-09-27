@@ -4,7 +4,7 @@
         camel-snake-kebab/camel-snake-kebab  {:mvn/version "0.4.3"}
         commons-codec/commons-codec          {:mvn/version "1.18.0"}
         ring/ring-core                       {:mvn/version "1.12.1"}
-        http-kit/http-kit                    {:mvn/version "2.7.0"}
+        http-kit/http-kit                    {:mvn/version "2.9.0-beta1"}
         ring/ring-defaults                   {:mvn/version "0.5.0"}
         amalloy/ring-gzip-middleware         {:mvn/version "0.1.4"}
         org.slf4j/slf4j-simple               {:mvn/version "2.0.13"}
@@ -13,15 +13,10 @@
         com.cnuernber/charred                {:mvn/version "1.034"}
         backtick/backtick                    {:mvn/version "0.3.5"}
         metosin/reitit                       {:mvn/version "0.8.0"}
-        datastar/sdk                         {:git/url "https://github.com/starfederation/datastar/"
-                                              :git/sha "d86d859e6829bff2d4c8896b154f05eeb9a5c73c"
-                                              :deps/root "sdk/clojure/sdk"}
+        dev.data-star.clojure/http-kit       {:mvn/version "1.0.0-RC3"}
+        dev.data-star.clojure/sdk            {:mvn/version "1.0.0-RC3"}
         io.github.squint-cljs/squint         {:git/url "https://github.com/squint-cljs/squint.git"
                                               :git/sha "1ecbf7fd37389211fcaf815dee9d64edb1d308e0"}
-        datastar/ring                        {:git/url "https://github.com/starfederation/datastar/"
-                                              :git/sha "d86d859e6829bff2d4c8896b154f05eeb9a5c73c"
-                                              :deps/root "sdk/clojure/adapter-http-kit"
-                                              :exclusions [http-kit/http-kit]}
         integrant/integrant                  {:mvn/version "0.13.1"}}
 
  :paths ["resources" "src" "target/assets"]
