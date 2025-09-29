@@ -504,7 +504,8 @@
   [_ attrs content]
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :sidebar :bg))
         logo-url (or (:logo-url attrs) "/weave.svg")
-        title (or (:title attrs) nil)]
+        title (or (:title attrs) nil)
+        home-url (:url attrs)]
 
     [:div.flex.h-screen
      ;; Sidebar backdrop for mobile
@@ -526,13 +527,19 @@
 
       ;; Header
       [:div.flex.items-center.justify-between.px-4.py-3.border-b.border-gray-700
-       [:div.flex.items-center.gap-3
-        [:img.h-8.w-auto
-         {:src logo-url}]
-        (when title
-          [:div
-           {:class "font-medium text-lg text-gray-300 dark:text-gray-300"}
-           title])]]
+       (if home-url
+         [::a {:href home-url :class "flex items-center gap-3 hover:opacity-80 transition-opacity"}
+          [:img.h-8.w-auto {:src logo-url}]
+          (when title
+            [:div
+             {:class "font-medium text-lg text-gray-300 dark:text-gray-300"}
+             title])]
+         [:div.flex.items-center.gap-3
+          [:img.h-8.w-auto {:src logo-url}]
+          (when title
+            [:div
+             {:class "font-medium text-lg text-gray-300 dark:text-gray-300"}
+             title])])]
 
       [:nav
        {:class "flex-1 px-2 py-4 overflow-y-auto flex flex-col h-[calc(100%-4rem)]"}
