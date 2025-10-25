@@ -1,3 +1,43 @@
+window.initDarkMode = function() {
+    const savedTheme = localStorage.getItem('theme');
+
+    if (savedTheme) {
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    } else {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        }
+    }
+}
+
+window.toggleDarkMode = function() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
+window.initDarkMode();
+
+if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        // Only auto-update if user hasn't explicitly set a preference
+        if (!localStorage.getItem('theme')) {
+            if (e.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+    });
+}
+
 // https://gist.githubusercontent.com/scwood/3bff42cc005cc20ab7ec98f0d8e1d59d/raw/32aaada5e4493efc8c728a571341821025190fa5/uuidV4.js
 function uuidV4() {
     const uuid = new Array(36);
