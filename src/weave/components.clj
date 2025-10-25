@@ -37,102 +37,102 @@
         (assoc :class merged-class))))
 
 (def ^:dynamic *theme*
-  {:view {:bg "bg-white dark:bg-gray-900"}
-   :card {:bg "bg-white dark:bg-gray-800"
-          :border "border border-gray-300 dark:border-gray-700"
+  {:view {:bg "bg-[#f7f7f7] dark:bg-[#1a1a1a]"}
+   :card {:bg "bg-white dark:bg-[#252525]"
+          :border "border border-[#e0e0e0] dark:border-[#333333]"
           :shadow "shadow-sm"}
-   :card-with-header {:bg "bg-white dark:bg-gray-800"
-                      :border "divide-y divide-gray-300 dark:divide-gray-700"
+   :card-with-header {:bg "bg-white dark:bg-[#252525]"
+                      :border "divide-y divide-[#e0e0e0] dark:divide-[#333333]"
                       :shadow "shadow-sm"}
-   :link {:base "text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"}
-   :sidebar {:bg "bg-gray-800 dark:bg-gray-900"
-             :text "text-gray-300 dark:text-gray-300"
-             :hover "hover:bg-gray-700 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white"
-             :active "bg-gray-900 text-white dark:bg-gray-800 dark:text-white"}
+   :link {:base "text-[#4f46e5] hover:text-[#4338ca] dark:text-[#5b8ff9] dark:hover:text-[#7ba8ff]"}
+   :sidebar {:bg "bg-[#f7f7f7] dark:bg-[#202020]"
+             :text "text-[#525252] dark:text-[#d0d0d0]"
+             :hover "hover:bg-[#e5e5e5] hover:text-[#171717] dark:hover:bg-[#2a2a2a] dark:hover:text-white"
+             :active "bg-[#e0e0e0] text-[#171717] dark:bg-[#2a2a2a] dark:text-white"}
    :button {:base "inline-flex items-center justify-center text-center gap-2 rounded-lg shadow-theme-xs transition"
             :sizes {:xs "px-2 py-1.5 text-xs"
                     :s "px-3 py-2 text-sm"
                     :md "px-4 py-3 text-sm"
                     :lg "px-5 py-3.5 text-base"
                     :xl "px-6 py-4 text-lg"}
-            :variants {:primary {:bg "bg-indigo-600 dark:bg-indigo-500"
-                                 :hover "hover:bg-indigo-500 dark:hover:bg-indigo-400"
+            :variants {:primary {:bg "bg-[#4f46e5] dark:bg-[#5b8ff9]"
+                                 :hover "hover:bg-[#4338ca] dark:hover:bg-[#7ba8ff]"
                                  :focus "focus:outline-none"
                                  :text "text-white font-medium"}
                        :danger {:bg "bg-red-600 dark:bg-red-500"
                                 :hover "hover:bg-red-500 dark:hover:bg-red-400"
                                 :focus "focus:outline-none"
                                 :text "text-white font-medium"}
-                       :secondary {:bg "bg-white dark:bg-gray-800"
-                                   :hover "hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                       :secondary {:bg "bg-white dark:bg-[#252525]"
+                                   :hover "hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a]"
                                    :focus "focus:outline-none"
-                                   :text "text-gray-700 dark:text-gray-400 font-medium ring-1 ring-inset ring-gray-300 dark:ring-gray-700"}}}
+                                   :text "text-[#525252] dark:text-[#d0d0d0] font-medium ring-1 ring-inset ring-[#e0e0e0] dark:ring-[#333333]"}}}
    :input {:base "block w-full h-11 rounded-lg border bg-transparent shadow-sm focus:outline-hidden focus:ring-3"
            :sizes {:xs "px-3 py-2 text-xs"
                    :s "px-3.5 py-2 text-sm"
                    :md "px-4 py-2.5 text-sm"
                    :lg "px-4 py-3 text-base"
                    :xl "px-5 py-3.5 text-lg"}
-           :border "border-gray-300 dark:border-gray-700 focus:border-indigo-300 dark:focus:border-indigo-800"
-           :focus "focus:ring-indigo-500/10"
-           :bg "bg-transparent dark:bg-gray-900"
-           :text "text-gray-800 dark:text-white/90"
-           :placeholder "placeholder:text-gray-400 dark:placeholder:text-white/30"}
+           :border "border-[#d0d0d0] dark:border-[#333333] focus:border-[#4f46e5] dark:focus:border-[#5b8ff9]"
+           :focus "focus:ring-[#4f46e5]/10 dark:focus:ring-[#5b8ff9]/20"
+           :bg "bg-white dark:bg-[#1a1a1a]"
+           :text "text-[#171717] dark:text-[#e5e5e5]"
+           :placeholder "placeholder:text-[#a3a3a3] dark:placeholder:text-[#707070]"}
    :label {:base "mb-1.5 block font-medium"
            :sizes {:xs "text-xs"
                    :s "text-sm"
                    :md "text-sm"
                    :lg "text-base"
                    :xl "text-lg"}
-           :text "text-gray-700 dark:text-gray-400"
+           :text "text-[#525252] dark:text-[#d0d0d0]"
            :required "text-red-500 dark:text-red-400"}
    :alert {:base "rounded-md p-4 border"
-           :variants {:success {:bg "bg-green-50 dark:bg-green-900/30"
+           :variants {:success {:bg "bg-green-50 dark:bg-green-900/20"
                                 :border "border-green-400 dark:border-green-700"
                                 :text "text-green-800 dark:text-green-300"}
-                      :warning {:bg "bg-yellow-50 dark:bg-yellow-900/30"
-                                :border "border-yellow-400 dark:border-yellow-700"
-                                :text "text-yellow-800 dark:text-yellow-300"}
-                      :error {:bg "bg-red-50 dark:bg-red-900/30"
+                      :warning {:bg "bg-[#fff7ed] dark:bg-[#ff9500]/20"
+                                :border "border-[#fb923c] dark:border-[#ff9500]"
+                                :text "text-[#c2410c] dark:text-[#ffa500]"}
+                      :error {:bg "bg-red-50 dark:bg-red-900/20"
                               :border "border-red-400 dark:border-red-700"
                               :text "text-red-800 dark:text-red-300"}
-                      :info {:bg "bg-blue-50 dark:bg-blue-900/30"
-                             :border "border-blue-400 dark:border-blue-700"
-                             :text "text-blue-800 dark:text-blue-300"}}}
-   :navbar {:bg "bg-gray-800 dark:bg-gray-900"
-            :text "text-gray-300 dark:text-gray-300"
-            :hover "hover:bg-gray-700 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white"}
+                      :info {:bg "bg-blue-50 dark:bg-[#5b8ff9]/20"
+                             :border "border-blue-400 dark:border-[#5b8ff9]"
+                             :text "text-blue-800 dark:text-[#7ba8ff]"}}}
+   :navbar {:bg "bg-[#f7f7f7] dark:bg-[#202020]"
+            :text "text-[#525252] dark:text-[#d0d0d0]"
+            :hover "hover:bg-[#e5e5e5] hover:text-[#171717] dark:hover:bg-[#2a2a2a] dark:hover:text-white"}
    :select {:base "block w-full h-11 rounded-lg border bg-transparent shadow-sm focus:outline-hidden focus:ring-3 appearance-none"
             :sizes {:xs "px-3 py-2 text-xs"
                     :s "px-3.5 py-2 text-sm"
                     :md "px-4 py-2.5 text-sm"
                     :lg "px-4 py-3 text-base"
                     :xl "px-5 py-3.5 text-lg"}
-            :border "border-gray-300 dark:border-gray-700 focus:border-indigo-300 dark:focus:border-indigo-800"
-            :focus "focus:ring-indigo-500/10"
-            :bg "bg-transparent dark:bg-gray-900"
-            :text "text-gray-800 dark:text-white/90"
+            :border "border-[#d0d0d0] dark:border-[#333333] focus:border-[#4f46e5] dark:focus:border-[#5b8ff9]"
+            :focus "focus:ring-[#4f46e5]/10 dark:focus:ring-[#5b8ff9]/20"
+            :bg "bg-white dark:bg-[#1a1a1a]"
+            :text "text-[#171717] dark:text-[#e5e5e5]"
             :icon "absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"}
-   :modal {:overlay "fixed inset-0 z-50 bg-black/50 dark:bg-black/70 transition-opacity"
+   :modal {:overlay "fixed inset-0 z-50 bg-black/50 dark:bg-black/80 transition-opacity"
            :container "fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-           :dialog "relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+           :dialog "relative bg-white dark:bg-[#252525] rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
            :sizes {:sm "max-w-sm"
                    :md "max-w-md"
                    :lg "max-w-lg"
                    :xl "max-w-xl"
                    :2xl "max-w-2xl"
                    :full "max-w-full mx-4"}}
-   :table {:container "w-full overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg dark:ring-gray-700 dark:ring-opacity-50"
-           :base "min-w-full divide-y divide-gray-300 dark:divide-gray-600"
-           :header {:bg "bg-gray-50 dark:bg-gray-800"
-                    :text "text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+   :table {:container "w-full overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg dark:ring-[#333333] dark:ring-opacity-50"
+           :base "min-w-full divide-y divide-[#e0e0e0] dark:divide-[#333333]"
+           :header {:bg "bg-[#f9f9f9] dark:bg-[#202020]"
+                    :text "text-xs font-medium text-[#737373] dark:text-[#a0a0a0] uppercase tracking-wider"
                     :padding "px-6 py-3"}
-           :body {:bg "bg-white dark:bg-gray-900"
-                  :divider "divide-y divide-gray-200 dark:divide-gray-700"}
-           :row {:hover "hover:bg-gray-50 dark:hover:bg-gray-800"
-                 :even "bg-white dark:bg-gray-900"
-                 :odd "bg-gray-50 dark:bg-gray-800"}
-           :cell {:text "text-sm text-gray-900 dark:text-gray-100"
+           :body {:bg "bg-white dark:bg-[#1a1a1a]"
+                  :divider "divide-y divide-[#f0f0f0] dark:divide-[#2a2a2a]"}
+           :row {:hover "hover:bg-[#f9f9f9] dark:hover:bg-[#252525]"
+                 :even "bg-white dark:bg-[#1a1a1a]"
+                 :odd "bg-[#fafafa] dark:bg-[#202020]"}
+           :cell {:text "text-sm text-[#171717] dark:text-[#e5e5e5]"
                   :padding "px-6 py-4 whitespace-nowrap"}}})
 
 #_:clj-kondo/ignore
