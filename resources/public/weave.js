@@ -23,6 +23,82 @@ window.toggleDarkMode = function() {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
 }
 
+window.positionDropdown = function(button) {
+    const container = button.closest('.relative');
+    if (!container) return;
+
+    const dropdown = container.querySelector('.dropdown-menu');
+    if (!dropdown) return;
+
+    const rect = button.getBoundingClientRect();
+
+    const rightPosition = window.innerWidth - rect.right;
+    const topPosition = rect.bottom;
+
+    dropdown.style.right = rightPosition + 'px';
+    dropdown.style.top = topPosition + 'px';
+    dropdown.style.left = 'auto';
+}
+
+window.toggleDropdown = function(button) {
+    const container = button.closest('.dropdown-container');
+    if (!container) return;
+
+    const dropdown = container.querySelector('.dropdown-menu');
+    const chevron = container.querySelector('.dropdown-chevron');
+    if (!dropdown) return;
+
+    // Close all other dropdowns first
+    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        if (menu !== dropdown && !menu.classList.contains('hidden')) {
+            menu.classList.add('hidden');
+            const otherChevron = menu.closest('.dropdown-container')?.querySelector('.dropdown-chevron');
+            if (otherChevron) otherChevron.classList.remove('rotate-180');
+        }
+    });
+
+    // Toggle this dropdown
+    const isHidden = dropdown.classList.contains('hidden');
+    if (isHidden) {
+        dropdown.classList.remove('hidden');
+        if (chevron) chevron.classList.add('rotate-180');
+        // Position if needed (for fixed positioning)
+        if (dropdown.classList.contains('fixed')) {
+            positionDropdown(button);
+        }
+    } else {
+        dropdown.classList.add('hidden');
+        if (chevron) chevron.classList.remove('rotate-180');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Close dropdown when clicking an item
+    document.addEventListener('click', function(e) {
+        const dropdownItem = e.target.closest('.dropdown-menu li');
+        if (dropdownItem) {
+            const container = dropdownItem.closest('.dropdown-container');
+            if (container) {
+                const dropdown = container.querySelector('.dropdown-menu');
+                const chevron = container.querySelector('.dropdown-chevron');
+                if (dropdown) dropdown.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        if (!e.target.closest('.dropdown-container')) {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                if (!menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                    const chevron = menu.closest('.dropdown-container')?.querySelector('.dropdown-chevron');
+                    if (chevron) chevron.classList.remove('rotate-180');
+                }
+            });
+        }
+    });
+});
+
 window.initDarkMode();
 
 if (window.matchMedia) {

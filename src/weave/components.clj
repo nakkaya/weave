@@ -133,7 +133,16 @@
                  :even "bg-white dark:bg-[#1a1a1a]"
                  :odd "bg-[#fafafa] dark:bg-[#202020]"}
            :cell {:text "text-sm text-[#171717] dark:text-[#e5e5e5]"
-                  :padding "px-6 py-4 whitespace-nowrap"}}})
+                  :padding "px-6 py-4 whitespace-nowrap"}}
+   :dropdown {:menu {:bg "bg-white dark:bg-[#2a2a2a]"
+                     :border "ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10"
+                     :shadow "shadow-xl"
+                     :divider "divide-y divide-gray-100 dark:divide-gray-800"}
+              :item {:base "flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors"
+                     :variants {:default {:text "text-gray-700 dark:text-gray-200"
+                                          :hover "hover:bg-indigo-50 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-white"}
+                                :danger {:text "text-red-700 dark:text-red-400"
+                                         :hover "hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-300"}}}}})
 
 #_:clj-kondo/ignore
 (defn with-theme
@@ -875,3 +884,81 @@
                            :left "text-left"
                            "text-left"))}
              (get row (keyword (:name column)) "-")])])]]]))
+
+(defmethod c/resolve-alias ::dropdown
+  [_ attrs content]
+  (let [{:keys [label icon variant size use-fixed position min-width z-index]} attrs
+        ;; Defaults
+        variant (or variant :secondary)
+        size (or size :s)
+        use-fixed (or use-fixed false)
+        position (or position :right)
+        min-width (or min-width "min-w-[200px]")
+        z-index (or z-index "z-[9999]")
+        ;; Position and menu classes
+        position-class (case position :left "left-0" :right "right-0" "right-0")
+        positioning-type (if use-fixed "fixed" "absolute")
+        menu-classes (tw positioning-type position-class "hidden"
+                         min-width z-index "dropdown-menu")
+        ;; Get theme classes
+        variant-classes (get-variant-classes :button variant)
+        size-class (get-size-class :button size)
+        base-class (get-theme-class :button :base)
+        ;; Build button class
+        btn-class (tw base-class
+                      size-class
+                      (:bg variant-classes)
+                      (:text variant-classes)
+                      (:hover variant-classes)
+                      (:focus variant-classes)
+                      "gap-x-1.5 dropdown-trigger")
+        ;; Menu theme classes
+        menu-bg (get-theme-class :dropdown :menu :bg)
+        menu-border (get-theme-class :dropdown :menu :border)
+        menu-shadow (get-theme-class :dropdown :menu :shadow)
+        menu-divider (get-theme-class :dropdown :menu :divider)
+        ;; Filter component-specific attrs
+        container-attrs (dissoc attrs :label :icon :variant :size :use-fixed
+                                :position :min-width :z-index)
+        ;; Build button attributes
+        button-attrs (cond-> {:type "button"
+                              :class btn-class
+                              :onclick "toggleDropdown(this)"}
+                       use-fixed (assoc :onmouseenter "positionDropdown(this)"))]
+    [:div.relative.dropdown-container container-attrs
+     ;; Trigger button
+     [:button button-attrs
+      [:span.flex.items-center.gap-1.5
+       (when icon [::icon {:id icon :class "w-4 h-4"}])
+       label
+       [::icon {:id "solid-chevron-down"
+                :class "w-3 h-3 transition-transform dropdown-chevron"}]]]
+     ;; Menu container
+     [:div {:class menu-classes
+            :style (when use-fixed "pointer-events: auto;")}
+      [:div {:class (tw "mt-2 py-1 rounded-lg" menu-border menu-bg menu-shadow)}
+       [:ul {:class menu-divider}
+        content]]]]))
+
+(defmethod c/resolve-alias ::dropdown-item
+  [_ attrs content]
+  (let [variant (or (:variant attrs) :default)
+        ;; Get theme classes
+        item-base (get-theme-class :dropdown :item :base)
+        variant-classes (get-in *theme* [:dropdown :item :variants variant])
+        ;; Build item class
+        item-class (tw item-base
+                       (:text variant-classes)
+                       (:hover variant-classes))
+        ;; Get the child element
+        child (first content)
+        ;; Merge classes with child's existing classes
+        [tag child-attrs & child-content] (if (vector? child) child [:div {} child])
+        child-attrs (if (map? child-attrs) child-attrs {})
+        child-content (if (map? child-attrs) child-content (cons child-attrs child-content))
+        ;; Merge item class with child's class
+        merged-class (merge-classes item-class (:class child-attrs ""))
+        ;; Filter component-specific attrs, merge with child attrs
+        filtered-attrs (dissoc attrs :variant)
+        final-attrs (merge filtered-attrs child-attrs {:class merged-class})]
+    [:li (into [tag final-attrs] child-content)]))
