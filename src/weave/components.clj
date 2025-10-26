@@ -207,7 +207,7 @@
 (defmethod c/resolve-alias ::view
   [_ attrs content]
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :view :bg))
-        base-attrs {:class (str "w-full h-full " theme-bg)}
+        base-attrs {:class (str "w-full min-h-screen " theme-bg)}
         filtered-attrs (dissoc attrs :bg-class)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:div merged-attrs
@@ -722,11 +722,11 @@
         ;; Container classes
         container-classes (get-theme-class :view :bg)
         card-container-classes "mx-auto w-full sm:max-w-lg"
-        heading-classes "mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900"
+        heading-classes "mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900 dark:text-gray-100"
         form-container-classes "mt-10 mx-auto w-full sm:max-w-lg"
         form-classes "space-y-6"
-        footer-text-classes "mt-10 text-center text-sm/6 text-gray-500"
-        link-classes "font-semibold text-indigo-600 hover:text-indigo-500 cursor-pointer"
+        footer-text-classes "mt-10 text-center text-sm/6 text-gray-500 dark:text-gray-400"
+        link-classes "font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer"
 
         ;; Prepare base attributes
         base-attrs {:class (tw "flex min-h-full flex-col w-full md:w-96 justify-center px-6 py-6 lg:px-8" container-classes)}
@@ -753,7 +753,7 @@
       [:div {:class form-container-classes
              :data-signals-_error "false"}
        [:div {:id "sign-in-error"
-              :class "p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg"
+              :class "p-3 mb-4 text-sm text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/20 rounded-lg border border-red-400 dark:border-red-700"
               :data-show error-signal
               :style "display: none"}
         error-message]
