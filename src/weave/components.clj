@@ -5,7 +5,10 @@
    [clojure.string :as str]
    [clojure.java.io :as io]
    [weave.core :as core]
-   [weave.squint :refer [clj->js]]))
+   [weave.squint :refer [clj->js]])
+  (:import
+   [java.time Instant ZonedDateTime LocalDateTime ZoneId]
+   [java.time.format DateTimeFormatter]))
 
 (defn tw
   "Combines multiple Tailwind CSS classes into a single string.
@@ -962,3 +965,35 @@
         filtered-attrs (dissoc attrs :variant)
         final-attrs (merge filtered-attrs child-attrs {:class merged-class})]
     [:li (into [tag final-attrs] child-content)]))
+
+(defmethod c/resolve-alias ::time
+  [_ attrs _content]
+  (let [time-value (:time attrs)
+        format-pattern (or (:format attrs) "yyyy-MM-dd HH:mm:ss")
+        timezone-str (or (:timezone attrs) core/*timezone*)
+        zone (ZoneId/of timezone-str)
+        zdt (cond
+              (instance? Instant time-value)
+              (.atZone ^Instant time-value zone)
+
+              (instance? ZonedDateTime time-value)
+              (.withZoneSameInstant ^ZonedDateTime time-value zone)
+
+              (instance? LocalDateTime time-value)
+              (.atZone ^LocalDateTime time-value zone)
+
+              (instance? Long time-value)
+              (.atZone (Instant/ofEpochMilli time-value) zone)
+
+              (string? time-value)
+              (.atZone (Instant/parse time-value) zone)
+
+              :else
+              (throw (ex-info "Unsupported time type" {:type (type time-value)})))
+        formatter (DateTimeFormatter/ofPattern format-pattern)
+        formatted (.format zdt formatter)
+        iso-datetime (.format zdt DateTimeFormatter/ISO_OFFSET_DATE_TIME)
+        base-attrs {:datetime iso-datetime}
+        filtered-attrs (dissoc attrs :time :format :timezone)
+        merged-attrs (merge-attrs base-attrs filtered-attrs)]
+    [:time merged-attrs formatted]))
