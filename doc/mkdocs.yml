@@ -32,6 +32,9 @@ theme:
     - navigation.expand
     - navigation.path
 
+hooks:
+  - hooks.py
+
 plugins:
   - search
 
