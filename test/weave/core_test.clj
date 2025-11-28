@@ -416,10 +416,10 @@
     {:id "render"
      :data-on-click
      (core/handler []
-                   (core/push-path!
-                    "/new-path")
-                   (core/push-html!
-                    (push-path-with-push-html-test-view)))}
+       (core/push-path!
+        "/new-path")
+       (core/push-html!
+        (push-path-with-push-html-test-view)))}
     "Update Path"]
    [:div
     [:input#value {:value core/*app-path*}]]])
@@ -1338,6 +1338,40 @@
         (e/wait-predicate
          #(str/includes? (el-text :count) "1"))))))
 
+(defn timezone-language-test-view []
+  [:div#view
+   [:h1 "Timezone and Language Test"]
+   [:div#timezone-display "Loading..."]
+   [:div#language-display "Loading..."]
+   [:button
+    {:id "get-locale-info"
+     :data-on-click
+     (core/handler []
+       (core/push-html!
+        [:div#view
+         [:div#timezone-display core/*timezone*]
+         [:div#language-display core/*language*]]))}
+    "Get Locale Info"]])
+
+(test-with-sse-variants
+ 'timezone-language-test
+ timezone-language-test-view
+
+ (testing "Timezone and language are accessible in handlers"
+   (visible? :get-locale-info)
+
+   (click :get-locale-info)
+
+   (e/wait-predicate #(not= "Loading..." (el-text :timezone-display)))
+
+   (let [timezone (el-text :timezone-display)]
+     (is (not (str/blank? timezone))
+         "Timezone should not be blank"))
+
+   (let [language (el-text :language-display)]
+     (is (not (str/blank? language))
+         "Language should not be blank"))))
+
 (defn query-params-test-view []
   [:div#view
    [:h1 "Query Parameters Test"]
@@ -1346,14 +1380,14 @@
      :data-on-click
      (core/handler []
        (core/push-html!
-         [:div#view
-          [:div#params-display
-           [:p "Query Params: " (pr-str core/*query-params*)]]
-          [:div#individual-params
-           [:p#tab-param
-            (get core/*query-params* :tab "not-found")]
-           [:p#view-param
-            (get core/*query-params* :view "not-found")]]]))}
+        [:div#view
+         [:div#params-display
+          [:p "Query Params: " (pr-str core/*query-params*)]]
+         [:div#individual-params
+          [:p#tab-param
+           (get core/*query-params* :tab "not-found")]
+          [:p#view-param
+           (get core/*query-params* :view "not-found")]]]))}
     "Get Query Params"]])
 
 (test-with-sse-variants

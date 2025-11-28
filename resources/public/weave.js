@@ -285,6 +285,8 @@ import('./datastar@v1.0.0-RC.4.js').then(({ load, apply }) => {
 		    'x-server-id': window.weave.server(),
                     'x-csrf-token': window.weave.csrf(),
                     'x-instance-id': window.weave.instance(),
+                    'x-timezone': Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+                    'x-language': navigator.language || 'en',
 		    'X-Accel-Buffering': 'no',
                     ...(options.headers || {})
                 }

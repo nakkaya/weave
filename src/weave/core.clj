@@ -49,6 +49,16 @@
    accessing URL query parameters from handlers and views."
   nil)
 
+(def ^:dynamic *timezone*
+  "The client's timezone as an IANA timezone ID (e.g., \"Europe/Helsinki\").
+  Defaults to \"UTC\"."
+  "UTC")
+
+(def ^:dynamic *language*
+  "The client's preferred language from navigator.language (e.g., \"en-US\").
+   Defaults to \"en\"."
+  "en")
+
 (def ^:dynamic *request*
   "Current Ring request map.  Contains all HTTP request information
    including headers, parameters, and the authenticated user identity."
@@ -102,8 +112,8 @@
 
 (defmacro bind-vars
   "Bind the dynamic variables *session-id*, *instance-id*,
-   *app-path*, *query-params*, and *request* to values extracted from the request map
-   for the duration of body execution.
+   *app-path*, *query-params*, *timezone*, *language*, and *request*
+   to values extracted from the request map for the duration of body execution.
 
    This macro is used internally to ensure that handlers and views
    have access to the current request context through these dynamic
@@ -115,11 +125,15 @@
          instance-id# (get headers# "x-instance-id")
          app-path# (get headers# "x-app-path")
          query-params-str# (get headers# "x-query-params")
-         query-params# (#'parse-query-params query-params-str#)]
+         query-params# (#'parse-query-params query-params-str#)
+         timezone# (or (get headers# "x-timezone") "UTC")
+         language# (or (get headers# "x-language") "en")]
      (binding [*session-id* session-id#
                *instance-id* instance-id#
                *app-path* app-path#
                *query-params* query-params#
+               *timezone* timezone#
+               *language* language#
                *request* ~req
                *signals* (get-signals ~req)]
        ~@body)))
