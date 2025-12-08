@@ -604,14 +604,18 @@
         active? (get attrs :active false)
         icon (get attrs :icon nil)
         handler (get attrs :handler nil)
+        href (get attrs :href nil)
         item-class (tw
                     theme-text
                     (if active? theme-active theme-hover)
-                    "flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer")]
+                    "flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer")
+        anchor-attrs (cond-> {:class item-class}
+                       (and handler href) (assoc :data-on-click__prevent handler)
+                       (and handler (not href)) (assoc :data-on-click handler)
+                       href (assoc :href href))]
 
     [:li
-     [:a {:class item-class
-          :data-on-click handler}
+     [:a anchor-attrs
       (when icon
         [::icon {:id icon :class "h-5 w-5 mr-2"}])
       (or content (:label attrs))]]))
