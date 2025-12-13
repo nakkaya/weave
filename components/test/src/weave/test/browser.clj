@@ -3,7 +3,8 @@
    [clojure.test :refer [is]]
    [etaoin.api :as e]
    [integrant.core :as ig]
-   [weave.core :as core]))
+   [weave.core :as core]
+   [weave.session :as session]))
 
 (def ^:dynamic *browser* nil)
 
@@ -71,3 +72,19 @@
   "Accept an alert or confirm dialog that appears."
   []
   (e/accept-alert *browser*))
+
+(defn login
+  "Set session cookie with user identity for authenticated tests.
+
+   Parameters:
+   - user-data: Map with user identity data, e.g. {:username \"admin\"}"
+  [user-data]
+  (let [cookie-value (->> (session/sign-in user-data)
+                          (re-find #"weave-auth=([^;]+)")
+                          second)]
+    (e/set-cookie *browser* {:name "weave-auth"
+                             :value cookie-value
+                             :path "/"
+                             :sameSite "Lax"})
+    ;; Refresh to apply the new cookie
+    (e/refresh *browser*)))
