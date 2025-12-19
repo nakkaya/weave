@@ -7,7 +7,7 @@
    [clj-http.client :as http]
    [etaoin.api :as e]
    [integrant.core :as ig]
-   [weave.test.browser :refer [*browser* with-browser url weave-options visible? fill click el-text new-tab tabs switch-tab has-alert? accept-alert] :as browser]
+   [weave.test.browser :refer [*browser* with-browser url weave-options visible? fill click el-text new-tab tabs switch-tab has-alert? accept-alert driver-options] :as browser]
    [weave.core :as core]
    [weave.session :as session]
    [weave.squint :as squint]))
@@ -1406,3 +1406,48 @@
    (is (= "compact"
           (el-text :view-param))
        "view parameter should be accessible")))
+
+(defn stale-reload-test-view []
+  [:div#view
+   [:div#status "Ready"]
+   [:button
+    {:id "test-btn"
+     :data-on-click
+     (core/handler []
+       (core/push-html! [:div#status "Clicked!"]))}
+    "Click Me"]])
+
+(defn run-stale-reload-test [sse-enabled]
+  (let [options (assoc-in weave-options [:sse :enabled] sse-enabled)
+        server (atom (core/run stale-reload-test-view options))]
+    (try
+      (e/with-chrome-headless (driver-options) driver
+        (binding [*browser* driver]
+          (e/go driver url)
+          (visible? :test-btn)
+
+          ;; Verify button works before restart
+          (click :test-btn)
+          (e/wait-predicate #(= "Clicked!" (el-text :status)))
+          (is (= "Clicked!" (el-text :status)))
+
+          ;; Restart server (gets new server-id)
+          (ig/halt! @server)
+          (reset! server (core/run stale-reload-test-view options))
+
+          ;; Click should trigger reload
+          (click :test-btn)
+
+          ;; After reload, status should be back to "Ready"
+          (e/wait-predicate #(= "Ready" (el-text :status)))
+          (is (= "Ready" (el-text :status)))))
+      (finally
+        (ig/halt! @server)))))
+
+(deftest stale-connection-reload-test-with-sse
+  (testing "Server restart triggers page reload (SSE enabled)"
+    (run-stale-reload-test true)))
+
+(deftest stale-connection-reload-test-without-sse
+  (testing "Server restart triggers page reload (SSE disabled)"
+    (run-stale-reload-test false)))

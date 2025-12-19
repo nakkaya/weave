@@ -80,6 +80,11 @@
   "Current Server-Sent Events (SSE) generator instance."
   nil)
 
+(def ^:dynamic *server-id*
+  "The current server instance's unique ID. Generated at server startup
+   and used to detect stale connections from old server instances."
+  nil)
+
 (defn- parse-query-params
   "Parse query parameter string into a map.
    Examples:
@@ -121,7 +126,6 @@
   [req & body]
   `(let [session-id# (session/get-sid ~req)
          headers# (:headers ~req)
-         csrf-token# (get headers# "x-csrf-token")
          instance-id# (get headers# "x-instance-id")
          app-path# (get headers# "x-app-path")
          query-params-str# (get headers# "x-query-params")
@@ -347,36 +351,13 @@
       (resp/content-type "text/html")
       (resp/charset "UTF-8")))
 
-(defmulti app-inner
-  "Renders the inner application content based on SSE configuration.
-
+(defmulti app-loader
+  "Renders the application content based on SSE configuration.
    Dispatches based on whether SSE is enabled in the options."
   (fn [_req _server-id _view options]
     (get-in options [:sse :enabled])))
 
-(defn- app-loader
-  "Checks for stale connections and triggers a reload if necessary.
-
-   - Verify the server ID and CSRF token from client signals
-   - If valid, passes to app-inner for rendering
-   - If stale, forces a page reload and removes the connection
-
-   This is the entry point for all app content rendering."
-  [req server-id view options]
-  (let [headers (:headers req)
-        valid-session? (and (= server-id (headers "x-server-id"))
-                            (session/verify-csrf
-                             *session-id* (headers "x-csrf-token")))]
-    (if valid-session?
-      (app-inner req server-id view options)
-      (do
-        (session/remove-connection! *session-id* *instance-id*)
-        (->sse-response
-         {hk-gen/on-open
-          (fn [sse-gen]
-            (d*/execute-script! sse-gen "weave.reload();"))})))))
-
-(defmethod app-inner true
+(defmethod app-loader true
   [_req _server-id view _options]
   (->sse-response
    {hk-gen/on-open
@@ -397,7 +378,7 @@
       (session/remove-connection!
        *session-id* *instance-id*))}))
 
-(defmethod app-inner false
+(defmethod app-loader false
   [_req _server-id view _options]
   (->sse-response
    {hk-gen/on-open
@@ -433,6 +414,30 @@
   (swap! *event-handlers* assoc route-hash {:route route
                                             :handler-fn handler-fn
                                             :dstar-expr dstar-expr}))
+
+(defn- wrap-stale-check
+  "Middleware that detects stale connections by checking server-id and CSRF.
+   If either fails, triggers reload via SSE."
+  [handler]
+  (fn [request]
+    (let [headers (:headers request)
+          client-server-id (get headers "x-server-id")]
+      (if client-server-id
+        ;; Internal request - check server-id and CSRF
+        (let [sid (session/get-sid request)
+              csrf-token (get headers "x-csrf-token")
+              valid? (and (= client-server-id *server-id*)
+                          (session/verify-csrf sid csrf-token))]
+          (if valid?
+            (handler request)
+            (hk-gen/->sse-response
+             request
+             {hk-gen/on-open
+              (fn [sse-gen]
+                (d*/execute-script! sse-gen "weave.reload();")
+                (d*/close-sse! sse-gen))})))
+        ;; Not internal - pass through
+        (handler request)))))
 
 (defn- handler-router-middleware
   "Custom middleware that handles event handler routes via direct hash map lookup."
@@ -477,13 +482,15 @@
                                (not (authenticated? *request*)))
                         {:status 403, :headers {}, :body nil}
                         (do
-                          (session/record-activity! *session-id* *instance-id*)
-                          (hk-gen/->sse-response *request*
-                                                 {hk-gen/on-open
-                                                  (fn [sse-gen#]
-                                                    (binding [*sse-gen* sse-gen#]
-                                                      ~@body)
-                                                    (d*/close-sse! sse-gen#))})))))))
+                          (session/record-activity!
+                            *session-id* *instance-id*)
+                          (hk-gen/->sse-response
+                           *request*
+                           {hk-gen/on-open
+                            (fn [sse-gen#]
+                              (binding [*sse-gen* sse-gen#]
+                                ~@body)
+                              (d*/close-sse! sse-gen#))})))))))
                route# (str "/h/" route-hash#)
                base-expr# (str "@call('" route# "', " (#'request-options merged-opts#) ")")
                dstar-expr# (if-let [confirm-msg# (:confirm merged-opts#)]
@@ -856,6 +863,7 @@
         handler-chain (-> routes
                           handler-router-middleware
                           (session/wrap-session jwt-secret)
+                          wrap-stale-check
                           (def/wrap-defaults site-defaults)
                           (wrap-gzip))
         handler-chain (if (:middleware options)
@@ -869,6 +877,7 @@
         handler
         (fn [request]
           (binding [*view* view
+                    *server-id* server-id
                     session/*csrf-keyspec* csrf-keyspec
                     *handler-options* (or (:handler-options options) {})]
             (handler-chain request)))]
