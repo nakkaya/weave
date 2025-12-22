@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+tailwind.config = {darkMode: "class"};
 window.initDarkMode();
 
 if (window.matchMedia) {
@@ -149,8 +150,6 @@ window.weave = {
 	window.weaveInstanceId = getOrCreateInstanceId()
 	window.weaveKeepAlive = keepAlive
 	window.weaveDevMode = devMode
-
-	tailwind.config = {darkMode: "class"}
 
 	window.addEventListener('hashchange', function(e) {
             if (!window.__pushHashChange) {

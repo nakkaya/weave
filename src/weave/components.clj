@@ -210,7 +210,7 @@
 (defmethod c/resolve-alias ::view
   [_ attrs content]
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :view :bg))
-        base-attrs {:class (str "w-full min-h-screen " theme-bg)}
+        base-attrs {:class (str "w-full h-full " theme-bg)}
         filtered-attrs (dissoc attrs :bg-class)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:div merged-attrs
