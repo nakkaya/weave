@@ -11,7 +11,7 @@
         dev.onionpancakes/chassis            {:mvn/version "1.0.365"}
         com.cnuernber/charred                {:mvn/version "1.037"}
         backtick/backtick                    {:mvn/version "0.4.0"}
-        metosin/reitit                       {:mvn/version "0.9.2"}
+        com.cognitect/transit-clj            {:mvn/version "1.0.333"}
         dev.data-star.clojure/http-kit       {:mvn/version "1.0.0-RC5"}
         dev.data-star.clojure/sdk            {:mvn/version "1.0.0-RC5"}
         io.github.squint-cljs/squint         {:git/url "https://github.com/squint-cljs/squint.git"

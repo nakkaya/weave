@@ -5,6 +5,7 @@
    [reitit.core :as r]
    [integrant.core :as ig]
    [weave.core :as weave]
+   [weave.view :as view]
    [weave.session :as session]
    [weave.components :as c]))
 
@@ -69,43 +70,57 @@
            :variant :primary}
           "Add"]]]]]]))
 
-(let [router (r/router
-              [["/views/one" ::view-one]
-               ["/views/two" ::view-two]])]
+(defn welcome-view [_]
+  [:div.text-center.text-gray-500
+   "Select a page from the navigation above"])
 
-  (defn navigation-view []
-    [::c/view#app
-     [::c/col
-      {:class "w-1/3 m-5"}
-      [::c/row
-       [::c/card.mb-5.w-full
-        [::c/flex-between
-         [::c/button
-          {:size :md
-           :variant :primary
-           :data-on-click (weave/handler [navigation-view]
-                           (weave/push-path! "/views/one" navigation-view))}
-          "Page One"]
-         [::c/button
-          {:size :md
-           :variant :primary
-           :data-on-click (weave/handler [navigation-view]
-                           (weave/push-path! "/views/two" navigation-view))}
-          "Page Two"]]]]
+(defn page-one-view [_]
+  [:div.text-center.text-gray-500
+   [:h2.text-xl.font-bold
+    "Page One Content"]
+   [:p "This is the content for page one."]])
 
-      [::c/row
-       [::c/card.w-full
-        (case (get-in (r/match-by-path router weave/*app-path*) [:data :name])
-          ::view-one [:div.text-center
-                      [:h2.text-xl.font-bold
-                       "Page One Content"]
-                      [:p "This is the content for page one."]]
-          ::view-two [:div.text-center
-                      [:h2.text-xl.font-bold
-                       "Page Two Content"]
-                      [:p "This is the content for page two."]]
-          [:div.text-center.text-gray-500
-           "Select a page from the navigation above"])]]]]))
+(defn page-two-view [_]
+  [:div.text-center.text-gray-500
+   [:h2.text-xl.font-bold
+    "Page Two Content"]
+   [:p "This is the content for page two."]])
+
+(def nav-app
+  (-> (view/new {:id :nav-content
+                 :default :welcome})
+      (view/add {:id :welcome
+                 :render #'welcome-view})
+      (view/add {:id :page-one
+                 :render #'page-one-view})
+      (view/add {:id :page-two
+                 :render #'page-two-view})))
+
+(defn navigation-view []
+  [::c/view#app
+   [::c/col
+    {:class "w-1/3 m-5"}
+    [::c/row
+     [::c/card.mb-5.w-full
+      [::c/flex-between
+       [::c/button
+        {:size :md
+         :variant :primary
+         :href (view/href nav-app :page-one)
+         :data-on-click (weave/handler [nav-app]
+                          (view/render nav-app :page-one))}
+        "Page One"]
+       [::c/button
+        {:size :md
+         :variant :primary
+         :href (view/href nav-app :page-two)
+         :data-on-click (weave/handler [nav-app]
+                          (view/render nav-app :page-two))}
+        "Page Two"]]]]
+
+    [::c/row
+     [::c/card.w-full
+      (view/render nav-app)]]]])
 
 (def router
   (-> (r/router
