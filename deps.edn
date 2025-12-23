@@ -1,37 +1,36 @@
-{:deps {org.clojure/clojure                  {:mvn/version "1.12.0"}
-        nrepl/nrepl                          {:mvn/version "1.3.1"}
+{:deps {org.clojure/clojure                  {:mvn/version "1.12.4"}
         org.clojure/tools.logging            {:mvn/version "1.3.0"}
         camel-snake-kebab/camel-snake-kebab  {:mvn/version "0.4.3"}
         commons-codec/commons-codec          {:mvn/version "1.18.0"}
-        ring/ring-core                       {:mvn/version "1.12.1"}
-        http-kit/http-kit                    {:mvn/version "2.9.0-beta1"}
-        ring/ring-defaults                   {:mvn/version "0.5.0"}
+        ring/ring-core                       {:mvn/version "1.15.3"}
+        http-kit/http-kit                    {:mvn/version "2.9.0-beta3"}
+        ring/ring-defaults                   {:mvn/version "0.7.0"}
         amalloy/ring-gzip-middleware         {:mvn/version "0.1.4"}
-        org.slf4j/slf4j-simple               {:mvn/version "2.0.13"}
-        compojure/compojure                  {:mvn/version "1.7.0"}
+        org.slf4j/slf4j-simple               {:mvn/version "2.0.17"}
+        compojure/compojure                  {:mvn/version "1.7.2"}
         dev.onionpancakes/chassis            {:mvn/version "1.0.365"}
-        com.cnuernber/charred                {:mvn/version "1.034"}
-        backtick/backtick                    {:mvn/version "0.3.5"}
-        metosin/reitit                       {:mvn/version "0.8.0"}
-        dev.data-star.clojure/http-kit       {:mvn/version "1.0.0-RC3"}
-        dev.data-star.clojure/sdk            {:mvn/version "1.0.0-RC3"}
+        com.cnuernber/charred                {:mvn/version "1.037"}
+        backtick/backtick                    {:mvn/version "0.4.0"}
+        metosin/reitit                       {:mvn/version "0.9.2"}
+        dev.data-star.clojure/http-kit       {:mvn/version "1.0.0-RC5"}
+        dev.data-star.clojure/sdk            {:mvn/version "1.0.0-RC5"}
         io.github.squint-cljs/squint         {:git/url "https://github.com/squint-cljs/squint.git"
-                                              :git/sha "1ecbf7fd37389211fcaf815dee9d64edb1d308e0"}
-        integrant/integrant                  {:mvn/version "0.13.1"}}
+                                              :git/sha "79a9468c71881de85e80953eb407e6fe11ecf2ca"}
+        integrant/integrant                  {:mvn/version "1.0.1"}}
 
  :paths ["resources" "src" "target/assets"]
 
  :aliases
  {:nrepl {:extra-paths ["test"]
-          :extra-deps {nrepl/nrepl {:mvn/version "1.3.1"}}
+          :extra-deps {nrepl/nrepl {:mvn/version "1.5.1"}}
           :jvm-opts ["-Djdk.attach.allowAttachSelf"]
           :main-opts ["-m" "nrepl.cmdline" "--port" "7888"]}
 
   :test {:extra-paths ["test"]
          :extra-deps {io.github.cognitect-labs/test-runner
                       {:git/tag "v0.5.1" :git/sha "dfb30dd"}
-                      org.clojure/test.check {:mvn/version "1.1.1"}
-                      clj-http/clj-http {:mvn/version "3.13.0"}
+                      org.clojure/test.check {:mvn/version "1.1.2"}
+                      clj-http/clj-http {:mvn/version "3.13.1"}
                       weave/test {:local/root "components/test"}}
          :main-opts ["-m" "cognitect.test-runner"]
          :exec-fn cognitect.test-runner.api/test}
@@ -44,12 +43,12 @@
                       :artifact-id "core"
                       :version "0.1.0-SNAPSHOT"}}
 
-  :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
+  :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.2"}}
             :exec-fn deps-deploy.deps-deploy/deploy
             :exec-args {:installer :local
                         :artifact "target/weave.jar"}}
 
-  :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
+  :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.2"}}
            :exec-fn deps-deploy.deps-deploy/deploy
            :exec-args {:installer :remote
                        :artifact "target/weave.jar"

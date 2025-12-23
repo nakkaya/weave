@@ -25,7 +25,7 @@
 
 (deftest test-clj->js-macro-variable-capture
   (testing "clj->js macro can capture variables")
-  (is (= "var f = function () {\nreturn 43;;\n};\n"
+  (is (= "var f = function () {\nreturn 43;\n\n};\n"
          (let [_x 43]
            (squint/clj->js
             (defn f [] ~_x))))))
