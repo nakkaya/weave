@@ -611,11 +611,23 @@
             (csk/->camelCase s))]
     (if (keyword? x) (keyword v) v)))
 
+(defn- deep-merge
+  "Recursively merges maps. If values are not maps, the second value wins."
+  [& maps]
+  (letfn [(reconcile-keys [val-in-result val-in-latter]
+            (if (and (map? val-in-result)
+                     (map? val-in-latter))
+              (merge-with reconcile-keys val-in-result val-in-latter)
+              val-in-latter))
+          (reconcile-maps [result latter]
+            (merge-with reconcile-keys result latter))]
+    (reduce reconcile-maps maps)))
+
 (defn push-signal!
   "Send updated signal values to the specific browser tab/window that
    triggered the current handler."
   [signal]
-  (set! *signals* (merge *signals* signal))
+  (set! *signals* (deep-merge *signals* signal))
   (d*/patch-signals!
    (sse-conn) (->> signal
                    (cske/transform-keys to-camel-case)
