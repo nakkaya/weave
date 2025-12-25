@@ -108,6 +108,36 @@
                                     :retry-max-count 8
                                     :request-cancellation "auto"})))))
 
+(deftest resolve-signal-fns-test
+  (testing "resolve-signal-fns resolves function values in signals"
+    (let [resolve-signal-fns #'core/resolve-signal-fns]
+      (testing "regular values pass through unchanged"
+        (is (= {:foo "bar" :num 42}
+               (resolve-signal-fns {:foo "bar" :num 42}))))
+
+      (testing "function values are called and replaced with their results"
+        (is (= {:today "2024-01-15"}
+               (resolve-signal-fns {:today (constantly "2024-01-15")}))))
+
+      (testing "nested maps have their function values resolved"
+        (is (= {:outer {:inner "resolved"}}
+               (resolve-signal-fns {:outer {:inner (constantly "resolved")}}))))
+
+      (testing "mixed values work correctly"
+        (is (= {:static "value"
+                :dynamic "computed"
+                :nested {:a 1 :b "also-computed"}}
+               (resolve-signal-fns {:static "value"
+                                    :dynamic (constantly "computed")
+                                    :nested {:a 1 :b (constantly "also-computed")}}))))
+
+      (testing "nil values pass through unchanged"
+        (is (= {:foo nil}
+               (resolve-signal-fns {:foo nil}))))
+
+      (testing "empty maps return empty maps"
+        (is (= {} (resolve-signal-fns {})))))))
+
 (defn instance-id-test-view []
   [:div
    [:h1#content "Instance ID Test"]

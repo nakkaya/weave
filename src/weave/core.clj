@@ -623,15 +623,37 @@
             (merge-with reconcile-keys result latter))]
     (reduce reconcile-maps maps)))
 
+(defn- resolve-signal-value
+  "If v is a function, call it and return the result; otherwise return v as-is."
+  [v]
+  (if (fn? v) (v) v))
+
+(defn- resolve-signal-fns
+  "Walk through a signal map and resolve any function values."
+  [signal]
+  (reduce-kv
+   (fn [m k v]
+     (assoc m k
+            (cond
+              (fn? v) (v)
+              (map? v) (resolve-signal-fns v)
+              :else v)))
+   {}
+   signal))
+
 (defn push-signal!
   "Send updated signal values to the specific browser tab/window that
-   triggered the current handler."
+   triggered the current handler.
+
+   If any signal value is a function, it will be called and the result
+   will be used as the value. This allows for dynamic signal defaults."
   [signal]
-  (set! *signals* (deep-merge *signals* signal))
-  (d*/patch-signals!
-   (sse-conn) (->> signal
-                   (cske/transform-keys to-camel-case)
-                   (charred/write-json-str))))
+  (let [resolved (resolve-signal-fns signal)]
+    (set! *signals* (deep-merge *signals* resolved))
+    (d*/patch-signals!
+     (sse-conn) (->> resolved
+                     (cske/transform-keys to-camel-case)
+                     (charred/write-json-str)))))
 
 (defn push-path!
   "Change the URL hash for the specific browser tab/window that
