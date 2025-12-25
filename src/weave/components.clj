@@ -462,7 +462,7 @@
 (defmethod c/resolve-alias ::select
   [_ attrs _content]
   (let [size (or (:size attrs) :md)
-        placeholder (or (:placeholder attrs) "Select an option")
+        placeholder (:placeholder attrs)
         value (or (:selected attrs) "")
         name (or (:name attrs) "")
         id (or (:id attrs) name)
@@ -495,7 +495,7 @@
 
     [:div.relative
      [:select merged-attrs
-      (when placeholder
+      (when (and placeholder (str/blank? value))
         [:option {:value ""} placeholder])
       (for [option options]
         [:option {:value (:value option)
