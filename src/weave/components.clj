@@ -601,15 +601,23 @@
   (let [theme-text (or (:text-class attrs) (get-theme-class :sidebar :text))
         theme-hover (or (:hover-class attrs) (get-theme-class :sidebar :hover))
         theme-active (or (:active-class attrs) (get-theme-class :sidebar :active))
-        active? (get attrs :active false)
+        active (get attrs :active false)
+        active-signal? (string? active)
         icon (get attrs :icon nil)
         handler (get attrs :handler nil)
         href (get attrs :href nil)
-        item-class (tw
-                    theme-text
-                    (if active? theme-active theme-hover)
-                    "flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer")
+        ;; Base classes always applied
+        base-classes "flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer"
+        ;; When using signals, we need data-class for reactive styling
+        ;; When not using signals, we apply classes statically
+        item-class (if active-signal?
+                     ;; Signal-based: apply base + text + hover, active handled by data-class
+                     (tw theme-text theme-hover base-classes)
+                     ;; Static: apply everything including active state
+                     (tw theme-text (if active theme-active theme-hover) base-classes))
         anchor-attrs (cond-> {:class item-class}
+                       ;; Add reactive active class when active is a signal expression
+                       active-signal? (assoc :data-class (str "{ '" theme-active "': " active " }"))
                        (and handler href) (assoc :data-on-click__prevent handler)
                        (and handler (not href)) (assoc :data-on-click handler)
                        href (assoc :href href))]
