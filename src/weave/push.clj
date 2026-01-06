@@ -26,16 +26,21 @@
   ^bytes [^String s]
   (.getBytes s "UTF-8"))
 
-(def ^:private x509-ec-header
+(def ^:private ^bytes x509-ec-header
   (byte-array [0x30 0x59 0x30 0x13 0x06 0x07 0x2A 0x86
                0x48 0xCE 0x3D 0x02 0x01 0x06 0x08 0x2A
                0x86 0x48 0xCE 0x3D 0x03 0x01 0x07 0x03
                0x42 0x00]))
 
+(defn- blen
+  "Get byte array length without reflection."
+  ^long [^bytes arr]
+  (alength arr))
+
 (defn- pad-to-32-bytes
   ^bytes [^bytes arr]
   (let [result (byte-array 32)
-        src-len (alength arr)]
+        src-len (blen arr)]
     (System/arraycopy arr (max 0 (- src-len 32))
                       result (max 0 (- 32 src-len))
                       (min 32 src-len))
@@ -54,7 +59,7 @@
 
 (defn- raw-bytes->x509
   ^bytes [^bytes raw-bytes]
-  (let [header-len (alength x509-ec-header)
+  (let [header-len (blen x509-ec-header)
         result (byte-array (+ header-len 65))]
     (System/arraycopy x509-ec-header 0 result 0 header-len)
     (System/arraycopy raw-bytes 0 result header-len 65)
@@ -120,12 +125,12 @@
   (let [mac (Mac/getInstance "HmacSHA256")
         prk (do (.init mac (SecretKeySpec. salt "HmacSHA256"))
                 (.doFinal mac ikm))
-        info-with-counter (doto (byte-array (inc (alength info)))
-                            (#(System/arraycopy info 0 % 0 (alength info)))
-                            (aset-byte (alength info) (unchecked-byte 1)))
+        info-with-counter (doto (byte-array (inc (blen info)))
+                            (#(System/arraycopy info 0 % 0 (blen info)))
+                            (aset-byte (blen info) (unchecked-byte 1)))
         okm (do (.init mac (SecretKeySpec. prk "HmacSHA256"))
                 (.doFinal mac info-with-counter))]
-    (if (<= length (alength okm))
+    (if (<= length (blen okm))
       (let [result (byte-array length)]
         (System/arraycopy okm 0 result 0 length)
         result)
@@ -151,25 +156,25 @@
                                   true))
         shared-secret (.generateSecret key-agreement)
         auth-info (let [prefix (str->bytes "WebPush: info\0")
-                        result (byte-array (+ (alength prefix) 130))]
-                    (System/arraycopy prefix 0 result 0 (alength prefix))
-                    (System/arraycopy client-public-bytes 0 result (alength prefix) 65)
-                    (System/arraycopy server-public-bytes 0 result (+ (alength prefix) 65) 65)
+                        result (byte-array (+ (blen prefix) 130))]
+                    (System/arraycopy prefix 0 result 0 (blen prefix))
+                    (System/arraycopy client-public-bytes 0 result (blen prefix) 65)
+                    (System/arraycopy server-public-bytes 0 result (+ (blen prefix) 65) 65)
                     result)
         ikm (hkdf client-auth shared-secret auth-info 32)
         cek (hkdf salt ikm (create-info "aes128gcm") 16)
         nonce (hkdf salt ikm (create-info "nonce") 12)
         plaintext (str->bytes (charred/write-json-str payload))
-        padded-plaintext (doto (byte-array (inc (alength plaintext)))
-                           (#(System/arraycopy plaintext 0 % 0 (alength plaintext)))
-                           (aset-byte (alength plaintext) (unchecked-byte 2)))
+        padded-plaintext (doto (byte-array (inc (blen plaintext)))
+                           (#(System/arraycopy plaintext 0 % 0 (blen plaintext)))
+                           (aset-byte (blen plaintext) (unchecked-byte 2)))
         cipher (doto (Cipher/getInstance "AES/GCM/NoPadding")
                  (.init Cipher/ENCRYPT_MODE
                         (SecretKeySpec. cek "AES")
                         (GCMParameterSpec. 128 nonce)))
         ciphertext (.doFinal cipher padded-plaintext)
         record-size 4096
-        encrypted-payload (byte-array (+ 86 (alength ciphertext)))]
+        encrypted-payload (byte-array (+ 86 (blen ciphertext)))]
     (System/arraycopy salt 0 encrypted-payload 0 16)
     (aset-byte encrypted-payload 16 (unchecked-byte (bit-shift-right record-size 24)))
     (aset-byte encrypted-payload 17 (unchecked-byte (bit-shift-right record-size 16)))
@@ -177,7 +182,7 @@
     (aset-byte encrypted-payload 19 (unchecked-byte record-size))
     (aset-byte encrypted-payload 20 (unchecked-byte 65))
     (System/arraycopy server-public-bytes 0 encrypted-payload 21 65)
-    (System/arraycopy ciphertext 0 encrypted-payload 86 (alength ciphertext))
+    (System/arraycopy ciphertext 0 encrypted-payload 86 (blen ciphertext))
     {:encrypted-payload encrypted-payload
      :server-public-key (bytes->base64url server-public-bytes)
      :salt (bytes->base64url salt)}))

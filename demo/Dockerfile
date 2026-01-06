@@ -10,6 +10,7 @@ RUN mkdir -p /dist/build_cache
 RUN native-image \
     --initialize-at-build-time \
     --no-server \
+    --enable-url-protocols=https \
     -H:ReflectionConfigurationFiles=/dist/reflect-config.json \
     --initialize-at-run-time=sun.font.SunFontManager \
     --initialize-at-run-time=sun.font.FontManagerNativeLibrary \
