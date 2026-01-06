@@ -17,6 +17,7 @@
    [ring.util.response :as resp]
    [starfederation.datastar.clojure.adapter.http-kit :as hk-gen]
    [starfederation.datastar.clojure.api :as d*]
+   [weave.push :as push]
    [weave.session :as session])
   (:import
    [java.awt RenderingHints]
@@ -304,7 +305,8 @@
             :head - Additional HTML to include in the head section
             :view-port - The viewport meta tag
             :keep-alive - Whether to keep SSE connections alive when tab is hidden
-            :dev-mode - When true, enables additional development features like signal change logging"
+            :dev-mode - When true, enables additional development features like signal change logging
+            :push - Push notification options (when present, exposes VAPID public key)"
   [server-id opts]
   (-> (resp/response
        (c/html
@@ -328,6 +330,9 @@
            [:script {:src "/tailwind@3.4.16.js"}]
            [:script {:src "/squint.core.umd@0.9.182.js"}]
            [:script {:type "module" :src "/weave.js"}]
+           (when-let [push-opts (:push opts)]
+             [:script
+              (str "window.WEAVE_VAPID_PUBLIC_KEY = '" (:vapid-public-key push-opts) "';")])
            [:script {:type "module"}
             (let [keep-alive (get-in opts [:sse :keep-alive] false)
                   dev-mode (get opts :dev-mode false)]
@@ -483,7 +488,7 @@
                         {:status 403, :headers {}, :body nil}
                         (do
                           (session/record-activity!
-                            *session-id* *instance-id*)
+                           *session-id* *instance-id*)
                           (hk-gen/->sse-response
                            *request*
                            {hk-gen/on-open
@@ -623,11 +628,6 @@
             (merge-with reconcile-keys result latter))]
     (reduce reconcile-maps maps)))
 
-(defn- resolve-signal-value
-  "If v is a function, call it and return the result; otherwise return v as-is."
-  [v]
-  (if (fn? v) (v) v))
-
 (defn- resolve-signal-fns
   "Walk through a signal map and resolve any function values."
   [signal]
@@ -688,6 +688,8 @@
   [cookie]
   (push-script!
    (str "document.cookie = '" cookie "';")))
+
+
 
 (defn- load-icon
   "Load an icon from the classpath."
@@ -849,6 +851,14 @@
                       :background-color - Background color (default: \"#f2f2f2\")
                       :theme-color - Theme color (default: \"#ffffff\")
                       :start-url - Start URL when launched (default: \"/\")
+              :push - A map of Web Push notification options:
+                      :vapid-public-key - VAPID public key (base64url encoded)
+                      :vapid-private-key - VAPID private key (base64url encoded)
+                      :vapid-subject - Contact URI (mailto: or https:)
+                      :save-subscription! - (fn [session-id subscription] ...) to store subscriptions
+                      :delete-subscription! - (fn [session-id endpoint] ...) to remove subscriptions
+                      :get-subscriptions - (fn [session-id] ...) to retrieve subscriptions for a session
+                      :get-all-subscriptions - (fn [] ...) optional, for broadcast-notification!
 
    Returns:
      An integrant system."
@@ -874,8 +884,14 @@
                        (GET "/icon-192.png" [] (icon-handler icon-path 192 192))
                        (GET "/icon-512.png" [] (icon-handler icon-path 512 512))
                        (GET "/manifest.json" [] (manifest-handler options server-id))])
+        push-opts (:push options)
+        push-routes (when push-opts
+                      [(POST "/weave/v1/push/subscribe" request (push/subscribe-handler request push-opts))
+                       (POST "/weave/v1/push/unsubscribe" request (push/unsubscribe-handler request push-opts))
+                       (GET "/weave/v1/push/vapid-public-key" request (push/vapid-key-handler request push-opts))])
         custom-routes (concat (or (:handlers options) [])
-                              (or icon-routes []))
+                              (or icon-routes [])
+                              (or push-routes []))
         routes (routes
                 (GET "/" _req
                   (app-outer server-id options))

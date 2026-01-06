@@ -216,6 +216,145 @@ window.weave = {
 	}
 	history.pushState(null, null, "#" + appPath)
 	window.__pushHashChange = false
+    },
+
+    push: {
+        isSupported: function() {
+            return 'serviceWorker' in navigator &&
+                   'PushManager' in window &&
+                   'Notification' in window;
+        },
+
+        getPermission: function() {
+            if (!this.isSupported()) return 'unsupported';
+            return Notification.permission;
+        },
+
+        isSubscribed: async function() {
+            if (!this.isSupported()) return false;
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+                return subscription !== null;
+            } catch (e) {
+                console.error('Error checking push subscription:', e);
+                return false;
+            }
+        },
+
+        // Convert URL-safe base64 to Uint8Array for applicationServerKey
+        _urlBase64ToUint8Array: function(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/-/g, '+')
+                .replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        },
+
+        _ensureServiceWorker: async function() {
+            if (!('serviceWorker' in navigator)) {
+                throw new Error('Service workers not supported');
+            }
+
+            // Check if we already have a registration
+            let registration = await navigator.serviceWorker.getRegistration('/weave-sw.js');
+
+            if (!registration) {
+                registration = await navigator.serviceWorker.register('/weave-sw.js', {
+                    scope: '/'
+                });
+
+                await navigator.serviceWorker.ready;
+            }
+
+            return registration;
+        },
+
+        // Subscribe to push notifications
+        // Optional id parameter to associate subscription with a user/entity
+        // If not provided, server will use session-id
+        subscribe: async function(id) {
+            if (!this.isSupported()) {
+                throw new Error('Push notifications not supported');
+            }
+
+            const vapidPublicKey = window.WEAVE_VAPID_PUBLIC_KEY;
+            if (!vapidPublicKey) {
+                throw new Error('VAPID public key not configured');
+            }
+
+            try {
+                const registration = await this._ensureServiceWorker();
+
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    throw new Error('Notification permission denied');
+                }
+
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: this._urlBase64ToUint8Array(vapidPublicKey)
+                });
+
+                const body = subscription.toJSON();
+                if (id) {
+                    body.id = id;
+                }
+
+                const response = await fetch('/weave/v1/push/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save subscription on server');
+                }
+
+                return subscription;
+            } catch (e) {
+                throw e;
+            }
+        },
+
+        // Unsubscribe from push notifications
+        // Optional id parameter should match what was used during subscribe
+        unsubscribe: async function(id) {
+            if (!this.isSupported()) return false;
+
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+
+                if (subscription) {
+                    const body = { endpoint: subscription.endpoint };
+                    if (id) {
+                        body.id = id;
+                    }
+
+                    await fetch('/weave/v1/push/unsubscribe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(body)
+                    });
+
+                    await subscription.unsubscribe();
+                }
+
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
     }
 }
 

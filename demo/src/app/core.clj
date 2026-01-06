@@ -7,6 +7,7 @@
    [weave.core :as weave]
    [weave.view :as view]
    [weave.session :as session]
+   [weave.push :as push]
    [weave.components :as c]))
 
 (let [click-count (atom 0)]
@@ -358,6 +359,76 @@
     [::c/card#tab-content.mt-6
      [:h2#message.text-xl.font-bold "Team Members"]]]])
 
+(def push-subscriptions (atom {}))
+(def push-vapid-keys (push/generate-vapid-keypair))
+(def push-options {:vapid-public-key (:public-key push-vapid-keys)
+                   :vapid-private-key (:private-key push-vapid-keys)
+                   :vapid-subject "mailto:demo@example.com"
+                   :save-subscription! (fn [sid sub]
+                                         (swap! push-subscriptions assoc sid sub)
+                                         (println "Saved subscription for" sid))
+                   :delete-subscription! (fn [sid _]
+                                           (swap! push-subscriptions dissoc sid)
+                                           (println "Deleted subscription for" sid))
+                   :get-subscriptions (fn [sid]
+                                        (when-let [sub (get @push-subscriptions sid)]
+                                          [sub]))})
+
+(defn push-example []
+  [::c/view#app
+   [::c/center-hv
+    [::c/card
+     [:h1.text-2xl.font-bold.mb-4 "Push Notifications"]
+     [:p.mb-6.text-gray-600 "Test Web Push notifications"]
+
+     [:div#push-status.mb-4.p-3.bg-gray-100.rounded
+      "Status: Ready"]
+
+     [:div.space-y-4
+      [::c/button
+       {:size :lg
+        :variant :primary
+        :class "w-full"
+        :data-on-click (weave/handler []
+                         (weave/push-script!
+                          "weave.push.subscribe().then(() => {
+                                 document.getElementById('push-status').textContent = 'Status: Subscribed!';
+                               }).catch(e => {
+                                 document.getElementById('push-status').textContent = 'Status: Error - ' + e.message;
+                               });"))}
+       "Subscribe to Push"]
+
+      [::c/button
+       {:size :lg
+        :variant :secondary
+        :class "w-full"
+        :data-on-click (weave/handler [push-options]
+                         (let [results (push/send!
+                                        weave/*session-id*
+                                        {:title "Hello from Weave!"
+                                         :body "This is a test push notification"
+                                         :url "/"}
+                                        push-options)]
+                           (weave/push-html!
+                            [:div#push-status.mb-4.p-3.bg-gray-100.rounded
+                             (if (some :success (vals results))
+                               "Status: Push sent successfully!"
+                               (str "Status: Push failed - " (pr-str results)))])))}
+       "Send Push Notification"]
+
+      [::c/button
+       {:size :lg
+        :variant :danger
+        :class "w-full"
+        :data-on-click (weave/handler []
+                         (weave/push-script!
+                          "weave.push.unsubscribe().then(() => {
+                                 document.getElementById('push-status').textContent = 'Status: Unsubscribed';
+                               }).catch(e => {
+                                 document.getElementById('push-status').textContent = 'Status: Error - ' + e.message;
+                               });"))}
+       "Unsubscribe"]]]]])
+
 (defn run [options]
   (let [view (condp = (:view options)
                :click-count #'click-count-view
@@ -367,8 +438,12 @@
                :navbar #'navbar-example
                :sidebar #'sidebar-example
                :modal #'modal-example
-               :tabs #'tabs-example)]
-    (weave/run view options)))
+               :tabs #'tabs-example
+               :push #'push-example)
+        push-opts (when (= :push (:view options))
+                    push-options)]
+    (weave/run view (cond-> options
+                      push-opts (assoc :push push-opts)))))
 
 (defn -main
   [& args]
