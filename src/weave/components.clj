@@ -1,13 +1,17 @@
 (ns weave.components
   (:require
-   [dev.onionpancakes.chassis.core :as c]
    [camel-snake-kebab.core :as csk]
-   [clojure.string :as str]
    [clojure.java.io :as io]
+   [clojure.string :as str]
+   [dev.onionpancakes.chassis.core :as c]
    [weave.core :as core]
    [weave.squint :refer [clj->js]])
   (:import
-   [java.time Instant ZonedDateTime LocalDateTime ZoneId]
+   [java.time
+    Instant
+    LocalDateTime
+    ZoneId
+    ZonedDateTime]
    [java.time.format DateTimeFormatter]))
 
 (defn tw
@@ -802,23 +806,22 @@
 (defmethod c/resolve-alias ::modal
   [_ attrs content]
   (let [size (or (:size attrs) :md)
-        signal (or (csk/->camelCase (:id attrs)) "modal")
+        signal (-> (or (:id attrs) "modal")
+                   (csk/->camelCase))
         overlay-class (get-theme-class :modal :overlay)
         container-class (get-theme-class :modal :container)
         dialog-class (get-theme-class :modal :dialog)
         size-class (get-size-class :modal size)
         dialog-class-with-size (tw dialog-class size-class)
-        base-attrs {:id (or (:id attrs) "modal")
+        base-attrs {:id signal
                     :data-show (str "$" signal)}
         filtered-attrs (dissoc attrs :size :id)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
-    [:div
-     {(-> (str "data-signals-" signal) keyword) "false"}
-     [:div merged-attrs
-      [:div {:class overlay-class}]
-      [:div {:class container-class}
-       [:div {:class dialog-class-with-size}
-        content]]]]))
+    [:div merged-attrs
+     [:div {:class overlay-class}]
+     [:div {:class container-class}
+      [:div {:class dialog-class-with-size}
+       content]]]))
 
 ;;    Example:
 ;;    [::table {:columns [{:name "name" :label "Name" :align :left}
