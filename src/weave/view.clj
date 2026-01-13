@@ -4,10 +4,6 @@
   (:import [java.io ByteArrayOutputStream ByteArrayInputStream]
            [java.util Base64]))
 
-(def ^:dynamic *path*
-  "Current view path as [view-id params-map]"
-  nil)
-
 (defn- encode-state [state]
   (if (empty? state)
     ""
@@ -69,12 +65,10 @@
 
 (defn- render-view [views view-id params]
   (if-let [render-fn (get-in views [view-id :render])]
-    (binding [*path* [view-id params]]
-      [:div {:id (:id views)} (render-fn views)])
+    [:div {:id (:id views)} (render-fn views)]
     (when-let [default-id (:default views)]
       (when-let [render-fn (get-in views [default-id :render])]
-        (binding [*path* [default-id {}]]
-          [:div {:id (:id views)} (render-fn views)])))))
+        [:div {:id (:id views)} (render-fn views)]))))
 
 (defn- get-view-state [views]
   (let [views-id (:id views)
@@ -82,6 +76,11 @@
     (if view-state
       view-state
       [(:default views) {}])))
+
+(defn path
+  "Returns the current view path as [view-id params-map]."
+  [views]
+  (get-view-state views))
 
 (defn render
   ([views]

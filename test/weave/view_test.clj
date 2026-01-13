@@ -147,10 +147,10 @@
                 (.endsWith url "#")
                 (not (.contains url "#"))))))))
 
-;; Test view/*path* and render with params
+;; Test view/path and render with params
 
-(defn param-view [_]
-  (let [[_view-id {:keys [id]}] view/*path*]
+(defn param-view [views]
+  (let [[_view-id {:keys [id]}] (view/path views)]
     [:div#param-view
      [:span#param-id (str id)]]))
 
@@ -170,7 +170,7 @@
 
 (deftest render-with-params-test
   (with-browser param-test-view weave-options
-    (testing "render with params makes them accessible via view/*path*"
+    (testing "render with params makes them accessible via view/path"
       (visible? :go-with-params)
 
       (click :go-with-params)

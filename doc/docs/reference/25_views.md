@@ -216,16 +216,14 @@ format:
 - Is bookmarkable and shareable
 - Omits views at their default state for clean URLs
 
-## Dynamic Var
+## Getting the Current Path
 
-- `view/*path*` - bound during render to `[view-id params-map]`
-
-Use this to access the current view id and params in your render
-function:
+Use `view/path` to get the current view path as `[view-id params-map]`.
+This works both during rendering and in handlers:
 
 ```clojure
-(defn user-edit-view [_views]
-  (let [[_view-id {:keys [id]}] view/*path*]
+(defn user-edit-view [views]
+  (let [[_view-id {:keys [id]}] (view/path views)]
     [:div
      [:h1 (str "Editing User " id)]]))
 ```
@@ -252,7 +250,7 @@ function:
         (:name user)]])]])
 
 (defn user-edit-view [views]
-  (let [[_view-id {:keys [id]}] view/*path*]
+  (let [[_view-id {:keys [id]}] (view/path views)]
     [:div
      [:h1 "Edit User"]
      [:p (str "Editing user: " id)]
