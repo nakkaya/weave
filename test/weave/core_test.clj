@@ -780,6 +780,26 @@
         :data-on-click handle-action}
        "Delete"]])])
 
+(defn data-call-with-nested-test-view []
+  [:div {:id "view"}
+   [:div#result "No action performed yet"]
+   (let [handle-action (core/handler []
+                         (let [{:keys [user]} core/*signals*
+                               {:keys [name id]} user]
+                           (core/push-html!
+                            [:div#result (str "User: " name ", ID: " id)])))]
+     [:div.button-group
+      [:button#user-one-button
+       {:data-call-with-user.name "Alice"
+        :data-call-with-user.id "123"
+        :data-on-click handle-action}
+       "User One"]
+      [:button#user-two-button
+       {:data-call-with-user.name "Bob"
+        :data-call-with-user.id "456"
+        :data-on-click handle-action}
+       "User Two"]])])
+
 (test-with-sse-variants
  'data-call-with-test
  data-call-with-test-view
@@ -800,6 +820,28 @@
   #(= "Action: delete, Item: 456"
       (el-text :result)))
  (is (= "Action: delete, Item: 456"
+        (el-text :result))))
+
+(test-with-sse-variants
+ 'data-call-with-nested-test
+ data-call-with-nested-test-view
+
+ (visible? :user-one-button)
+ (is (= "No action performed yet"
+        (el-text :result)))
+
+ (click :user-one-button)
+ (e/wait-predicate
+  #(= "User: Alice, ID: 123"
+      (el-text :result)))
+ (is (= "User: Alice, ID: 123"
+        (el-text :result)))
+
+ (click :user-two-button)
+ (e/wait-predicate
+  #(= "User: Bob, ID: 456"
+      (el-text :result)))
+ (is (= "User: Bob, ID: 456"
         (el-text :result))))
 
 (defn confirm-test-view []

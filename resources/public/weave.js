@@ -377,7 +377,23 @@ import('./datastar@v1.0.0-RC.5.js').then(({ load, apply }) => {
     // requests in serialize mode
     const activeRouteRequests = new Map()
 
-    // Define and load the CallAction
+    const lcFirst = (s) => s.charAt(0).toLowerCase() + s.slice(1)
+
+    const setNested = (obj, keys, value) => {
+        let current = obj
+        for (let i = 0; i < keys.length - 1; i++) {
+            const key = keys[i]
+            if (!(key in current)) {
+                current[key] = {}
+            }
+            current = current[key]
+        }
+        const lastKey = keys[keys.length - 1]
+        if (!(lastKey in current)) {
+            current[lastKey] = value
+        }
+    }
+
     const CallAction = {
 	type: 'action',
 	name: 'call',
@@ -394,9 +410,9 @@ import('./datastar@v1.0.0-RC.5.js').then(({ load, apply }) => {
 		    if (key.startsWith(prefix)) {
 			foundCallWith = true
 			const paramName = key.slice(prefix.length)
-			if (!(paramName in callWithData)) {
-			    callWithData[paramName] = value
-			}
+			const keys = paramName.split('.')
+			keys[0] = lcFirst(keys[0])
+			setNested(callWithData, keys, value)
 		    }
 		}
 
