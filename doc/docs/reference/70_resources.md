@@ -30,14 +30,14 @@ to use your own CSS framework:
 
 ### Datastar
 
-[Datastar](https://data-star.dev/) v1.0.0-beta.11 is included for
+[Datastar](https://data-star.dev/) v1.0.0-RC.5 is included for
 client-side reactivity and event handling. Weave uses Datastar
 internally for its event system and server-sent events (SSE)
 communication.
 
 ### Squint
 
-[Squint](https://github.com/squint-cljs/squint) v0.8.147 is included
+[Squint](https://github.com/squint-cljs/squint) v0.9.182 is included
 for JavaScript interoperability, allowing you to write Clojure code
 that gets transpiled to JavaScript for client-side execution.
 
