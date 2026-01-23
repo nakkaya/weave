@@ -14,9 +14,9 @@ merged with Weave's internal routes.
 
 ```clojure
 (weave/run view-fn
-  {:handlers [(GET "/api/data" [] (api-handler))
-              (POST "/api/upload" [] (upload-handler))
-              (GET "/api/download/:id" [id] (download-handler id))]})
+  {:handlers [(GET "/api/data" request (api-handler request))
+              (POST "/api/upload" request (upload-handler request))
+              (GET "/api/download/:id" [id :as request] (download-handler id request))]})
 ```
 
 ## Route Handlers
@@ -25,10 +25,15 @@ Route handlers are regular Ring handler functions that take a request
 map and return a response map:
 
 ```clojure
-(defn api-handler [req]
+(defn api-handler [request]
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body "{\"message\":\"Hello from API\"}"})
+
+(defn download-handler [id request]
+  {:status 200
+   :headers {"Content-Type" "application/octet-stream"}
+   :body (get-file-by-id id)})
 ```
 
 ## Authentication for Custom Routes
@@ -38,8 +43,8 @@ system. To protect your routes, you need to manually check the request
 for authentication information,
 
 ```clojure
-(defn authenticated-api [req]
-  (if (:identity req)
+(defn authenticated-api [request]
+  (if (:identity request)
     {:status 200
      :headers {"Content-Type" "application/json"}
      :body "{\"data\":\"Protected data\"}"}
@@ -54,8 +59,8 @@ Custom routes have access to the same request context as Weave
 handlers, including session information:
 
 ```clojure
-(defn session-info [req]
-  (let [session-id (session/get-sid req)]
+(defn session-info [request]
+  (let [session-id (session/get-sid request)]
     {:status 200
      :headers {"Content-Type" "application/json"}
      :body (str "{\"session\":\"" session-id "\"}")}))
