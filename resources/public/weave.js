@@ -99,7 +99,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-tailwind.config = {darkMode: "class"};
+if (typeof tailwind !== 'undefined') {
+    tailwind.config = {darkMode: "class"};
+}
 window.initDarkMode();
 
 if (window.matchMedia) {

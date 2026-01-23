@@ -9,15 +9,23 @@ configuration.
 
 ### Tailwind CSS
 
-[Tailwind CSS](https://tailwindcss.com/) v3.4.16 is included, it
-provides a utility-first CSS framework. You can use Tailwind classes
-directly in your Hiccup markup:
+[Tailwind CSS](https://tailwindcss.com/) v3.4.16 is included by
+default. It provides a utility-first CSS framework. You can use
+Tailwind classes directly in your Hiccup markup:
 
 ```clojure
 [:div.flex.items-center.justify-between.p-4.bg-white.shadow
  [:h1.text-xl.font-bold "My Application"]
  [:button.px-4.py-2.bg-blue-500.text-white.rounded.hover:bg-blue-600
   "Click Me"]]
+```
+
+Tailwind is enabled by default, but you can disable it if you prefer
+to use your own CSS framework:
+
+```clojure
+(weave/run view-fn
+  {:tailwind false})
 ```
 
 ### Datastar

@@ -304,6 +304,7 @@
             :icon - Path to an icon file in the classpath (PNG format)
             :head - Additional HTML to include in the head section
             :view-port - The viewport meta tag
+            :tailwind - Whether to include Tailwind CSS (default: true)
             :keep-alive - Whether to keep SSE connections alive when tab is hidden
             :dev-mode - When true, enables additional development features like signal change logging
             :push - Push notification options (when present, exposes VAPID public key)"
@@ -327,7 +328,8 @@
               [:link {:rel "manifest" :href "/manifest.json"}]])
            [:title (or (:title opts) "Weave")]
            ;;
-           [:script {:src "/tailwind@3.4.16.js"}]
+           (when (get opts :tailwind true)
+             [:script {:src "/tailwind@3.4.16.js"}])
            [:script {:src "/squint.core.umd@0.9.182.js"}]
            [:script {:type "module" :src "/weave.js"}]
            (when-let [push-opts (:push opts)]
@@ -831,6 +833,7 @@
               :sse - Server-Sent Events options map:
                     :enabled - Whether to enable SSE (default: true)
                     :keep-alive - Whether to keep SSE connections alive when tab is hidden (default: false)
+              :tailwind - Whether to include Tailwind CSS (default: true)
               :dev-mode - When true, enables additional development features like signal change logging (default: false)
               :handlers - A vector of custom route handlers (Compojure routes) that
                           will be included in the application's routing system
