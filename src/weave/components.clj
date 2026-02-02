@@ -864,7 +864,8 @@
                        (case (:align column)
                          :right "text-right"
                          :left "text-left"
-                         "text-left"))}
+                         "text-left")
+                       (:class column))}
            (:label column)])]]
 
       ;; Body
@@ -881,7 +882,8 @@
                          (case (:align column)
                            :right "text-right"
                            :left "text-left"
-                           "text-left"))}
+                           "text-left")
+                         (:class column))}
              (get row (keyword (:name column)) "-")])])]]]))
 
 (defmethod c/resolve-alias ::dropdown
