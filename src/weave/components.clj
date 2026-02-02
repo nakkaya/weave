@@ -253,9 +253,11 @@
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :card :bg))
         theme-border (or (:border-class attrs) (get-theme-class :card :border))
         theme-shadow (or (:shadow-class attrs) (get-theme-class :card :shadow))
-        base-attrs {:class (str "overflow-hidden "
-                                theme-bg " " theme-border " " theme-shadow
-                                " sm:rounded-lg ring-1 ring-gray-200 dark:ring-gray-700")}
+        theme-radius (or (get-theme-class :card :radius) "sm:rounded-lg")
+        theme-ring (or (get-theme-class :card :ring) "ring-1 ring-gray-200 dark:ring-gray-700")
+        base-attrs {:class (tw "overflow-hidden"
+                               theme-bg theme-border theme-shadow
+                               theme-radius theme-ring)}
         filtered-attrs (dissoc attrs :bg-class :border-class :shadow-class)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:div merged-attrs
@@ -267,10 +269,11 @@
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :card-with-header :bg))
         theme-border (or (:border-class attrs) (get-theme-class :card-with-header :border))
         theme-shadow (or (:shadow-class attrs) (get-theme-class :card-with-header :shadow))
-        base-attrs {:class (str theme-border
-                                " overflow-hidden rounded-lg "
-                                theme-bg " " theme-shadow
-                                " ring-1 ring-gray-200 dark:ring-gray-700")}
+        theme-radius (or (get-theme-class :card-with-header :radius) "rounded-lg")
+        theme-ring (or (get-theme-class :card-with-header :ring) "ring-1 ring-gray-200 dark:ring-gray-700")
+        base-attrs {:class (tw "overflow-hidden"
+                               theme-border theme-bg theme-shadow
+                               theme-radius theme-ring)}
         filtered-attrs (dissoc attrs :bg-class :border-class :shadow-class)
         merged-attrs (merge-attrs base-attrs filtered-attrs)
         header (first content)
