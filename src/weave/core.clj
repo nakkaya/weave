@@ -691,8 +691,6 @@
   (push-script!
    (str "document.cookie = '" cookie "';")))
 
-
-
 (defn- load-icon
   "Load an icon from the classpath."
   [icon-path]
@@ -821,6 +819,7 @@
    Parameters:
      view - A function that returns the Hiccup view to render
      options - A map of server options:
+              :base-path - URL path prefix for the app (default: \"/\")
               :http-kit - HTTP server options map:
                          :bind - IP address to bind to (default: \"0.0.0.0\")
                          :port - HTTP server port (default: 8080)
@@ -867,6 +866,7 @@
      An integrant system."
   [view options]
   (let [server-id (str (random-uuid))
+        base-path (or (:base-path options) "/")
         options (update options :sse #(merge {:enabled true :keep-alive false} %))
         csrf-secret (or (:csrf-secret options)
                         (str (random-uuid)))
@@ -896,7 +896,7 @@
                               (or icon-routes [])
                               (or push-routes []))
         routes (routes
-                (GET "/" _req
+                (GET base-path _req
                   (app-outer server-id options))
                 (POST "/app-loader" req
                   (let [body (:body req)

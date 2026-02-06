@@ -36,6 +36,38 @@ server with all the necessary components for your application.
 
 ## Configuration Options
 
+### Base Path (`:base-path`)
+
+By default, Weave serves the application shell from the root path (`/`).
+Use `:base-path` to serve the app from a subfolder.
+
+```clojure
+(weave/run my-view
+  {:base-path "/app"})
+```
+
+With this configuration:
+
+- `/` - Returns 404 (or can be handled by a custom handler or static resource)
+- `/app` - Serves the Weave application
+- `/app/#/dashboard` - Example client-side route within the Weave app
+
+Note: Only the app route is affected by `:base-path`. Static resources,
+`/app-loader`, `/h/*` handlers, `/health`, and other routes remain at root.
+
+**Example with landing page:**
+
+```clojure
+(require '[compojure.core :refer [GET]])
+
+(weave/run my-view
+  {:base-path "/app"
+   :handlers [(GET "/" []
+               {:status 200
+                :headers {"Content-Type" "text/html"}
+                :body "<html><body><a href='/app'>Launch App</a></body></html>"})]})
+```
+
 ### HTTP Server Options (`:http-kit`)
 
 ```clojure
