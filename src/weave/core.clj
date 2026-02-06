@@ -777,6 +777,23 @@
           (resp/content-type "application/json")
           (resp/charset "UTF-8")))))
 
+(defn- wrap-index-files
+  "Middleware that serves index.html for directory requests."
+  [handler]
+  (fn [request]
+    (let [uri (:uri request)
+          looks-like-dir? (or (s/ends-with? uri "/")
+                              (not (s/includes? (last (s/split uri #"/")) ".")))
+          ;; Build index.html path
+          index-path (if (s/ends-with? uri "/")
+                       (str "public" uri "index.html")
+                       (str "public" uri "/index.html"))]
+      (if (and looks-like-dir?
+               (io/resource index-path))
+        (-> (resp/resource-response index-path)
+            (resp/content-type "text/html"))
+        (handler request)))))
+
 ;; This method is needed to handle resources from GraalVM-compiled
 ;; JARs.  When running in a GraalVM native image, resources are
 ;; accessed via the 'resource:' URL scheme instead of the standard
@@ -914,6 +931,7 @@
                 (apply routes custom-routes)
                 (route/not-found "Not Found"))
         handler-chain (-> routes
+                          wrap-index-files
                           handler-router-middleware
                           (session/wrap-session jwt-secret)
                           wrap-stale-check
