@@ -15,7 +15,8 @@ Create a file called `deps.edn`,
 ```clojure
 {:paths   ["src"]
 
- :deps    {org.clojure/clojure {:mvn/version "1.12.0"}
+ :deps    {org.clojure/clojure {:mvn/version "1.12.4"}
+           nrepl/nrepl {:mvn/version "1.5.1"}
 		   weave/core {:git/url "https://github.com/nakkaya/weave/"
 					   :git/sha "<<latest-commit-sha>>"}}
 
