@@ -320,7 +320,14 @@
                        :content (str "width=device-width,"
                                      "initial-scale=1.0,"
                                      "maximum-scale=1.0,"
-                                     "user-scalable=no")}])
+                                     "user-scalable=no,"
+                                     "viewport-fit=cover")}])
+           (let [bg-color (get-in opts [:pwa :background-color])]
+             [[:meta {:name "mobile-web-app-capable" :content "yes"}]
+              [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
+              [:meta {:name "apple-mobile-web-app-status-bar-style" :content "black-translucent"}]
+              (when bg-color
+                [:meta {:name "theme-color" :content bg-color}])])
            ;;
            (when (:icon opts)
              [[:link {:rel "icon" :href "/favicon.png"}]
