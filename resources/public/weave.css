@@ -1,0 +1,23 @@
+/* PWA Safe Area Handling */
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: calc(100% + env(safe-area-inset-top));
+  overflow: hidden;
+}
+
+#weave-main {
+  height: 100dvh;
+  overflow: auto;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+#sidebar {
+  top: 0;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}

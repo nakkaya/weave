@@ -523,21 +523,23 @@
   [_ attrs content]
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :sidebar :bg))]
 
-    [:div.flex.h-screen
+    [:div.flex.min-h-full
      ;; Sidebar backdrop for mobile
      [:div#sidebar-backdrop.fixed.inset-0.bg-gray-800.bg-opacity-75.z-20.hidden.lg:hidden
       {:onclick (clj->js
                  (let [sidebar (js/document.getElementById "sidebar")
                        backdrop (js/document.getElementById "sidebar-backdrop")
-                       content (js/document.getElementById "sidebar-content")]
+                       content (js/document.getElementById "sidebar-content")
+                       toggle (js/document.getElementById "sidebar-toggle")]
                    (.add (.-classList sidebar) "-translate-x-full")
                    (.add (.-classList backdrop) "hidden")
+                   (.remove (.-classList toggle) "hidden")
                    ;; On mobile, add ml-0 to override the margin
                    (when content (.add (.-classList content) "ml-0"))))}]
 
      [:aside#sidebar
       {:class (tw theme-bg
-                  "fixed inset-y-0 left-0 z-30 w-64"
+                  "fixed left-0 bottom-0 z-30 w-64"
                   "transform -translate-x-full lg:translate-x-0"
                   "transition-transform duration-300 ease-in-out")}
 
@@ -546,21 +548,24 @@
        content]]
 
      ;; Toggle button for mobile
-     [:div.fixed.bottom-4.left-4.lg:hidden.z-30
+     [:div#sidebar-toggle.fixed.bottom-4.left-4.lg:hidden.z-30
       [:button.p-2.rounded-full.bg-gray-800.text-white.shadow-lg
        {:onclick (clj->js
                   (let [sidebar (js/document.getElementById "sidebar")
                         backdrop (js/document.getElementById "sidebar-backdrop")
-                        content (js/document.getElementById "sidebar-content")]
+                        content (js/document.getElementById "sidebar-content")
+                        toggle (js/document.getElementById "sidebar-toggle")]
                     (if (.contains (.-classList sidebar) "-translate-x-full")
                       (do
                         (.remove (.-classList sidebar) "-translate-x-full")
                         (.remove (.-classList backdrop) "hidden")
+                        (.add (.-classList toggle) "hidden")
                         ;; On mobile, remove the ml-0 override to show the margin
                         (when content (.remove (.-classList content) "ml-0")))
                       (do
                         (.add (.-classList sidebar) "-translate-x-full")
                         (.add (.-classList backdrop) "hidden")
+                        (.remove (.-classList toggle) "hidden")
                         ;; On mobile, add ml-0 to override the margin
                         (when content (.add (.-classList content) "ml-0"))))))}
        [::icon#solid-bars-3 {:class "h-6 w-6"}]]]]))
@@ -639,7 +644,7 @@
   [_ _ content]
   (let [sidebar-element (first content)
         content-element (second content)]
-    [:div.flex.h-screen
+    [:div.flex.min-h-full
      sidebar-element
      [:div#sidebar-content
       {:class "flex-1 transition-all duration-300 ease-in-out ml-0 lg:ml-64 overflow-auto"}

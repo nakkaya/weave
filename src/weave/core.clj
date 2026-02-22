@@ -326,6 +326,8 @@
              [[:meta {:name "mobile-web-app-capable" :content "yes"}]
               [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
               [:meta {:name "apple-mobile-web-app-status-bar-style" :content "black-translucent"}]
+              [:link {:rel "stylesheet" :href "/weave.css"}]
+              [:style (str "html { background-color: " (or bg-color "#ffffff") "; }")]
               (when bg-color
                 [:meta {:name "theme-color" :content bg-color}])])
            ;;
