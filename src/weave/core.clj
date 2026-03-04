@@ -81,6 +81,12 @@
   "Current Server-Sent Events (SSE) generator instance."
   nil)
 
+(def ^:dynamic *sse-enabled*
+  "Whether SSE persistent connections are enabled for this server instance.
+   When false, session activity tracking is skipped since there is no
+   on-close cleanup path to remove stale entries."
+  true)
+
 (def ^:dynamic *server-id*
   "The current server instance's unique ID. Generated at server startup
    and used to detect stale connections from old server instances."
@@ -498,8 +504,9 @@
                                (not (authenticated? *request*)))
                         {:status 403, :headers {}, :body nil}
                         (do
-                          (session/record-activity!
-                           *session-id* *instance-id*)
+                          (when *sse-enabled*
+                            (session/record-activity!
+                             *session-id* *instance-id*))
                           (hk-gen/->sse-response
                            *request*
                            {hk-gen/on-open
@@ -958,6 +965,7 @@
         (fn [request]
           (binding [*view* view
                     *server-id* server-id
+                    *sse-enabled* (get-in options [:sse :enabled])
                     session/*csrf-keyspec* csrf-keyspec
                     *handler-options* (or (:handler-options options) {})]
             (handler-chain request)))]
