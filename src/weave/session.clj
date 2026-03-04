@@ -65,7 +65,8 @@
   (str "weave-auth=" jwt "; Path=/; SameSite=Lax; Max-Age=86400"))
 
 (defn verify-csrf
-  "Verifies that the CSRF token is valid for the given session ID"
+  "Verifies that the CSRF token is valid for the given
+   session ID."
   [sid csrf-token]
   (when (and sid csrf-token)
     (let [expected-csrf (hmac-sha256 *csrf-keyspec* sid)]
@@ -117,10 +118,12 @@
 (defn sign-out []
   "weave-auth=; Path=/; SameSite=Lax; Max-Age=0")
 
-;; Maps {session-id -> {instance-id -> sse-generator}}
+;; Maps {session-id ->
+;;       {instance-id -> sse-generator}}
 (def ^{:private true} !connections (atom {}))
 
-;; Maps {session-id -> {instance-id -> last-activity-timestamp}}
+;; Maps {session-id ->
+;;       {instance-id -> last-activity-timestamp}}
 (def ^{:private true} !activity (atom {}))
 
 (defn add-connection! [session-id instance-id sse-gen]
@@ -144,8 +147,10 @@
 
 (defn session-connections
   "Gets session connections.
-   With no arguments: returns all connections {session-id -> {instance-id -> sse-generator}}
-   With session-id: returns connections for that session as a seq of sse-generators"
+   With no arguments: returns all connections
+   {session-id -> {instance-id -> sse-generator}}.
+   With session-id: returns connections for that session
+   as a seq of sse-generators."
   ([]
    @!connections)
   ([session-id]
@@ -155,7 +160,8 @@
   ((@!connections session-id) instance-id))
 
 (defn record-activity!
-  "Records the current timestamp as the last activity for the given session instance"
+  "Records the current timestamp as the last activity
+   for the given session instance."
   [session-id instance-id]
   (let [now (System/currentTimeMillis)]
     (swap! !activity update session-id
@@ -163,19 +169,22 @@
              (assoc (or session-activity {}) instance-id now)))))
 
 (defn last-activity
-  "Gets the last activity timestamp for a session instance"
+  "Gets the last activity timestamp for a session
+   instance."
   [session-id instance-id]
   (get-in @!activity [session-id instance-id]))
 
 (defn session-activity
-  "Gets all activity data for a session"
+  "Gets all activity data for a session."
   [session-id]
   (@!activity session-id))
 
 (defn session-activities
   "Gets session activity data.
-   With no arguments: returns all session activities {session-id -> {instance-id -> timestamp}}
-   With session-id: returns activity data for that session {instance-id -> timestamp}"
+   With no arguments: returns all session activities
+   {session-id -> {instance-id -> timestamp}}.
+   With session-id: returns activity data for that
+   session {instance-id -> timestamp}."
   ([]
    @!activity)
   ([session-id]
