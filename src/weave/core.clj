@@ -167,10 +167,18 @@
         {}
         (read-json signals)))))
 
+(defn- client-accepts-gzip? [request]
+  (when-let [accept (get-in request [:headers "accept-encoding"])]
+    (s/includes? accept "gzip")))
+
 (defn ->sse-response
   "Create a Server-Sent Events (SSE) response with the given options."
   [opts]
-  (hk-gen/->sse-response *request* opts))
+  (let [request *request*
+        opts (if (client-accepts-gzip? request)
+               (assoc opts hk-gen/write-profile hk-gen/gzip-profile)
+               opts)]
+    (hk-gen/->sse-response request opts)))
 
 (defn- request-options
   "Generate a JavaScript object string with request options for datastar.
@@ -454,10 +462,12 @@
             (handler request)
             (hk-gen/->sse-response
              request
-             {hk-gen/on-open
-              (fn [sse-gen]
-                (d*/execute-script! sse-gen "weave.reload();")
-                (d*/close-sse! sse-gen))})))
+             (cond-> {hk-gen/on-open
+                      (fn [sse-gen]
+                        (d*/execute-script! sse-gen "weave.reload();")
+                        (d*/close-sse! sse-gen))}
+               (client-accepts-gzip? request)
+               (assoc hk-gen/write-profile hk-gen/gzip-profile)))))
         ;; Not internal - pass through
         (handler request)))))
 
@@ -507,8 +517,7 @@
                           (when *sse-enabled*
                             (session/record-activity!
                              *session-id* *instance-id*))
-                          (hk-gen/->sse-response
-                           *request*
+                          (->sse-response
                            {hk-gen/on-open
                             (fn [sse-gen#]
                               (binding [*sse-gen* sse-gen#]
