@@ -381,6 +381,21 @@ import('./datastar@v1.0.0-RC.5.js').then(({ load, apply }) => {
 
     const lcFirst = (s) => s.charAt(0).toLowerCase() + s.slice(1)
 
+    const deepMerge = (target, source) => {
+        const result = { ...target }
+        for (const key of Object.keys(source)) {
+            if (
+                source[key] && typeof source[key] === 'object' && !Array.isArray(source[key]) &&
+                result[key] && typeof result[key] === 'object' && !Array.isArray(result[key])
+            ) {
+                result[key] = deepMerge(result[key], source[key])
+            } else {
+                result[key] = source[key]
+            }
+        }
+        return result
+    }
+
     const setNested = (obj, keys, value) => {
         let current = obj
         for (let i = 0; i < keys.length - 1; i++) {
@@ -459,7 +474,7 @@ import('./datastar@v1.0.0-RC.5.js').then(({ load, apply }) => {
                 const originalFiltered = ctx.filtered
                 const enhancedFiltered = (filterOptions) => {
 		    const signals = originalFiltered(filterOptions)
-		    return { ...signals, ...callWithData }
+		    return deepMerge(signals, callWithData)
                 }
 
                 // Create enhanced context with our custom filtered function
