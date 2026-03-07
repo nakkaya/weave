@@ -1678,3 +1678,45 @@
             (is (= "Button Clicked!" (el-text :content)))))
         (finally
           (ig/halt! server))))))
+
+(defn shared-action-button [{:keys [id on-click]}]
+  [:button
+   {:id id
+    :data-on-click (core/handler [on-click] (on-click))}
+   (str "Button " id)])
+
+(defn fn-param-handler-bug-test-view
+  "Two buttons using the same shared component with different fn callbacks.
+   Button A should set result to 'handler-a', Button B to 'handler-b'."
+  []
+  [:div#view
+   [:div#result "initial"]
+   (shared-action-button
+    {:id "btn-a"
+     :on-click (fn []
+                 (core/push-html! [:div#result "handler-a"]))})
+   (shared-action-button
+    {:id "btn-b"
+     :on-click (fn []
+                 (core/push-html! [:div#result "handler-b"]))})])
+
+(deftest fn-param-handler-bug-test
+  (with-browser fn-param-handler-bug-test-view weave-options
+    (testing "Different fn params in shared component should invoke correct handler"
+      (visible? :result)
+      (is (= "initial" (el-text :result)))
+
+      (click :btn-a)
+      (e/wait-predicate #(not= "initial" (el-text :result)))
+      (is (= "handler-a" (el-text :result))
+          "Button A should execute handler-a, not handler-b")
+
+      (e/go *browser* url)
+      (visible? :result)
+      (is (= "initial" (el-text :result)))
+
+      (click :btn-b)
+      (e/wait-predicate #(not= "initial" (el-text :result)))
+      (is (= "handler-b" (el-text :result))
+          "Button B should execute handler-b, not handler-a"))))
+
