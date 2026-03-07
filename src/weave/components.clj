@@ -201,15 +201,12 @@
         icon-class (or (:class attrs) "")
         size (or (:size attrs) 24)
         size-class (str "h-" size " w-" size)
-        svg (get-icon-svg icon-id)
         final-class (tw size-class icon-class)]
-
-    (when svg
-      (-> svg
-          (str/replace
-           #"<svg"
-           (str "<svg class=\"" final-class "\""))
-          c/raw))))
+    [:svg {:class final-class
+           :viewBox "0 0 24 24"
+           :fill "currentColor"
+           :xmlns "http://www.w3.org/2000/svg"}
+     [:use {:href (str "/heroicons-sprite.svg#" icon-id)}]]))
 
 (defmethod c/resolve-alias ::view
   [_ attrs content]
