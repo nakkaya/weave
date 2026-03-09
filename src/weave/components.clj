@@ -141,6 +141,8 @@
                  :odd "bg-[#fafafa] dark:bg-[#202020]"}
            :cell {:text "text-sm text-[#171717] dark:text-[#e5e5e5]"
                   :padding "px-6 py-4 whitespace-nowrap"}}
+   :heading {:text "text-[#171717] dark:text-[#e5e5e5]"}
+   :text {:text "text-[#171717] dark:text-[#e5e5e5]"}
    :dropdown {:menu {:bg "bg-white dark:bg-[#2a2a2a]"
                      :border "ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10"
                      :shadow "shadow-xl"
@@ -244,6 +246,36 @@
         merged-attrs (merge-attrs base-attrs attrs)]
     [:div merged-attrs
      content]))
+
+(defmethod c/resolve-alias ::h1
+  [_ attrs content]
+  (let [theme-text (get-in *theme* [:heading :text])]
+    (into [:h1 (merge-attrs {:class theme-text} attrs)] content)))
+
+(defmethod c/resolve-alias ::h2
+  [_ attrs content]
+  (let [theme-text (get-in *theme* [:heading :text])]
+    (into [:h2 (merge-attrs {:class theme-text} attrs)] content)))
+
+(defmethod c/resolve-alias ::h3
+  [_ attrs content]
+  (let [theme-text (get-in *theme* [:heading :text])]
+    (into [:h3 (merge-attrs {:class theme-text} attrs)] content)))
+
+(defmethod c/resolve-alias ::h4
+  [_ attrs content]
+  (let [theme-text (get-in *theme* [:heading :text])]
+    (into [:h4 (merge-attrs {:class theme-text} attrs)] content)))
+
+(defmethod c/resolve-alias ::span
+  [_ attrs content]
+  (let [theme-text (get-in *theme* [:text :text])]
+    (into [:span (merge-attrs {:class theme-text} attrs)] content)))
+
+(defmethod c/resolve-alias ::p
+  [_ attrs content]
+  (let [theme-text (get-in *theme* [:text :text])]
+    (into [:p (merge-attrs {:class theme-text} attrs)] content)))
 
 (defmethod c/resolve-alias ::card
   [_ attrs content]
