@@ -1000,3 +1000,44 @@
         filtered-attrs (dissoc attrs :time :format :timezone)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:time merged-attrs formatted]))
+
+(defmethod c/resolve-alias ::badge
+  [_ attrs content]
+  (let [color (or (:color attrs) "gray")
+        variant (or (:variant attrs) :pill)
+        size (or (:size attrs) :md)
+        base-class "inline-flex items-center text-xs font-medium"
+        size-class (case size
+                     :sm "px-2.5 py-0.5"
+                     :md "px-2 py-1")
+        shape-class (case variant
+                      :pill "rounded-full"
+                      :outlined "rounded-md ring-1 ring-inset")
+        color-class (if (= variant :outlined)
+                      (case color
+                        "green" "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 ring-green-600/20 dark:ring-green-500/30"
+                        "red" "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 ring-red-600/20 dark:ring-red-500/30"
+                        "blue" "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 ring-blue-600/20 dark:ring-blue-500/30"
+                        "yellow" "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 ring-yellow-600/20 dark:ring-yellow-500/30"
+                        "purple" "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 ring-purple-600/20 dark:ring-purple-500/30"
+                        "gray" "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-400 ring-gray-600/20 dark:ring-gray-500/30"
+                        "indigo" "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 ring-indigo-600/20 dark:ring-indigo-500/30"
+                        "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-400 ring-gray-600/20 dark:ring-gray-500/30")
+                      ;; pill variant
+                      (case color
+                        "green" "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                        "red" "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
+                        "blue" "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400"
+                        "yellow" "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
+                        "purple" "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400"
+                        "gray" "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300"
+                        "indigo" "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400"
+                        "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300"))
+        full-class (tw base-class size-class shape-class color-class (:class attrs))
+        title (or (:title attrs)
+                  (when (every? string? content)
+                    (str/join " " content)))
+        filtered-attrs (-> (dissoc attrs :color :variant :size)
+                           (assoc :class full-class)
+                           (cond-> title (assoc :title title)))]
+    (into [:span filtered-attrs] content)))
