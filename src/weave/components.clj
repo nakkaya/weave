@@ -1041,3 +1041,21 @@
                            (assoc :class full-class)
                            (cond-> title (assoc :title title)))]
     (into [:span filtered-attrs] content)))
+
+(defmethod c/resolve-alias ::toggle
+  [_ attrs _content]
+  (let [disabled (:disabled attrs)
+        input-keys #{:name :id :checked :disabled}
+        input-attrs (-> (select-keys attrs input-keys)
+                        (assoc :type "checkbox")
+                        (merge (into {}
+                                 (filter (fn [[k _]] (and (keyword? k)
+                                                         (str/starts-with? (name k) "data-")))
+                                         attrs))))
+        label-class (tw "relative inline-flex items-center"
+                        (if disabled "cursor-not-allowed opacity-50" "cursor-pointer")
+                        (:class attrs))]
+    [:label {:class label-class}
+     [:input.sr-only.peer input-attrs]
+     [:div
+      {:class "w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"}]]))
