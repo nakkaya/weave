@@ -52,9 +52,10 @@
 
 (def ^:dynamic *theme*
   {:view {:bg "bg-[#f7f7f7] dark:bg-[#1a1a1a]"}
+   :hr {:border "border-[#e0e0e0] dark:border-[#333333]"
+        :light "border-[#f0f0f0] dark:border-[#2a2a2a]"}
    :card {:bg "bg-white dark:bg-[#252525]"
-          :border "border border-[#e0e0e0] dark:border-[#333333]"
-          :shadow "shadow-sm"}
+          :border "border border-[#e0e0e0] dark:border-[#333333]"}
    :card-with-header {:bg "bg-white dark:bg-[#252525]"
                       :border "divide-y divide-[#e0e0e0] dark:divide-[#333333]"
                       :shadow "shadow-sm"}
@@ -306,21 +307,26 @@
         attrs (dissoc attrs :variant)]
     (into [:p (merge-attrs {:class theme-text} attrs)] content)))
 
+(defmethod c/resolve-alias ::hr
+  [_ attrs _content]
+  (let [variant (:variant attrs)
+        theme-border (if (= variant :light)
+                       (get-theme-class :hr :light)
+                       (get-theme-class :hr :border))
+        base-attrs {:class (tw "border-t" theme-border)}
+        filtered-attrs (dissoc attrs :variant)
+        merged-attrs (merge-attrs base-attrs filtered-attrs)]
+    [:hr merged-attrs]))
+
 (defmethod c/resolve-alias ::card
   [_ attrs content]
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :card :bg))
         theme-border (or (:border-class attrs) (get-theme-class :card :border))
-        theme-shadow (or (:shadow-class attrs) (get-theme-class :card :shadow))
-        theme-radius (or (get-theme-class :card :radius) "sm:rounded-lg")
-        theme-ring (or (get-theme-class :card :ring) "ring-1 ring-gray-200 dark:ring-gray-700")
-        base-attrs {:class (tw "overflow-hidden"
-                               theme-bg theme-border theme-shadow
-                               theme-radius theme-ring)}
-        filtered-attrs (dissoc attrs :bg-class :border-class :shadow-class)
+        base-attrs {:class (tw "rounded-lg" theme-bg theme-border)}
+        filtered-attrs (dissoc attrs :bg-class :border-class)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:div merged-attrs
-     [:div {:class "px-4 py-5 sm:p-6"}
-      content]]))
+     content]))
 
 (defmethod c/resolve-alias ::card-with-header
   [_ attrs content]
