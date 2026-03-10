@@ -26,12 +26,19 @@
                                         %)
                                      classes)))))
 
+(defn- normalize-class [class-val]
+  (cond
+    (string? class-val) class-val
+    (sequential? class-val) (str/join " " class-val)
+    :else class-val))
+
 (defn- merge-classes
   "Merge base class with custom class if provided."
   [base-class custom-class]
-  (if (and custom-class (not (str/blank? custom-class)))
-    (tw base-class custom-class)
-    base-class))
+  (let [custom-class (normalize-class custom-class)]
+    (if (and custom-class (not (str/blank? custom-class)))
+      (tw base-class custom-class)
+      base-class)))
 
 (defn- merge-attrs
   "Merge component base attributes with user attributes.
