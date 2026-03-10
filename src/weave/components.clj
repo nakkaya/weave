@@ -82,7 +82,19 @@
                        :secondary {:bg "bg-white dark:bg-[#252525]"
                                    :hover "hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a]"
                                    :focus "focus:outline-none"
-                                   :text "text-[#525252] dark:text-[#d0d0d0] font-medium ring-1 ring-inset ring-[#e0e0e0] dark:ring-[#333333]"}}}
+                                   :text "text-[#525252] dark:text-[#d0d0d0] font-medium ring-1 ring-inset ring-[#e0e0e0] dark:ring-[#333333]"}
+                       :success {:bg "bg-green-500 dark:bg-green-600"
+                                 :hover "hover:bg-green-600 dark:hover:bg-green-500"
+                                 :focus "focus:outline-none"
+                                 :text "text-white font-medium"}
+                       :info {:bg "bg-blue-500 dark:bg-blue-600"
+                              :hover "hover:bg-blue-600 dark:hover:bg-blue-500"
+                              :focus "focus:outline-none"
+                              :text "text-white font-medium"}
+                       :ghost {:bg ""
+                               :hover ""
+                               :focus "focus:outline-none"
+                               :text "text-[#737373] dark:text-[#a0a0a0] hover:text-[#4f46e5] dark:hover:text-[#5b8ff9] font-medium"}}}
    :input {:base "block w-full h-11 rounded-lg border bg-transparent shadow-sm focus:outline-hidden focus:ring-3"
            :sizes {:xs "px-3 py-2 text-xs"
                    :sm "px-3.5 py-2 text-sm"
