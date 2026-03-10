@@ -65,10 +65,11 @@
              :active "bg-[#e0e0e0] text-[#171717] dark:bg-[#2a2a2a] dark:text-white"}
    :button {:base "inline-flex items-center justify-center text-center gap-2 rounded-lg shadow-theme-xs transition"
             :sizes {:xs "px-2 py-1.5 text-xs"
-                    :s "px-3 py-2 text-sm"
-                    :md "px-4 py-3 text-sm"
+                    :sm "px-3 py-2 text-sm"
+                    :md "px-4 py-2.5 text-sm"
                     :lg "px-5 py-3.5 text-base"
-                    :xl "px-6 py-4 text-lg"}
+                    :xl "px-6 py-4 text-lg"
+                    :icon "p-2"}
             :variants {:primary {:bg "bg-[#4f46e5] dark:bg-[#5b8ff9]"
                                  :hover "hover:bg-[#4338ca] dark:hover:bg-[#7ba8ff]"
                                  :focus "focus:outline-none"
@@ -83,7 +84,7 @@
                                    :text "text-[#525252] dark:text-[#d0d0d0] font-medium ring-1 ring-inset ring-[#e0e0e0] dark:ring-[#333333]"}}}
    :input {:base "block w-full h-11 rounded-lg border bg-transparent shadow-sm focus:outline-hidden focus:ring-3"
            :sizes {:xs "px-3 py-2 text-xs"
-                   :s "px-3.5 py-2 text-sm"
+                   :sm "px-3.5 py-2 text-sm"
                    :md "px-4 py-2.5 text-sm"
                    :lg "px-4 py-3 text-base"
                    :xl "px-5 py-3.5 text-lg"}
@@ -94,7 +95,7 @@
            :placeholder "placeholder:text-[#a3a3a3] dark:placeholder:text-[#707070]"}
    :label {:base "mb-1.5 block font-medium"
            :sizes {:xs "text-xs"
-                   :s "text-sm"
+                   :sm "text-sm"
                    :md "text-sm"
                    :lg "text-base"
                    :xl "text-lg"}
@@ -212,9 +213,9 @@
   [_ attrs _content]
   (let [icon-id (or (:id attrs) "")
         icon-class (or (:class attrs) "")
-        size (or (:size attrs) 24)
-        size-class (str "h-" size " w-" size)
-        final-class (tw size-class icon-class)]
+        size (:size attrs)
+        size-class (when size (str "h-" size " w-" size))
+        final-class (tw (or size-class (when-not (seq icon-class) "h-5 w-5")) icon-class)]
     [:svg {:class final-class
            :viewBox "0 0 24 24"
            :fill "currentColor"
@@ -342,7 +343,6 @@
 (defmethod c/resolve-alias ::button
   [_ attrs content]
   (let [size (or (:size attrs) :md)
-        text (or (first content) (:title attrs))
         variant (or (:variant attrs) :primary)
 
         ;; Get theme classes
@@ -365,9 +365,10 @@
         filtered-attrs (dissoc attrs
                                :size :title :variant :type
                                :bg-class :hover-class :focus-class :text-class)
-        merged-attrs (merge-attrs base-attrs filtered-attrs)]
+        merged-attrs (merge-attrs base-attrs filtered-attrs)
+        body (or (seq content) [(:title attrs)])]
 
-    [:button merged-attrs text]))
+    (into [:button merged-attrs] body)))
 
 (defmethod c/resolve-alias ::input
   [_ attrs _content]
