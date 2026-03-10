@@ -143,7 +143,7 @@
             :icon "absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"}
    :modal {:overlay "fixed inset-0 z-50 bg-black/50 dark:bg-black/80 transition-opacity"
            :container "fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-           :dialog "relative bg-white dark:bg-[#252525] rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+           :dialog "relative bg-white dark:bg-[#252525] text-[#171717] dark:text-[#e5e5e5] rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
            :sizes {:sm "max-w-sm"
                    :md "max-w-md"
                    :lg "max-w-lg"
