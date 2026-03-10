@@ -159,10 +159,10 @@
    :dropdown {:menu {:bg "bg-white dark:bg-[#2a2a2a]"
                      :border "ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10"
                      :shadow "shadow-xl"
-                     :divider "divide-y divide-gray-100 dark:divide-gray-800"}
+                     :divider "divide-y divide-[#f0f0f0] dark:divide-[#2a2a2a]"}
               :item {:base "flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors"
-                     :variants {:default {:text "text-gray-700 dark:text-gray-200"
-                                          :hover "hover:bg-indigo-50 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-white"}
+                     :variants {:default {:text "text-[#525252] dark:text-[#e5e5e5]"
+                                          :hover "hover:bg-indigo-50 dark:hover:bg-[#333333] hover:text-indigo-600 dark:hover:text-white"}
                                 :danger {:text "text-red-700 dark:text-red-400"
                                          :hover "hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-300"}}}}})
 
@@ -334,7 +334,7 @@
         theme-border (or (:border-class attrs) (get-theme-class :card-with-header :border))
         theme-shadow (or (:shadow-class attrs) (get-theme-class :card-with-header :shadow))
         theme-radius (or (get-theme-class :card-with-header :radius) "rounded-lg")
-        theme-ring (or (get-theme-class :card-with-header :ring) "ring-1 ring-gray-200 dark:ring-gray-700")
+        theme-ring (or (get-theme-class :card-with-header :ring) "ring-1 ring-[#e0e0e0] dark:ring-[#333333]")
         base-attrs {:class (tw "overflow-hidden"
                                theme-border theme-bg theme-shadow
                                theme-radius theme-ring)}
@@ -483,8 +483,9 @@
         content]]
       (when dismissible?
         [:div.ml-auto.pl-3
-         [:button.text-gray-400.hover:text-gray-500.focus:outline-none
-          {:type "button"
+         [:button.focus:outline-none
+          {:class "text-[#a3a3a3] hover:text-[#737373]"
+           :type "button"
            :onclick "this.closest('[class*=\"rounded-md p-4 border\"]').remove()"}
           [:span.sr-only "Dismiss"]
           [::icon#solid-x-mark
@@ -509,13 +510,14 @@
         {:src logo-url}]
        (when title
          [:div
-          {:class "font-medium text-lg text-gray-300 dark:text-gray-300"}
+          {:class "font-medium text-lg text-[#d0d0d0] dark:text-[#d0d0d0]"}
           title])]
 
       ;; Mobile menu toggle button
       [:div.sm:hidden
-       [:button.block.text-gray-300.hover:text-white.focus:text-white.focus:outline-none
-        {:data-on-click "$navbarOpen = !$navbarOpen"
+       [:button.block.hover:text-white.focus:text-white.focus:outline-none
+        {:class "text-[#d0d0d0]"
+         :data-on-click "$navbarOpen = !$navbarOpen"
          :type "button"}
         [:div
          [:div {:data-if "$navbarOpen"}
@@ -574,7 +576,7 @@
          (:label option)])]
      [:div {:class theme-icon}
       [::icon#solid-chevron-up-down
-       {:class "h-5 w-5 text-gray-400"}]]]))
+       {:class "h-5 w-5 text-[#a3a3a3]"}]]]))
 
 (defmethod c/resolve-alias ::a
   [_ attrs content]
@@ -589,8 +591,9 @@
 
     [:div.flex.min-h-full
      ;; Sidebar backdrop for mobile
-     [:div#sidebar-backdrop.fixed.inset-0.bg-gray-800.bg-opacity-75.z-20.hidden.lg:hidden
-      {:onclick (clj->js
+     [:div#sidebar-backdrop.fixed.inset-0.bg-opacity-75.z-20.hidden.lg:hidden
+      {:class "bg-[#252525]"
+       :onclick (clj->js
                  (let [sidebar (js/document.getElementById "sidebar")
                        backdrop (js/document.getElementById "sidebar-backdrop")
                        content (js/document.getElementById "sidebar-content")
@@ -613,8 +616,9 @@
 
      ;; Toggle button for mobile
      [:div#sidebar-toggle.fixed.bottom-4.left-4.lg:hidden.z-30
-      [:button.p-2.rounded-full.bg-gray-800.text-white.shadow-lg
-       {:onclick (clj->js
+      [:button.p-2.rounded-full.text-white.shadow-lg
+       {:class "bg-[#252525]"
+        :onclick (clj->js
                   (let [sidebar (js/document.getElementById "sidebar")
                         backdrop (js/document.getElementById "sidebar-backdrop")
                         content (js/document.getElementById "sidebar-content")
@@ -648,8 +652,9 @@
                 :checked (not collapsed?)}]
 
        (when-let [title (:title attrs)]
-         [:label.px-3.mb-2.text-xs.font-semibold.text-gray-400.uppercase.cursor-pointer.flex.items-center.justify-between.select-none
-          {:for group-id}
+         [:label.px-3.mb-2.text-xs.font-semibold.uppercase.cursor-pointer.flex.items-center.justify-between.select-none
+          {:class "text-[#a3a3a3]"
+           :for group-id}
           title
           ;; Chevron icon that rotates based on state
           [:svg.w-4.h-4.transition-transform.peer-checked:rotate-180
@@ -667,7 +672,8 @@
     ;; Static version when :collapsed attribute is not present (original behavior)
     [:div.mb-6
      (when-let [title (:title attrs)]
-       [:h3.px-3.mb-2.text-xs.font-semibold.text-gray-400.uppercase
+       [:h3.px-3.mb-2.text-xs.font-semibold.uppercase
+        {:class "text-[#a3a3a3]"}
         title])
      [:ul.space-y-1
       content]]))
@@ -725,7 +731,7 @@
 
    ;; Desktop horizontal tabs (hidden on mobile)
    [:div.hidden.sm:block
-    [:div.border-b.border-gray-200
+    [:div.border-b {:class "border-[#e0e0e0]"}
      [:nav {:aria-label "Tabs"
             :class "-mb-px flex space-x-8"}
       content]]]])
@@ -741,10 +747,10 @@
         mobile-classes "border-l-2 border-b-0 px-4 py-3 w-full sm:w-auto"
         active-classes (if active?
                          "border-indigo-500 text-indigo-600"
-                         "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700")
+                         "border-transparent text-[#737373] hover:border-[#d0d0d0] hover:text-[#525252]")
         icon-classes (if active?
                        "text-indigo-500"
-                       "text-gray-400 group-hover:text-gray-500")]
+                       "text-[#a3a3a3] group-hover:text-[#737373]")]
     [:a {:class (tw base-classes desktop-classes mobile-classes active-classes "cursor-pointer")
          :aria-current (when active? "page")
          :data-on-click handler}
@@ -794,10 +800,10 @@
         ;; Container classes
         container-classes (get-theme-class :view :bg)
         card-container-classes "mx-auto w-full sm:max-w-lg"
-        heading-classes "mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900 dark:text-gray-100"
+        heading-classes "mt-10 text-center text-2xl/9 font-bold tracking-tight text-[#171717] dark:text-[#f5f5f5]"
         form-container-classes "mt-10 mx-auto w-full sm:max-w-lg"
         form-classes "space-y-6"
-        footer-text-classes "mt-10 text-center text-sm/6 text-gray-500 dark:text-gray-400"
+        footer-text-classes "mt-10 text-center text-sm/6 text-[#737373] dark:text-[#a3a3a3]"
         link-classes "font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer"
 
         ;; Prepare base attributes
@@ -1087,9 +1093,9 @@
                         "blue" "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 ring-blue-600/20 dark:ring-blue-500/30"
                         "yellow" "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 ring-yellow-600/20 dark:ring-yellow-500/30"
                         "purple" "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 ring-purple-600/20 dark:ring-purple-500/30"
-                        "gray" "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-400 ring-gray-600/20 dark:ring-gray-500/30"
+                        "gray" "bg-[#f9f9f9] dark:bg-[#252525] text-[#525252] dark:text-[#a3a3a3] ring-[#525252]/20 dark:ring-[#737373]/30"
                         "indigo" "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 ring-indigo-600/20 dark:ring-indigo-500/30"
-                        "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-400 ring-gray-600/20 dark:ring-gray-500/30")
+                        "bg-[#f9f9f9] dark:bg-[#252525] text-[#525252] dark:text-[#a3a3a3] ring-[#525252]/20 dark:ring-[#737373]/30")
                       ;; pill variant
                       (case color
                         "green" "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
@@ -1097,9 +1103,9 @@
                         "blue" "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400"
                         "yellow" "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
                         "purple" "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400"
-                        "gray" "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300"
+                        "gray" "bg-[#f5f5f5] dark:bg-[#252525] text-[#171717] dark:text-[#d0d0d0]"
                         "indigo" "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400"
-                        "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300"))
+                        "bg-[#f5f5f5] dark:bg-[#252525] text-[#171717] dark:text-[#d0d0d0]"))
         full-class (tw base-class size-class shape-class color-class (:class attrs))
         title (or (:title attrs)
                   (when (every? string? content)
@@ -1125,4 +1131,4 @@
     [:label {:class label-class}
      [:input.sr-only.peer input-attrs]
      [:div
-      {:class "w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"}]]))
+      {:class "w-11 h-6 bg-[#e0e0e0] dark:bg-[#333333] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#d0d0d0] dark:after:border-[#737373] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"}]]))
