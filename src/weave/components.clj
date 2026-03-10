@@ -148,8 +148,12 @@
                  :odd "bg-[#fafafa] dark:bg-[#202020]"}
            :cell {:text "text-sm text-[#171717] dark:text-[#e5e5e5]"
                   :padding "px-6 py-4 whitespace-nowrap"}}
-   :heading {:text "text-[#171717] dark:text-[#e5e5e5]"}
-   :text {:text "text-[#171717] dark:text-[#e5e5e5]"}
+   :heading {:text "text-[#171717] dark:text-[#e5e5e5]"
+             :variants {:secondary {:text "text-[#525252] dark:text-[#d0d0d0]"}
+                        :caption {:text "text-[#737373] dark:text-[#a0a0a0]"}}}
+   :text {:text "text-[#171717] dark:text-[#e5e5e5]"
+          :variants {:secondary {:text "text-[#525252] dark:text-[#d0d0d0]"}
+                     :caption {:text "text-[#737373] dark:text-[#a0a0a0]"}}}
    :dropdown {:menu {:bg "bg-white dark:bg-[#2a2a2a]"
                      :border "ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10"
                      :shadow "shadow-xl"
@@ -254,34 +258,51 @@
     [:div merged-attrs
      content]))
 
+(defn- resolve-text-variant [theme-key variant]
+  (if-let [variant-text (get-in *theme* [theme-key :variants variant :text])]
+    variant-text
+    (get-in *theme* [theme-key :text])))
+
 (defmethod c/resolve-alias ::h1
   [_ attrs content]
-  (let [theme-text (get-in *theme* [:heading :text])]
+  (let [variant (:variant attrs)
+        theme-text (resolve-text-variant :heading variant)
+        attrs (dissoc attrs :variant)]
     (into [:h1 (merge-attrs {:class theme-text} attrs)] content)))
 
 (defmethod c/resolve-alias ::h2
   [_ attrs content]
-  (let [theme-text (get-in *theme* [:heading :text])]
+  (let [variant (:variant attrs)
+        theme-text (resolve-text-variant :heading variant)
+        attrs (dissoc attrs :variant)]
     (into [:h2 (merge-attrs {:class theme-text} attrs)] content)))
 
 (defmethod c/resolve-alias ::h3
   [_ attrs content]
-  (let [theme-text (get-in *theme* [:heading :text])]
+  (let [variant (:variant attrs)
+        theme-text (resolve-text-variant :heading variant)
+        attrs (dissoc attrs :variant)]
     (into [:h3 (merge-attrs {:class theme-text} attrs)] content)))
 
 (defmethod c/resolve-alias ::h4
   [_ attrs content]
-  (let [theme-text (get-in *theme* [:heading :text])]
+  (let [variant (:variant attrs)
+        theme-text (resolve-text-variant :heading variant)
+        attrs (dissoc attrs :variant)]
     (into [:h4 (merge-attrs {:class theme-text} attrs)] content)))
 
 (defmethod c/resolve-alias ::span
   [_ attrs content]
-  (let [theme-text (get-in *theme* [:text :text])]
+  (let [variant (:variant attrs)
+        theme-text (resolve-text-variant :text variant)
+        attrs (dissoc attrs :variant)]
     (into [:span (merge-attrs {:class theme-text} attrs)] content)))
 
 (defmethod c/resolve-alias ::p
   [_ attrs content]
-  (let [theme-text (get-in *theme* [:text :text])]
+  (let [variant (:variant attrs)
+        theme-text (resolve-text-variant :text variant)
+        attrs (dissoc attrs :variant)]
     (into [:p (merge-attrs {:class theme-text} attrs)] content)))
 
 (defmethod c/resolve-alias ::card
