@@ -59,6 +59,9 @@
    :card-with-header {:bg "bg-white dark:bg-[#252525]"
                       :border "divide-y divide-[#e0e0e0] dark:divide-[#333333]"
                       :shadow "shadow-sm"}
+   :code {:bg "bg-[#f5f5f5] dark:bg-[#1a1a1a]"
+          :text "text-[#171717] dark:text-[#e5e5e5]"
+          :base "font-mono text-sm rounded p-3 overflow-x-auto whitespace-pre-wrap"}
    :link {:base "text-[#4f46e5] hover:text-[#4338ca] dark:text-[#5b8ff9] dark:hover:text-[#7ba8ff]"}
    :sidebar {:bg "bg-[#f7f7f7] dark:bg-[#202020]"
              :text "text-[#525252] dark:text-[#d0d0d0]"
@@ -318,6 +321,13 @@
         theme-text (resolve-text-variant :text variant)
         attrs (dissoc attrs :variant)]
     (into [:p (merge-attrs {:class theme-text} attrs)] content)))
+
+(defmethod c/resolve-alias ::code
+  [_ attrs content]
+  (let [base (get-theme-class :code :base)
+        bg (get-theme-class :code :bg)
+        text (get-theme-class :code :text)]
+    (into [:pre (merge-attrs {:class (tw base bg text)} attrs)] content)))
 
 (defmethod c/resolve-alias ::hr
   [_ attrs _content]
