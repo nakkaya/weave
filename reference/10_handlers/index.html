@@ -1,0 +1,1475 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Weave is a Clojure web framework that provides a simple and powerful way to build web applications.">
+      
+      
+      
+        <link rel="canonical" href="https://github.com/nakkaya/weave/reference/10_handlers/">
+      
+      
+        <link rel="prev" href="../../create_a_project/">
+      
+      
+        <link rel="next" href="../20_push_broadcast/">
+      
+      
+      <link rel="icon" href="https://raw.githubusercontent.com/nakkaya/weave/refs/heads/master/resources/public/weave.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.48">
+    
+    
+      
+        <title>Handlers - Weave</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#handlers" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Weave" class="md-header__button md-logo" aria-label="Weave" data-md-component="logo">
+      
+  <img src="https://raw.githubusercontent.com/nakkaya/weave/refs/heads/master/resources/public/weave.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Weave
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Handlers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1M8 13h8v-2H8zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4a5 5 0 0 0 5-5 5 5 0 0 0-5-5"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5M7 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Weave" class="md-nav__button md-logo" aria-label="Weave" data-md-component="logo">
+      
+  <img src="https://raw.githubusercontent.com/nakkaya/weave/refs/heads/master/resources/public/weave.svg" alt="logo">
+
+    </a>
+    Weave
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../create_a_project/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create a Project
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Handlers
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Handlers
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-handlers-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      How Handlers Work
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handler-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      Handler Syntax
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Handler Syntax">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#variable-capture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Variable Capture
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handler-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Handler Options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Handler Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-cancellation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Cancellation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Request Cancellation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auto-mode-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      Auto Mode (Default)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serialize-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Serialize Mode
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disabled-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Disabled Mode
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signal-naming-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Signal Naming Conventions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Signal Naming Conventions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#clojure-to-javascript-outgoing-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clojure to JavaScript (Outgoing Signals)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#javascript-to-clojure-incoming-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      JavaScript to Clojure (Incoming Signals)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-url-query-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Accessing URL Query Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Accessing URL Query Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#url-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      URL Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#accessing-query-parameters-in-handlers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Accessing Query Parameters in Handlers
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Examples
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      With Variables
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      With Signals
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-data-call-with-" class="md-nav__link">
+    <span class="md-ellipsis">
+      With :data-call-with-*
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="With :data-call-with-*">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scoping-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scoping Rules
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-confirmation-dialog" class="md-nav__link">
+    <span class="md-ellipsis">
+      With Confirmation Dialog
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#problem-route-explosion-with-closures" class="md-nav__link">
+    <span class="md-ellipsis">
+      Problem: Route Explosion with Closures
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Problem: Route Explosion with Closures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solution-shared-handlers-with-data-call-with-" class="md-nav__link">
+    <span class="md-ellipsis">
+      Solution: Shared Handlers with :data-call-with-*
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-cancellation-with-data-call-with-" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Cancellation with :data-call-with-*
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20_push_broadcast/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Push and Broadcast
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../25_views/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Views
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../30_session/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Session Management
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../40_javascript/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    JavaScript
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../45_custom_routes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Custom Routes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../50_pwa/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Progressive Web Apps (PWA)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../60_components/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Components
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../70_resources/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bundling Resources
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../90_running/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running Applications
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../91_testing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Testing Applications
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-handlers-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      How Handlers Work
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handler-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      Handler Syntax
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Handler Syntax">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#variable-capture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Variable Capture
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handler-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Handler Options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Handler Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-cancellation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Cancellation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Request Cancellation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auto-mode-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      Auto Mode (Default)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serialize-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Serialize Mode
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disabled-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Disabled Mode
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signal-naming-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Signal Naming Conventions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Signal Naming Conventions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#clojure-to-javascript-outgoing-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clojure to JavaScript (Outgoing Signals)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#javascript-to-clojure-incoming-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      JavaScript to Clojure (Incoming Signals)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-url-query-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Accessing URL Query Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Accessing URL Query Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#url-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      URL Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#accessing-query-parameters-in-handlers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Accessing Query Parameters in Handlers
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Examples
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      With Variables
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      With Signals
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-data-call-with-" class="md-nav__link">
+    <span class="md-ellipsis">
+      With :data-call-with-*
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="With :data-call-with-*">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scoping-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scoping Rules
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-confirmation-dialog" class="md-nav__link">
+    <span class="md-ellipsis">
+      With Confirmation Dialog
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#problem-route-explosion-with-closures" class="md-nav__link">
+    <span class="md-ellipsis">
+      Problem: Route Explosion with Closures
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Problem: Route Explosion with Closures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solution-shared-handlers-with-data-call-with-" class="md-nav__link">
+    <span class="md-ellipsis">
+      Solution: Shared Handlers with :data-call-with-*
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-cancellation-with-data-call-with-" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Cancellation with :data-call-with-*
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="handlers">Handlers</h1>
+<p>Handlers are server-side functions that process client-side
+events. They are a core part of Weave's reactivity model.</p>
+<h2 id="how-handlers-work">How Handlers Work</h2>
+<ul>
+<li>
+<p>When you define a handler using the <code>weave/handler</code> macro, Weave:</p>
+<ul>
+<li>Generates a unique route path based on code structure and
+  captured variables. A hash is calculated for each handler,
+  handlers with the same hash share the same unique route</li>
+<li>Registers the handler function with that route</li>
+<li>Returns client-side <a href="https://data-star.dev/">Datastar</a>
+  expression that will invoke this route when triggered</li>
+</ul>
+</li>
+<li>
+<p>When a client-side event occurs (like a button click):</p>
+<ul>
+<li>The browser sends a request to the unique route</li>
+<li>Weave executes your handler function on the server</li>
+<li>Your handler can update the DOM, execute scripts, etc.</li>
+</ul>
+</li>
+</ul>
+<h2 id="handler-syntax">Handler Syntax</h2>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="o">^</span><span class="p">{</span><span class="nv">options</span><span class="p">}</span><span class="w"> </span><span class="p">[</span><span class="nv">arguments</span><span class="p">]</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="c1">;; handler body</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="variable-capture">Variable Capture</h3>
+<p>Any variables accessed within the handler body must be explicitly
+captured in the first argument vector. This is required for proper
+caching and ensures handlers work correctly with closures:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">user-name</span><span class="w"> </span><span class="s">&quot;John&quot;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">      </span><span class="nv">counter</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="mi">0</span><span class="p">)]</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="p">[</span><span class="nv">user-name</span><span class="w"> </span><span class="nv">counter</span><span class="p">]</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="p">[</span><span class="ss">:div</span><span class="w"> </span><span class="s">&quot;Hello &quot;</span><span class="w"> </span><span class="nv">user-name</span><span class="w"> </span><span class="s">&quot;! Count: &quot;</span><span class="w"> </span><span class="o">@</span><span class="nv">counter</span><span class="p">])))</span>
+</span></code></pre></div>
+<h2 id="handler-options">Handler Options</h2>
+<p>Options are provided as metadata (optional):</p>
+<ul>
+<li><code>:auth-required?</code> - Whether authentication is required (defaults to
+  the value from <code>:handler-options</code> in the run configuration)</li>
+<li><code>:type</code> - Request content type (use <code>:form</code> for form submissions)</li>
+<li><code>:selector</code> - CSS selector for the form to submit (e.g. <code>"#myform"</code>)</li>
+<li><code>:request-cancellation</code> - Controls request cancellation behavior
+  (see <a href="#request-cancellation">Request Cancellation</a>)</li>
+<li><code>:confirm</code> - String message for confirmation dialog. When present,
+  shows a browser <code>confirm()</code> dialog before executing the handler.
+  Example: <code>^{:confirm "Are you sure you want to delete this item?"} []</code></li>
+</ul>
+<h3 id="request-cancellation">Request Cancellation</h3>
+<p>Weave provides different modes for handling duplicate or rapid
+requests to the same handler route:</p>
+<h4 id="auto-mode-default">Auto Mode (Default)</h4>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">;; Default behavior - no need to specify</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="p">[</span><span class="ss">:div</span><span class="w"> </span><span class="s">&quot;Processing...&quot;</span><span class="p">]))</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1">;; Explicitly specified</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="o">^</span><span class="p">{</span><span class="ss">:request-cancellation</span><span class="w"> </span><span class="s">&quot;auto&quot;</span><span class="p">}</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="p">[</span><span class="ss">:div</span><span class="w"> </span><span class="s">&quot;Processing...&quot;</span><span class="p">]))</span>
+</span></code></pre></div>
+<p><strong>Behavior</strong>: When a user rapidly clicks the same button:</p>
+<ul>
+<li>The first request starts processing</li>
+<li>If a second click occurs before the first request completes, the
+  first request is <strong>cancelled</strong></li>
+<li>The second request proceeds normally</li>
+<li>Only the <strong>latest</strong> request will complete</li>
+</ul>
+<p><strong>Use case</strong>: Standard UI interactions where only the most recent user
+action matters.</p>
+<h4 id="serialize-mode">Serialize Mode</h4>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="o">^</span><span class="p">{</span><span class="ss">:request-cancellation</span><span class="w"> </span><span class="s">&quot;serialize&quot;</span><span class="p">}</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="c1">;; This operation will be serialized per route</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="p">(</span><span class="nf">Thread/sleep</span><span class="w"> </span><span class="mi">2000</span><span class="p">)</span><span class="w"> </span><span class="c1">; Simulate slow operation</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="p">[</span><span class="ss">:div</span><span class="w"> </span><span class="s">&quot;Operation completed&quot;</span><span class="p">]))</span>
+</span></code></pre></div>
+<p><strong>Behavior</strong>: When a user rapidly clicks the same button:</p>
+<ul>
+<li>The first request starts processing and <strong>completes fully</strong></li>
+<li>Additional clicks are <strong>silently ignored</strong> until the first request finishes</li>
+<li>Once the first request completes, new requests are allowed</li>
+<li>Ensures <strong>no duplicate operations</strong> occur</li>
+</ul>
+<p><strong>Use case</strong>: Critical operations like database writes, payments, or
+any action that should not be duplicated.</p>
+<h4 id="disabled-mode">Disabled Mode</h4>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="o">^</span><span class="p">{</span><span class="ss">:request-cancellation</span><span class="w"> </span><span class="s">&quot;disabled&quot;</span><span class="p">}</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="p">[</span><span class="ss">:div</span><span class="w"> </span><span class="s">&quot;Processing...&quot;</span><span class="p">]))</span>
+</span></code></pre></div>
+<p><strong>Behavior</strong>: All requests are allowed to proceed concurrently.</p>
+<p><strong>Use case</strong>: When you want to allow multiple simultaneous requests to the same handler.</p>
+<h2 id="signal-naming-conventions">Signal Naming Conventions</h2>
+<p>Weave automatically converts signal names between Clojure's kebab-case
+convention and JavaScript's camelCase convention:</p>
+<h3 id="clojure-to-javascript-outgoing-signals">Clojure to JavaScript (Outgoing Signals)</h3>
+<p>When you use <code>push-signal!</code> or similar functions, signal names are
+converted from kebab-case keywords to camelCase:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">;; In your handler</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="p">(</span><span class="nf">weave/push-signal!</span><span class="w"> </span><span class="p">{</span><span class="ss">:user-name</span><span class="w"> </span><span class="s">&quot;John&quot;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">                     </span><span class="ss">:is-active</span><span class="w"> </span><span class="nv">true</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">                     </span><span class="ss">:item-count</span><span class="w"> </span><span class="mi">42</span><span class="p">})</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1">;; JavaScript receives:</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1">;; {userName: &quot;John&quot;, isActive: true, itemCount: 42}</span>
+</span></code></pre></div>
+<h3 id="javascript-to-clojure-incoming-signals">JavaScript to Clojure (Incoming Signals)</h3>
+<p>When signals are sent from the browser (via Datastar), they are
+converted from camelCase to kebab-case keywords:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="cm">&lt;!-- In your HTML --&gt;</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">data-signals-userName</span><span class="o">=</span><span class="s">&quot;John&quot;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>     <span class="na">data-signals-isActive</span><span class="o">=</span><span class="s">&quot;true&quot;</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>     <span class="na">data-signals-itemCount</span><span class="o">=</span><span class="s">&quot;42&quot;</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">;; In your handler, signals are accessible as:</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="p">(</span><span class="k">let </span><span class="p">[{</span><span class="ss">:keys</span><span class="w"> </span><span class="p">[</span><span class="nv">user-name</span><span class="w"> </span><span class="nv">is-active</span><span class="w"> </span><span class="nv">item-count</span><span class="p">]}</span><span class="w"> </span><span class="nv">weave/*signals*</span><span class="p">]</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="c1">;; user-name = &quot;John&quot;</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="c1">;; is-active = true</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="c1">;; item-count = 42</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="accessing-url-query-parameters">Accessing URL Query Parameters</h2>
+<p>Weave automatically parses URL query parameters and makes them
+available to handlers through the <code>weave/*query-params*</code> dynamic
+variable. Query parameters are extracted from the URL hash and parsed
+into a map with keyword keys.</p>
+<h3 id="url-structure">URL Structure</h3>
+<p>Query parameters can be included in the URL hash:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>https://your-app.com/#/dashboard?tab=settings&amp;view=compact&amp;debug
+</span></code></pre></div></p>
+<h3 id="accessing-query-parameters-in-handlers">Accessing Query Parameters in Handlers</h3>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">(</span><span class="kd">defn </span><span class="nv">dashboard-view</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="p">[</span><span class="ss">:div</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">   </span><span class="p">[</span><span class="ss">:button</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="p">{</span><span class="ss">:data-on-click</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">     </span><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">       </span><span class="p">(</span><span class="k">let </span><span class="p">[{</span><span class="ss">:keys</span><span class="w"> </span><span class="p">[</span><span class="nv">tab</span><span class="w"> </span><span class="nv">view</span><span class="w"> </span><span class="nv">debug</span><span class="p">]}</span><span class="w"> </span><span class="nv">weave/*query-params*</span><span class="p">]</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">         </span><span class="p">(</span><span class="nf">weave/push-html!</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">          </span><span class="p">[</span><span class="ss">:div</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">           </span><span class="p">[</span><span class="ss">:p</span><span class="w"> </span><span class="s">&quot;Current tab: &quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">or </span><span class="nv">tab</span><span class="w"> </span><span class="s">&quot;default&quot;</span><span class="p">)]</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">           </span><span class="p">[</span><span class="ss">:p</span><span class="w"> </span><span class="s">&quot;View mode: &quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">or </span><span class="nv">view</span><span class="w"> </span><span class="s">&quot;normal&quot;</span><span class="p">)]</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">           </span><span class="p">[</span><span class="ss">:p</span><span class="w"> </span><span class="s">&quot;Debug mode: &quot;</span><span class="w"> </span><span class="p">(</span><span class="k">if </span><span class="nv">debug</span><span class="w"> </span><span class="s">&quot;enabled&quot;</span><span class="w"> </span><span class="s">&quot;disabled&quot;</span><span class="p">)]])))}</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">    </span><span class="s">&quot;Show Query Params&quot;</span><span class="p">]])</span>
+</span></code></pre></div>
+<h2 id="examples">Examples</h2>
+<h2 id="with-variables">With Variables</h2>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">message</span><span class="w"> </span><span class="s">&quot;Hello from server!&quot;</span><span class="p">]</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="p">{</span><span class="ss">:data-on-click</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">   </span><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="p">[</span><span class="nv">message</span><span class="p">]</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="p">[</span><span class="ss">:div#message</span><span class="w"> </span><span class="nv">message</span><span class="p">]))})</span>
+</span></code></pre></div>
+<p>When this handler is registered, Weave:</p>
+<ul>
+<li>Creates a unique route based on the handler code and captured
+   variables.</li>
+<li>Sets up a POST endpoint for that route</li>
+<li>Returns client-side code that will POST to that route when the
+   click event occurs</li>
+</ul>
+<h2 id="with-signals">With Signals</h2>
+<p>Signals provide a powerful alternative to variable capture for
+managing dynamic state. Instead of capturing variables in closures,
+you can store state as signals in the browser and access them via
+<code>weave/*signals*</code>.</p>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">(</span><span class="kd">defn </span><span class="nv">click-count-view</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="p">[</span><span class="ss">::c/view#app</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">   </span><span class="p">[</span><span class="ss">::c/center-hv</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="p">[</span><span class="ss">::c/card</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">     </span><span class="p">[</span><span class="ss">:div.text-center.text-6xl.font-bold.mb-6.text-blue-600</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">      </span><span class="p">{</span><span class="ss">:data-signals-count</span><span class="w"> </span><span class="s">&quot;0&quot;</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">       </span><span class="ss">:data-text</span><span class="w"> </span><span class="s">&quot;$count&quot;</span><span class="p">}]</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">     </span><span class="p">[</span><span class="ss">::c/button</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">      </span><span class="p">{</span><span class="ss">:size</span><span class="w"> </span><span class="ss">:xl</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">       </span><span class="ss">:variant</span><span class="w"> </span><span class="ss">:primary</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">       </span><span class="ss">:data-on-click</span><span class="w"> </span><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">                        </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nb">count </span><span class="p">(</span><span class="nb">or </span><span class="p">(</span><span class="ss">:count</span><span class="w"> </span><span class="nv">weave/*signals*</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span><span class="p">)]</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">                          </span><span class="p">(</span><span class="nf">weave/push-signal!</span><span class="w"> </span><span class="p">{</span><span class="ss">:count</span><span class="w"> </span><span class="p">(</span><span class="nb">inc </span><span class="nv">count</span><span class="p">)})))}</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">      </span><span class="s">&quot;Increment Count&quot;</span><span class="p">]]]])</span>
+</span></code></pre></div>
+<p>In this example:</p>
+<ul>
+<li><code>data-signals-click-count="0"</code> initializes the signal with value 0</li>
+<li><code>data-text="$click"</code> displays the signal value reactively</li>
+<li>The handler reads the current value from <code>weave/*signals*</code> and
+  updates it with <code>push-signal!</code></li>
+</ul>
+<h2 id="with-data-call-with-">With <code>:data-call-with-*</code></h2>
+<p>The <code>:data-call-with-*</code> attribute is a Weave-specific feature that
+provides way to pass arguments to handlers while avoiding variable
+capture.</p>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">(</span><span class="kd">defn </span><span class="nv">action-buttons-view</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="p">[</span><span class="ss">:div#app</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">   </span><span class="p">[</span><span class="ss">:div#result</span><span class="w"> </span><span class="s">&quot;No action performed yet&quot;</span><span class="p">]</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">   </span><span class="c1">;; Define a single shared handler</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">   </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">handle-action</span><span class="w"> </span><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">                         </span><span class="p">(</span><span class="k">let </span><span class="p">[{</span><span class="ss">:keys</span><span class="w"> </span><span class="p">[</span><span class="nv">action</span><span class="w"> </span><span class="nv">item-id</span><span class="p">]}</span><span class="w"> </span><span class="nv">weave/*signals*</span><span class="p">]</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">                           </span><span class="p">(</span><span class="nf">weave/push-html!</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">                             </span><span class="p">[</span><span class="ss">:div#result</span><span class="w"> </span><span class="p">(</span><span class="nb">str </span><span class="s">&quot;Action: &quot;</span><span class="w"> </span><span class="nv">action</span><span class="w"> </span><span class="s">&quot;, Item: &quot;</span><span class="w"> </span><span class="nv">item-id</span><span class="p">)])))]</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">     </span><span class="p">[</span><span class="ss">:div.button-group</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">      </span><span class="p">[</span><span class="ss">::c/button</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="w">       </span><span class="p">{</span><span class="ss">:data-call-with-action</span><span class="w"> </span><span class="s">&quot;edit&quot;</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="w">        </span><span class="ss">:data-call-with-item-id</span><span class="w"> </span><span class="s">&quot;123&quot;</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="w">        </span><span class="ss">:data-on-click</span><span class="w"> </span><span class="nv">handle-action</span><span class="p">}</span>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="w">       </span><span class="s">&quot;Edit&quot;</span><span class="p">]</span>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="w">      </span><span class="p">[</span><span class="ss">::c/button</span>
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="w">       </span><span class="p">{</span><span class="ss">:data-call-with-action</span><span class="w"> </span><span class="s">&quot;delete&quot;</span>
+</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a><span class="w">        </span><span class="ss">:data-call-with-item-id</span><span class="w"> </span><span class="s">&quot;123&quot;</span>
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a><span class="w">        </span><span class="ss">:data-on-click</span><span class="w"> </span><span class="nv">handle-action</span><span class="p">}</span>
+</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a><span class="w">       </span><span class="s">&quot;Delete&quot;</span><span class="p">]])])</span>
+</span></code></pre></div>
+<h3 id="scoping-rules">Scoping Rules</h3>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1">;; Example showing inheritance</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="p">[</span><span class="ss">:div</span><span class="w"> </span><span class="p">{</span><span class="ss">:data-call-with-action</span><span class="w"> </span><span class="s">&quot;noop&quot;</span><span class="p">}</span><span class="w">  </span><span class="c1">; Parent element</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w"> </span><span class="p">[</span><span class="ss">:button</span><span class="w"> </span><span class="p">{</span><span class="ss">:data-call-with-action</span><span class="w"> </span><span class="s">&quot;edit&quot;</span><span class="w">  </span><span class="c1">; Child element</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">           </span><span class="ss">:data-call-with-id</span><span class="w"> </span><span class="s">&quot;123&quot;</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">           </span><span class="ss">:data-on-click</span><span class="w"> </span><span class="nv">handler</span><span class="p">}</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="s">&quot;Edit User&quot;</span><span class="p">]]</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="c1">;; Result: signals will be {:action &quot;edit&quot;, :id &quot;123&quot;}</span>
+</span></code></pre></div>
+<h2 id="with-confirmation-dialog">With Confirmation Dialog</h2>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">;; Simple delete confirmation</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="p">{</span><span class="ss">:data-on-click</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w"> </span><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="o">^</span><span class="p">{</span><span class="ss">:confirm</span><span class="w"> </span><span class="s">&quot;Are you sure you want to delete this item?&quot;</span><span class="p">}</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">   </span><span class="p">(</span><span class="nf">delete-item!</span><span class="p">)</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">   </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="p">[</span><span class="ss">:div</span><span class="w"> </span><span class="s">&quot;Item deleted&quot;</span><span class="p">]))}</span>
+</span></code></pre></div>
+<p>The <code>:confirm</code> option generates JavaScript that shows a browser
+confirmation dialog before executing the handler. If the user clicks
+"Cancel", the handler will not execute.</p>
+<h2 id="problem-route-explosion-with-closures">Problem: Route Explosion with Closures</h2>
+<p>When using variable capture, each unique combination of captured
+variables creates a separate route. This becomes problematic with
+things like table rows where each action becomes a new route and
+nothing shared:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1">;; BAD: Creates separate handler for each row × action combination</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="p">(</span><span class="kd">defn </span><span class="nv">user-table-bad</span><span class="w"> </span><span class="p">[</span><span class="nv">users</span><span class="p">]</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span><span class="p">[</span><span class="ss">:table</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">   </span><span class="p">(</span><span class="nb">for </span><span class="p">[</span><span class="nv">user</span><span class="w"> </span><span class="nv">users</span><span class="p">]</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">     </span><span class="p">[</span><span class="ss">:tr</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">      </span><span class="p">[</span><span class="ss">:td</span><span class="w"> </span><span class="p">(</span><span class="ss">:name</span><span class="w"> </span><span class="nv">user</span><span class="p">)]</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="w">      </span><span class="p">[</span><span class="ss">:td</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">       </span><span class="p">[</span><span class="ss">::c/button</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">        </span><span class="p">{</span><span class="ss">:data-on-click</span><span class="w"> </span><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="p">[</span><span class="nv">user</span><span class="p">]</span><span class="w"> </span><span class="c1">; Captures user - creates unique route!</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="w">                          </span><span class="p">(</span><span class="nf">delete-user!</span><span class="w"> </span><span class="p">(</span><span class="ss">:id</span><span class="w"> </span><span class="nv">user</span><span class="p">))</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="w">                          </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="p">(</span><span class="nf">user-table-bad</span><span class="w"> </span><span class="p">(</span><span class="nf">get-updated-users</span><span class="p">))))}</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="w">        </span><span class="s">&quot;Delete&quot;</span><span class="p">]</span>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="w">       </span><span class="p">[</span><span class="ss">::c/button</span>
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="w">        </span><span class="p">{</span><span class="ss">:data-on-click</span><span class="w"> </span><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="p">[</span><span class="nv">user</span><span class="p">]</span><span class="w"> </span><span class="c1">; Another unique route per user!</span>
+</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="w">                          </span><span class="p">(</span><span class="nf">promote-user!</span><span class="w"> </span><span class="p">(</span><span class="ss">:id</span><span class="w"> </span><span class="nv">user</span><span class="p">))</span>
+</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="w">                          </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="p">(</span><span class="nf">user-table-bad</span><span class="w"> </span><span class="p">(</span><span class="nf">get-updated-users</span><span class="p">))))}</span>
+</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="w">        </span><span class="s">&quot;Promote&quot;</span><span class="p">]]])])</span>
+</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>
+</span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a><span class="c1">;; With 100 users × 2 actions = 200 different routes registered!</span>
+</span></code></pre></div>
+<h3 id="solution-shared-handlers-with-data-call-with-">Solution: Shared Handlers with <code>:data-call-with-*</code></h3>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1">;; GOOD: Only 1 handler total, regardless of number of users</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="p">(</span><span class="kd">defn </span><span class="nv">user-table</span><span class="w"> </span><span class="p">[</span><span class="nv">users</span><span class="p">]</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">handle-action</span><span class="w"> </span><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">                        </span><span class="p">(</span><span class="k">let </span><span class="p">[{</span><span class="ss">:keys</span><span class="w"> </span><span class="p">[</span><span class="nv">user-id</span><span class="w"> </span><span class="nv">action</span><span class="p">]}</span><span class="w"> </span><span class="nv">weave/*signals*</span><span class="p">]</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">                          </span><span class="p">(</span><span class="nf">case</span><span class="w"> </span><span class="nv">action</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">                            </span><span class="s">&quot;delete&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">delete-user!</span><span class="w"> </span><span class="nv">user-id</span><span class="p">)</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">                            </span><span class="s">&quot;promote&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">promote-user!</span><span class="w"> </span><span class="nv">user-id</span><span class="p">))</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">                          </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="p">(</span><span class="nf">user-table</span><span class="w"> </span><span class="p">(</span><span class="nf">get-updated-users</span><span class="p">)))))]</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">    </span><span class="p">[</span><span class="ss">:table</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="w">     </span><span class="p">(</span><span class="nb">for </span><span class="p">[</span><span class="nv">user</span><span class="w"> </span><span class="nv">users</span><span class="p">]</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="w">       </span><span class="p">[</span><span class="ss">:tr</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="w">        </span><span class="p">[</span><span class="ss">:td</span><span class="w"> </span><span class="p">(</span><span class="ss">:name</span><span class="w"> </span><span class="nv">user</span><span class="p">)]</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="w">        </span><span class="p">[</span><span class="ss">:td</span>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="w">         </span><span class="p">[</span><span class="ss">::c/button</span>
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="w">          </span><span class="p">{</span><span class="ss">:data-call-with-user-id</span><span class="w"> </span><span class="p">(</span><span class="ss">:id</span><span class="w"> </span><span class="nv">user</span><span class="p">)</span>
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a><span class="w">           </span><span class="ss">:data-call-with-action</span><span class="w"> </span><span class="s">&quot;delete&quot;</span>
+</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a><span class="w">           </span><span class="ss">:data-on-click</span><span class="w"> </span><span class="nv">handle-action</span><span class="p">}</span>
+</span><span id="__span-16-18"><a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a><span class="w">          </span><span class="s">&quot;Delete&quot;</span><span class="p">]</span>
+</span><span id="__span-16-19"><a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a><span class="w">         </span><span class="p">[</span><span class="ss">::c/button</span>
+</span><span id="__span-16-20"><a id="__codelineno-16-20" name="__codelineno-16-20" href="#__codelineno-16-20"></a><span class="w">          </span><span class="p">{</span><span class="ss">:data-call-with-user-id</span><span class="w"> </span><span class="p">(</span><span class="ss">:id</span><span class="w"> </span><span class="nv">user</span><span class="p">)</span>
+</span><span id="__span-16-21"><a id="__codelineno-16-21" name="__codelineno-16-21" href="#__codelineno-16-21"></a><span class="w">           </span><span class="ss">:data-call-with-action</span><span class="w"> </span><span class="s">&quot;promote&quot;</span>
+</span><span id="__span-16-22"><a id="__codelineno-16-22" name="__codelineno-16-22" href="#__codelineno-16-22"></a><span class="w">           </span><span class="ss">:data-on-click</span><span class="w"> </span><span class="nv">handle-action</span><span class="p">}</span>
+</span><span id="__span-16-23"><a id="__codelineno-16-23" name="__codelineno-16-23" href="#__codelineno-16-23"></a><span class="w">          </span><span class="s">&quot;Promote&quot;</span><span class="p">]]])]))</span>
+</span><span id="__span-16-24"><a id="__codelineno-16-24" name="__codelineno-16-24" href="#__codelineno-16-24"></a>
+</span><span id="__span-16-25"><a id="__codelineno-16-25" name="__codelineno-16-25" href="#__codelineno-16-25"></a><span class="c1">;; Only 1 handler registered total - shared across all rows and actions!</span>
+</span></code></pre></div>
+<h3 id="request-cancellation-with-data-call-with-">Request Cancellation with <code>:data-call-with-*</code></h3>
+<p>When using <code>:data-call-with-*</code> attributes, the request cancellation behavior is controlled by the handler's metadata:</p>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="p">(</span><span class="kd">defn </span><span class="nv">payment-view</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">payment-handler</span><span class="w"> </span><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="o">^</span><span class="p">{</span><span class="ss">:request-cancellation</span><span class="w"> </span><span class="s">&quot;serialize&quot;</span><span class="p">}</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">                          </span><span class="p">(</span><span class="k">let </span><span class="p">[{</span><span class="ss">:keys</span><span class="w"> </span><span class="p">[</span><span class="nv">action</span><span class="w"> </span><span class="nv">amount</span><span class="p">]}</span><span class="w"> </span><span class="nv">weave/*signals*</span><span class="p">]</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">                            </span><span class="p">(</span><span class="nf">process-payment!</span><span class="w"> </span><span class="nv">amount</span><span class="p">)</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">                            </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="p">[</span><span class="ss">:div</span><span class="w"> </span><span class="s">&quot;Payment processed&quot;</span><span class="p">])))]</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">    </span><span class="p">[</span><span class="ss">:button</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">     </span><span class="p">{</span><span class="ss">:data-call-with-action</span><span class="w"> </span><span class="s">&quot;process-payment&quot;</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">      </span><span class="ss">:data-call-with-amount</span><span class="w"> </span><span class="s">&quot;100&quot;</span>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="w">      </span><span class="ss">:data-on-click</span><span class="w"> </span><span class="nv">payment-handler</span><span class="p">}</span>
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="w">     </span><span class="s">&quot;Process Payment&quot;</span><span class="p">]))</span>
+</span></code></pre></div>
+<p>The serialize behavior ensures that even with rapid clicking, only one payment operation will execute.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand", "navigation.path"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      
+    
+  </body>
+</html>
