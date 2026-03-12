@@ -62,6 +62,10 @@
    :code {:bg "bg-[#f5f5f5] dark:bg-[#1a1a1a]"
           :text "text-[#171717] dark:text-[#e5e5e5]"
           :base "font-mono text-sm rounded p-3 overflow-x-auto whitespace-pre-wrap"}
+   :stat {:bg "bg-white dark:bg-[#252525]"
+          :base "overflow-hidden rounded-lg px-4 py-5 shadow ring-1 ring-inset ring-[#e0e0e0] dark:ring-[#333333] sm:p-6"
+          :label "truncate text-sm font-medium text-[#737373] dark:text-[#a0a0a0]"
+          :value "mt-1 text-3xl font-semibold tracking-tight text-[#171717] dark:text-[#e5e5e5]"}
    :link {:base "text-[#4f46e5] hover:text-[#4338ca] dark:text-[#5b8ff9] dark:hover:text-[#7ba8ff]"}
    :sidebar {:bg "bg-[#f7f7f7] dark:bg-[#202020]"
              :text "text-[#525252] dark:text-[#d0d0d0]"
@@ -367,6 +371,41 @@
     [:div merged-attrs
      [:div {:class "px-4 py-5 sm:px-6"} header]
      [:div {:class "px-4 py-5 sm:p-6"} body]]))
+
+(defmethod c/resolve-alias ::stat
+  [_ attrs content]
+  (let [theme-bg (get-theme-class :stat :bg)
+        theme-base (get-theme-class :stat :base)
+        theme-label (get-theme-class :stat :label)
+        theme-value (get-theme-class :stat :value)
+        color (:color attrs)
+        value-color (case color
+                      "green" "text-green-600 dark:text-green-400"
+                      "red" "text-red-600 dark:text-red-400"
+                      "blue" "text-blue-600 dark:text-blue-400"
+                      "yellow" "text-yellow-600 dark:text-yellow-400"
+                      "purple" "text-purple-600 dark:text-purple-400"
+                      nil)
+        icon (:icon attrs)
+        icon-color (case color
+                     "green" "text-green-500 dark:text-green-400"
+                     "red" "text-red-500 dark:text-red-400"
+                     "blue" "text-blue-500 dark:text-blue-400"
+                     "yellow" "text-yellow-500 dark:text-yellow-400"
+                     "purple" "text-purple-500 dark:text-purple-400"
+                     "text-[#a0a0a0] dark:text-[#707070]")
+        filtered-attrs (dissoc attrs :color :value :label :icon)]
+    [:div (merge-attrs {:class (tw theme-bg theme-base)} filtered-attrs)
+     [:div.flex.items-center.justify-between
+      [:div
+       [:dt {:class theme-label} (:label attrs)]
+       [:dd {:class (if value-color
+                      (str "mt-1 text-3xl font-semibold tracking-tight " value-color)
+                      theme-value)}
+        (:value attrs)]]
+      (when icon
+        [:div {:class (tw "h-10 w-10 opacity-50" icon-color)}
+         icon])]]))
 
 (defmethod c/resolve-alias ::button
   [_ attrs content]
