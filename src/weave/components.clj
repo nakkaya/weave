@@ -1125,3 +1125,198 @@
      [:input.sr-only.peer input-attrs]
      [:div
       {:class "w-11 h-6 bg-[#e0e0e0] dark:bg-[#333333] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#d0d0d0] dark:after:border-[#737373] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"}]]))
+
+;; GOV.UK Design System theme
+;; Light-mode only, based on https://design-system.service.gov.uk
+
+(def theme-gov-uk
+  {:view {:bg "bg-[#f3f3f3]"}
+
+   :hr {:border "border-[#cecece]"
+        :light "border-[#f3f3f3]"}
+
+   :card {:bg "bg-white"
+          :border "border border-[#cecece]"
+          :shadow ""
+          :radius "rounded-none"
+          :ring ""}
+
+   :card-with-header {:bg "bg-white"
+                      :border "divide-y divide-[#cecece]"
+                      :shadow ""
+                      :radius "rounded-none"
+                      :ring "ring-1 ring-[#cecece]"
+                      :header-bg "bg-[#f3f3f3]"}
+
+   :code {:bg "bg-[#f3f3f3]"
+          :text "text-[#0b0c0c]"
+          :base "font-mono text-sm rounded-none p-3 overflow-x-auto whitespace-pre-wrap"}
+
+   :stat {:bg "bg-white"
+          :base "overflow-hidden px-4 py-5 border-l-4 border-[#1d70b8] sm:p-6"
+          :label "truncate text-base font-normal text-[#484949]"
+          :value "mt-1 text-3xl font-bold tracking-tight text-[#0b0c0c]"}
+
+   :link {:base "text-[#1a65a6] underline hover:text-[#0f385c] visited:text-[#54319f] focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:no-underline"}
+
+   :sidebar {:bg "bg-[#f4f8fb] lg:bg-transparent"
+             :text "text-[#484949]"
+             :hover "hover:bg-[#f4f8fb] hover:text-[#0b0c0c]"
+             :active "border-l-[5px] border-[#1a65a6] bg-[#f4f8fb] text-[#0b0c0c] font-bold"
+             :radius "rounded-none"
+             :mobile-bg "bg-[#0b0c0c]"
+             :group-text "text-[#484949]"}
+
+   :button {:base "inline-flex items-center justify-center text-center gap-2 rounded-none shadow-[0_2px_0_#083d29] transition font-sans font-bold"
+            :sizes {:xs "px-2 py-1.5 text-sm"
+                    :s "px-3 py-2 text-base"
+                    :sm "px-3 py-2 text-base"
+                    :md "px-4 py-2.5 text-base"
+                    :lg "px-5 py-3 text-lg"
+                    :xl "px-6 py-3.5 text-lg"
+                    :icon "p-2"}
+            :variants {:primary {:bg "bg-[#0f7a52]"
+                                 :hover "hover:bg-[#0b5c3e]"
+                                 :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:shadow-[0_2px_0_#0b0c0c]"
+                                 :text "text-white font-bold"}
+                       :danger {:bg "bg-[#ca3535]"
+                                :hover "hover:bg-[#982828]"
+                                :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:shadow-[0_2px_0_#0b0c0c]"
+                                :text "text-white font-bold"}
+                       :secondary {:bg "bg-[#f3f3f3] shadow-[0_2px_0_#858686]"
+                                   :hover "hover:bg-[#cecece]"
+                                   :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:shadow-[0_2px_0_#0b0c0c]"
+                                   :text "text-[#0b0c0c] font-bold"}
+                       :success {:bg "bg-[#0f7a52]"
+                                 :hover "hover:bg-[#0b5c3e]"
+                                 :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:shadow-[0_2px_0_#0b0c0c]"
+                                 :text "text-white font-bold"}
+                       :info {:bg "bg-[#1d70b8]"
+                              :hover "hover:bg-[#16548a]"
+                              :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:shadow-[0_2px_0_#0b0c0c]"
+                              :text "text-white font-bold"}
+                       :ghost {:bg "bg-transparent"
+                               :hover "hover:bg-[#f3f3f3] hover:text-[#0b0c0c]"
+                               :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c]"
+                               :text "text-[#1a65a6] underline font-bold"}}}
+
+   :input {:base "block w-full h-11 border-2 bg-transparent shadow-none focus:outline-3 focus:outline-[#ffdd00] rounded-none font-sans"
+           :sizes {:xs "px-3 py-2 text-sm"
+                   :s "px-3 py-2 text-base"
+                   :sm "px-3 py-2 text-base"
+                   :md "px-4 py-2.5 text-base"
+                   :lg "px-4 py-3 text-lg"
+                   :xl "px-5 py-3.5 text-lg"}
+           :border "border-[#0b0c0c] focus:border-[#0b0c0c]"
+           :focus "focus:ring-0"
+           :bg "bg-white"
+           :text "text-[#0b0c0c]"
+           :placeholder "placeholder:text-[#484949]"}
+
+   :label {:base "mb-1.5 block font-bold"
+           :sizes {:xs "text-sm"
+                   :s "text-base"
+                   :sm "text-base"
+                   :md "text-base"
+                   :lg "text-lg"
+                   :xl "text-xl"}
+           :text "text-[#0b0c0c]"
+           :required "text-[#ca3535]"}
+
+   :select {:base "block w-full h-11 border-2 bg-transparent shadow-none focus:outline-3 focus:outline-[#ffdd00] appearance-none rounded-none font-sans"
+            :sizes {:xs "px-3 py-2 text-sm"
+                    :s "px-3 py-2 text-base"
+                    :md "px-4 py-2.5 text-base"
+                    :lg "px-4 py-3 text-lg"
+                    :xl "px-5 py-3.5 text-lg"}
+            :border "border-[#0b0c0c] focus:border-[#0b0c0c]"
+            :focus "focus:ring-0"
+            :bg "bg-white"
+            :text "text-[#0b0c0c]"
+            :icon "absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-[#0b0c0c]"}
+
+   :table {:container "w-full overflow-x-auto border border-[#cecece]"
+           :base "min-w-full divide-y divide-[#cecece]"
+           :header {:bg "bg-[#f3f3f3]"
+                    :text "text-sm font-bold text-[#0b0c0c]"
+                    :padding "px-5 py-3"}
+           :body {:bg "bg-white"
+                  :divider "divide-y divide-[#cecece]"}
+           :row {:hover "hover:bg-[#f3f3f3]"
+                 :even "bg-white"
+                 :odd "bg-white"}
+           :cell {:text "text-base text-[#0b0c0c]"
+                  :padding "px-5 py-3 whitespace-nowrap"}}
+
+   :alert {:base "p-4 border-l-4"
+           :variants {:success {:bg "bg-white"
+                                :border "border-[#0f7a52]"
+                                :text "text-[#0b0c0c]"}
+                      :warning {:bg "bg-white"
+                                :border "border-[#f47738]"
+                                :text "text-[#0b0c0c]"}
+                      :error {:bg "bg-white"
+                              :border "border-[#ca3535]"
+                              :text "text-[#0b0c0c]"}
+                      :info {:bg "bg-white"
+                             :border "border-[#1d70b8]"
+                             :text "text-[#0b0c0c]"}}}
+
+   :modal {:overlay "fixed inset-0 z-50 bg-black/50 transition-opacity"
+           :container "fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+           :dialog "relative bg-white text-[#0b0c0c] rounded-none shadow-lg overflow-hidden"
+           :sizes {:sm "max-w-sm w-full"
+                   :md "max-w-md w-full"
+                   :lg "max-w-lg w-full"
+                   :xl "max-w-xl w-full"
+                   :2xl "max-w-2xl w-full"
+                   :full "max-w-full mx-4"}}
+
+   :navbar {:bg "bg-[#1d70b8]"
+            :text "text-white"
+            :hover "hover:underline hover:decoration-2 hover:underline-offset-[10px] hover:text-white"
+            :active "underline decoration-2 underline-offset-[10px] text-white font-bold"
+            :radius "rounded-none"}
+
+   :heading {:text "text-[#0b0c0c]"
+             :variants {:secondary {:text "text-[#484949]"}
+                        :caption {:text "text-[#484949]"}}}
+
+   :text {:text "text-[#0b0c0c]"
+          :variants {:secondary {:text "text-[#484949]"}
+                     :caption {:text "text-[#484949]"}}}
+
+   :tab {:border "border-[#cecece]"
+         :text "text-[#484949]"
+         :hover "hover:border-[#cecece] hover:text-[#0b0c0c]"
+         :active {:border "border-[#1a65a6]"
+                  :text "text-[#0b0c0c]"}
+         :icon {:inactive "text-[#484949]"
+                :active "text-[#1a65a6]"}}
+
+   :dropdown {:menu {:bg "bg-white"
+                     :border "ring-1 ring-[#cecece]"
+                     :shadow "shadow-lg"
+                     :divider "divide-y divide-[#cecece]"}
+              :item {:base "flex items-center gap-3 px-4 py-3 text-base font-normal transition-colors"
+                     :variants {:default {:text "text-[#0b0c0c]"
+                                          :hover "hover:bg-[#f3f3f3] hover:text-[#0b0c0c]"}
+                                :danger {:text "text-[#ca3535]"
+                                         :hover "hover:bg-[#fcf5f5] hover:text-[#982828]"}}}}
+
+   :badge {:colors {:green   {:pill "bg-[#cfe4dc] text-[#083d29]"
+                               :outlined "bg-[#cfe4dc] text-[#083d29] ring-[#083d29]/20"}
+                    :red     {:pill "bg-[#f4d7d7] text-[#651b1b]"
+                               :outlined "bg-[#f4d7d7] text-[#651b1b] ring-[#651b1b]/20"}
+                    :blue    {:pill "bg-[#d2e2f1] text-[#0f385c]"
+                               :outlined "bg-[#d2e2f1] text-[#0f385c] ring-[#0f385c]/20"}
+                    :yellow  {:pill "bg-[#ffee80] text-[#7a3c1c]"
+                               :outlined "bg-[#ffee80] text-[#7a3c1c] ring-[#7a3c1c]/20"}
+                    :purple  {:pill "bg-[#ddd6ec] text-[#2a1950]"
+                               :outlined "bg-[#ddd6ec] text-[#2a1950] ring-[#2a1950]/20"}
+                    :gray    {:pill "bg-[#cecece] text-[#0b0c0c]"
+                               :outlined "bg-[#cecece] text-[#0b0c0c] ring-[#0b0c0c]/20"}
+                    :orange  {:pill "bg-[#fde4d7] text-[#7a3c1c]"
+                               :outlined "bg-[#fde4d7] text-[#7a3c1c] ring-[#7a3c1c]/20"}
+                    :indigo  {:pill "bg-[#ddd6ec] text-[#2a1950]"
+                               :outlined "bg-[#ddd6ec] text-[#2a1950] ring-[#2a1950]/20"}}}})
