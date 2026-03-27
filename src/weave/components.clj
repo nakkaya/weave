@@ -1,7 +1,6 @@
 (ns weave.components
   (:require
    [camel-snake-kebab.core :as csk]
-   [clojure.java.io :as io]
    [clojure.string :as str]
    [dev.onionpancakes.chassis.core :as c]
    [weave.core :as core]
@@ -18,13 +17,11 @@
   "Combines multiple Tailwind CSS classes into a single string.
    Filters out nil values and trims whitespace."
   [& classes]
-  (clojure.string/trim
-   (clojure.string/join " "
-                        (remove nil?
-                                (map #(if (string? %)
-                                        (clojure.string/trim %)
-                                        %)
-                                     classes)))))
+  (str/trim
+   (str/join " "
+             (remove nil?
+                     (map #(if (string? %) (str/trim %) %)
+                          classes)))))
 
 (defn- normalize-class [class-val]
   (cond
@@ -55,10 +52,13 @@
    :hr {:border "border-[#e0e0e0] dark:border-[#333333]"
         :light "border-[#f0f0f0] dark:border-[#2a2a2a]"}
    :card {:bg "bg-white dark:bg-[#252525]"
-          :border "border border-[#e0e0e0] dark:border-[#333333]"}
+          :border "border border-[#e0e0e0] dark:border-[#333333]"
+          :radius "rounded-lg"}
    :card-with-header {:bg "bg-white dark:bg-[#252525]"
                       :border "divide-y divide-[#e0e0e0] dark:divide-[#333333]"
-                      :shadow "shadow-sm"}
+                      :shadow "shadow-sm"
+                      :radius "rounded-lg"
+                      :ring "ring-1 ring-[#e0e0e0] dark:ring-[#333333]"}
    :code {:bg "bg-[#f5f5f5] dark:bg-[#1a1a1a]"
           :text "text-[#171717] dark:text-[#e5e5e5]"
           :base "font-mono text-sm rounded p-3 overflow-x-auto whitespace-pre-wrap"}
@@ -70,7 +70,8 @@
    :sidebar {:bg "bg-[#f7f7f7] dark:bg-[#202020]"
              :text "text-[#525252] dark:text-[#d0d0d0]"
              :hover "hover:bg-[#e5e5e5] hover:text-[#171717] dark:hover:bg-[#2a2a2a] dark:hover:text-white"
-             :active "bg-[#e0e0e0] text-[#171717] dark:bg-[#2a2a2a] dark:text-white"}
+             :active "bg-[#e0e0e0] text-[#171717] dark:bg-[#2a2a2a] dark:text-white"
+             :radius "rounded-md"}
    :button {:base "inline-flex items-center justify-center text-center gap-2 rounded-lg shadow-theme-xs transition"
             :sizes {:xs "px-2 py-1.5 text-xs"
                     :sm "px-3 py-2 text-sm"
@@ -136,7 +137,8 @@
                              :text "text-blue-800 dark:text-[#7ba8ff]"}}}
    :navbar {:bg "bg-[#f7f7f7] dark:bg-[#202020]"
             :text "text-[#525252] dark:text-[#d0d0d0]"
-            :hover "hover:bg-[#e5e5e5] hover:text-[#171717] dark:hover:bg-[#2a2a2a] dark:hover:text-white"}
+            :hover "hover:bg-[#e5e5e5] hover:text-[#171717] dark:hover:bg-[#2a2a2a] dark:hover:text-white"
+            :radius "rounded-md"}
    :select {:base "block w-full h-11 rounded-lg border bg-transparent shadow-sm focus:outline-hidden focus:ring-3 appearance-none"
             :sizes {:xs "px-3 py-2 text-xs"
                     :s "px-3.5 py-2 text-sm"
@@ -175,6 +177,13 @@
    :text {:text "text-[#171717] dark:text-[#e5e5e5]"
           :variants {:secondary {:text "text-[#525252] dark:text-[#d0d0d0]"}
                      :caption {:text "text-[#737373] dark:text-[#a0a0a0]"}}}
+   :tab {:border "border-[#e0e0e0]"
+         :text "text-[#737373]"
+         :hover "hover:border-[#d0d0d0] hover:text-[#525252]"
+         :active {:border "border-indigo-500"
+                  :text "text-indigo-600"}
+         :icon {:active "text-indigo-500"
+                :inactive "text-[#a3a3a3]"}}
    :dropdown {:menu {:bg "bg-white dark:bg-[#2a2a2a]"
                      :border "ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10"
                      :shadow "shadow-xl"
@@ -185,19 +194,11 @@
                                 :danger {:text "text-red-700 dark:text-red-400"
                                          :hover "hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-300"}}}}})
 
-#_:clj-kondo/ignore
-(defn with-theme
-  "Execute body with a custom theme configuration"
-  [custom-theme & body]
-  (binding [*theme* (merge-with merge *theme* custom-theme)]
-    (do body)))
 
 (defn- get-theme-class
   "Get a class string from the theme configuration"
   [component-type & path]
-  (let [path-vec (into [component-type] path)
-        class-str (get-in *theme* path-vec)]
-    class-str))
+  (get-in *theme* (into [component-type] path)))
 
 (defn- get-size-class
   "Get the size-specific class for a component"
@@ -209,25 +210,27 @@
   [component-type variant]
   (get-in *theme* [component-type :variants variant]))
 
-(def ^:private load-heroicons-sprite
-  (memoize
-   (fn []
-     (try
-       (slurp (io/resource "public/heroicons-sprite.svg"))
-       (catch Exception e
-         (println "Error loading heroicons sprite:" (.getMessage e))
-         nil)))))
+(defn- resolve-theme-classes
+  "Returns a map of {key resolved-class} from a spec.
+   Each spec entry is {attr-key [theme-path...]}.
+   Uses (attr-key attrs) if present, else (get-theme-class theme-key ...path)."
+  [theme-key spec attrs]
+  (into {}
+        (map (fn [[attr-key theme-path]]
+               [attr-key (or (get attrs attr-key)
+                             (apply get-theme-class theme-key theme-path))])
+             spec)))
 
-(defn- get-icon-svg
-  "Returns the SVG string for the specified icon from heroicons-sprite.svg"
-  [icon-id]
-  (let [sprite (load-heroicons-sprite)
-        pattern (re-pattern (str "(?s)<symbol\\s+id=\"" icon-id "\".*?</symbol>"))]
-    (when sprite
-      (when-let [match (re-find pattern sprite)]
-        (-> match
-            (str/replace #"<symbol\s+id=\"([^\"]+)\"" "<svg")
-            (str/replace #"</symbol>" "</svg>"))))))
+(defn- build-themed-attrs
+  "Resolve theme overrides from spec, combine into a single class, merge with attrs.
+   `spec` is a map of {attr-override-key [theme-path...]}.
+   Override keys are removed from the returned attrs."
+  [theme-key spec attrs]
+  (let [resolved (resolve-theme-classes theme-key spec attrs)
+        combined (apply tw (vals resolved))
+        filtered (apply dissoc attrs (keys spec))]
+    (merge-attrs {:class combined} filtered)))
+
 
 (defmethod c/resolve-alias ::icon
   [_ attrs _content]
@@ -245,93 +248,63 @@
 (defmethod c/resolve-alias ::view
   [_ attrs content]
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :view :bg))
-        base-attrs {:class (str "w-full min-h-full " theme-bg)}
+        base-attrs {:class (tw "w-full min-h-full" theme-bg)}
         filtered-attrs (dissoc attrs :bg-class)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:div merged-attrs
      content]))
 
-(defmethod c/resolve-alias ::row
-  [_ attrs content]
-  (let [base-attrs {:class "flex flex-row"}
-        merged-attrs (merge-attrs base-attrs attrs)]
-    [:div merged-attrs
-     content]))
+(defn- layout-element [base-class attrs content]
+  [:div (merge-attrs {:class base-class} attrs) content])
 
-(defmethod c/resolve-alias ::col
-  [_ attrs content]
-  (let [base-attrs {:class "flex flex-col"}
-        merged-attrs (merge-attrs base-attrs attrs)]
-    [:div merged-attrs
-     content]))
+(defmethod c/resolve-alias ::row [_ attrs content]
+  (layout-element "flex flex-row" attrs content))
 
-(defmethod c/resolve-alias ::flex-between
-  [_ attrs content]
-  (let [base-attrs {:class "flex justify-between items-center"}
-        merged-attrs (merge-attrs base-attrs attrs)]
-    [:div merged-attrs
-     content]))
+(defmethod c/resolve-alias ::col [_ attrs content]
+  (layout-element "flex flex-col" attrs content))
 
-(defmethod c/resolve-alias ::center-hv
-  [_ attrs content]
-  (let [base-attrs {:class "w-full h-full flex items-center justify-center"}
-        merged-attrs (merge-attrs base-attrs attrs)]
-    [:div merged-attrs
-     content]))
+(defmethod c/resolve-alias ::flex-between [_ attrs content]
+  (layout-element "flex justify-between items-center" attrs content))
+
+(defmethod c/resolve-alias ::center-hv [_ attrs content]
+  (layout-element "w-full h-full flex items-center justify-center" attrs content))
 
 (defn- resolve-text-variant [theme-key variant]
   (if-let [variant-text (get-in *theme* [theme-key :variants variant :text])]
     variant-text
     (get-in *theme* [theme-key :text])))
 
-(defmethod c/resolve-alias ::h1
-  [_ attrs content]
-  (let [variant (:variant attrs)
-        theme-text (resolve-text-variant :heading variant)
+(defn- themed-text-element [tag theme-key attrs content]
+  (let [theme-text (resolve-text-variant theme-key (:variant attrs))
         attrs (dissoc attrs :variant)]
-    (into [:h1 (merge-attrs {:class theme-text} attrs)] content)))
+    (into [tag (merge-attrs {:class theme-text} attrs)] content)))
 
-(defmethod c/resolve-alias ::h2
-  [_ attrs content]
-  (let [variant (:variant attrs)
-        theme-text (resolve-text-variant :heading variant)
-        attrs (dissoc attrs :variant)]
-    (into [:h2 (merge-attrs {:class theme-text} attrs)] content)))
+(defmethod c/resolve-alias ::h1 [_ attrs content]
+  (themed-text-element :h1 :heading attrs content))
 
-(defmethod c/resolve-alias ::h3
-  [_ attrs content]
-  (let [variant (:variant attrs)
-        theme-text (resolve-text-variant :heading variant)
-        attrs (dissoc attrs :variant)]
-    (into [:h3 (merge-attrs {:class theme-text} attrs)] content)))
+(defmethod c/resolve-alias ::h2 [_ attrs content]
+  (themed-text-element :h2 :heading attrs content))
 
-(defmethod c/resolve-alias ::h4
-  [_ attrs content]
-  (let [variant (:variant attrs)
-        theme-text (resolve-text-variant :heading variant)
-        attrs (dissoc attrs :variant)]
-    (into [:h4 (merge-attrs {:class theme-text} attrs)] content)))
+(defmethod c/resolve-alias ::h3 [_ attrs content]
+  (themed-text-element :h3 :heading attrs content))
 
-(defmethod c/resolve-alias ::span
-  [_ attrs content]
-  (let [variant (:variant attrs)
-        theme-text (resolve-text-variant :text variant)
-        attrs (dissoc attrs :variant)]
-    (into [:span (merge-attrs {:class theme-text} attrs)] content)))
+(defmethod c/resolve-alias ::h4 [_ attrs content]
+  (themed-text-element :h4 :heading attrs content))
 
-(defmethod c/resolve-alias ::p
-  [_ attrs content]
-  (let [variant (:variant attrs)
-        theme-text (resolve-text-variant :text variant)
-        attrs (dissoc attrs :variant)]
-    (into [:p (merge-attrs {:class theme-text} attrs)] content)))
+(defmethod c/resolve-alias ::span [_ attrs content]
+  (themed-text-element :span :text attrs content))
+
+(defmethod c/resolve-alias ::p [_ attrs content]
+  (themed-text-element :p :text attrs content))
 
 (defmethod c/resolve-alias ::code
   [_ attrs content]
-  (let [base (get-theme-class :code :base)
-        bg (get-theme-class :code :bg)
-        text (get-theme-class :code :text)]
-    (into [:pre (merge-attrs {:class (tw base bg text)} attrs)] content)))
+  (into [:pre (build-themed-attrs :code
+                {:base-class [:base]
+                 :bg-class   [:bg]
+                 :text-class [:text]}
+                attrs)]
+        content))
 
 (defmethod c/resolve-alias ::hr
   [_ attrs _content]
@@ -346,31 +319,48 @@
 
 (defmethod c/resolve-alias ::card
   [_ attrs content]
-  (let [theme-bg (or (:bg-class attrs) (get-theme-class :card :bg))
-        theme-border (or (:border-class attrs) (get-theme-class :card :border))
-        base-attrs {:class (tw "rounded-lg" theme-bg theme-border)}
-        filtered-attrs (dissoc attrs :bg-class :border-class)
-        merged-attrs (merge-attrs base-attrs filtered-attrs)]
-    [:div merged-attrs
-     content]))
+  [:div (build-themed-attrs :card
+          {:bg-class     [:bg]
+           :border-class [:border]
+           :shadow-class [:shadow]
+           :radius-class [:radius]
+           :ring-class   [:ring]}
+          attrs)
+   content])
 
 (defmethod c/resolve-alias ::card-with-header
   [_ attrs content]
-  (let [theme-bg (or (:bg-class attrs) (get-theme-class :card-with-header :bg))
-        theme-border (or (:border-class attrs) (get-theme-class :card-with-header :border))
-        theme-shadow (or (:shadow-class attrs) (get-theme-class :card-with-header :shadow))
-        theme-radius (or (get-theme-class :card-with-header :radius) "rounded-lg")
-        theme-ring (or (get-theme-class :card-with-header :ring) "ring-1 ring-[#e0e0e0] dark:ring-[#333333]")
+  (let [themed (resolve-theme-classes :card-with-header
+                 {:bg-class        [:bg]
+                  :border-class    [:border]
+                  :shadow-class    [:shadow]
+                  :radius-class    [:radius]
+                  :ring-class      [:ring]
+                  :header-bg-class [:header-bg]}
+                 attrs)
         base-attrs {:class (tw "overflow-hidden"
-                               theme-border theme-bg theme-shadow
-                               theme-radius theme-ring)}
-        filtered-attrs (dissoc attrs :bg-class :border-class :shadow-class)
+                               (:border-class themed) (:bg-class themed)
+                               (:shadow-class themed) (:radius-class themed)
+                               (:ring-class themed))}
+        filtered-attrs (apply dissoc attrs (keys themed))
         merged-attrs (merge-attrs base-attrs filtered-attrs)
         header (first content)
         body (rest content)]
     [:div merged-attrs
-     [:div {:class "px-4 py-5 sm:px-6"} header]
+     [:div {:class (tw "px-4 py-5 sm:px-6" (:header-bg-class themed))} header]
      [:div {:class "px-4 py-5 sm:p-6"} body]]))
+
+(def ^:private stat-colors
+  {"green"  {:value "text-green-600 dark:text-green-400"
+             :icon  "text-green-500 dark:text-green-400"}
+   "red"    {:value "text-red-600 dark:text-red-400"
+             :icon  "text-red-500 dark:text-red-400"}
+   "blue"   {:value "text-blue-600 dark:text-blue-400"
+             :icon  "text-blue-500 dark:text-blue-400"}
+   "yellow" {:value "text-yellow-600 dark:text-yellow-400"
+             :icon  "text-yellow-500 dark:text-yellow-400"}
+   "purple" {:value "text-purple-600 dark:text-purple-400"
+             :icon  "text-purple-500 dark:text-purple-400"}})
 
 (defmethod c/resolve-alias ::stat
   [_ attrs content]
@@ -379,45 +369,28 @@
         theme-label (get-theme-class :stat :label)
         theme-value (get-theme-class :stat :value)
         color (:color attrs)
-        value-color (case color
-                      "green" "text-green-600 dark:text-green-400"
-                      "red" "text-red-600 dark:text-red-400"
-                      "blue" "text-blue-600 dark:text-blue-400"
-                      "yellow" "text-yellow-600 dark:text-yellow-400"
-                      "purple" "text-purple-600 dark:text-purple-400"
-                      nil)
+        colors (get stat-colors color)
         icon (:icon attrs)
-        icon-color (case color
-                     "green" "text-green-500 dark:text-green-400"
-                     "red" "text-red-500 dark:text-red-400"
-                     "blue" "text-blue-500 dark:text-blue-400"
-                     "yellow" "text-yellow-500 dark:text-yellow-400"
-                     "purple" "text-purple-500 dark:text-purple-400"
-                     "text-[#a0a0a0] dark:text-[#707070]")
         filtered-attrs (dissoc attrs :color :value :label :icon)]
     [:div (merge-attrs {:class (tw theme-bg theme-base)} filtered-attrs)
      [:div.flex.items-center.justify-between
       [:div
        [:dt {:class theme-label} (:label attrs)]
-       [:dd {:class (if value-color
-                      (str "mt-1 text-3xl font-semibold tracking-tight " value-color)
+       [:dd {:class (if (:value colors)
+                      (str "mt-1 text-3xl font-semibold tracking-tight " (:value colors))
                       theme-value)}
         (:value attrs)]]
       (when icon
-        [:div {:class (tw "h-10 w-10 opacity-50" icon-color)}
+        [:div {:class (tw "h-10 w-10 opacity-50" (:icon colors "text-[#a0a0a0] dark:text-[#707070]"))}
          icon])]]))
 
 (defmethod c/resolve-alias ::button
   [_ attrs content]
   (let [size (or (:size attrs) :md)
         variant (or (:variant attrs) :primary)
-
-        ;; Get theme classes
         variant-classes (get-variant-classes :button variant)
         size-class (get-size-class :button size)
         base-class (get-theme-class :button :base)
-
-        ;; Build class using tw function
         btn-class (tw
                    base-class
                    size-class
@@ -425,8 +398,6 @@
                    (or (:text-class attrs) (:text variant-classes))
                    (or (:hover-class attrs) (:hover variant-classes))
                    (or (:focus-class attrs) (:focus variant-classes)))
-
-        ;; Prepare attributes
         base-attrs {:type (or (:type attrs) "button")
                     :class btn-class}
         filtered-attrs (dissoc attrs
@@ -437,45 +408,41 @@
 
     (into [:button merged-attrs] body)))
 
+(defn- form-control-classes
+  "Resolve themed classes common to form controls (input, select).
+   Returns {:class combined-string, :themed resolved-map}.
+   `extra-spec` merges into the default border/focus/bg/text spec.
+   `exclude-from-class` is a set of keys to resolve but not include in the class string."
+  ([theme-key attrs extra-spec]
+   (form-control-classes theme-key attrs extra-spec #{}))
+  ([theme-key attrs extra-spec exclude-from-class]
+   (let [size (or (:size attrs) :md)
+         spec (merge {:border-class [:border]
+                      :focus-class  [:focus]
+                      :bg-class     [:bg]
+                      :text-class   [:text]}
+                     extra-spec)
+         themed (resolve-theme-classes theme-key spec attrs)
+         class-vals (vals (apply dissoc themed exclude-from-class))
+         control-class (apply tw (get-theme-class theme-key :base)
+                                  (get-size-class theme-key size)
+                                  class-vals)]
+     {:class control-class :themed themed})))
+
 (defmethod c/resolve-alias ::input
   [_ attrs _content]
-  (let [input-type (or (:type attrs) "text")
-        size (or (:size attrs) :md)
-        placeholder (or (:placeholder attrs) "")
-        value (or (:value attrs) "")
-        name (or (:name attrs) "")
-
-        ;; Get theme classes
-        base-class (get-theme-class :input :base)
-        size-class (get-size-class :input size)
-        theme-border (or (:border-class attrs) (get-theme-class :input :border))
-        theme-focus (or (:focus-class attrs) (get-theme-class :input :focus))
-        theme-bg (or (:bg-class attrs) (get-theme-class :input :bg))
-        theme-text (or (:text-class attrs) (get-theme-class :input :text))
-        theme-placeholder (or (:placeholder-class attrs) (get-theme-class :input :placeholder))
-
-        ;; Build class using tw function
-        input-class (tw
-                     base-class
-                     size-class
-                     theme-text
-                     theme-border
-                     theme-placeholder
-                     theme-focus
-                     theme-bg)
-
-        ;; Prepare attributes
-        base-attrs {:type input-type
-                    :class input-class
-                    :placeholder placeholder
-                    :value value
-                    :name name}
+  (let [{:keys [class]} (form-control-classes :input attrs
+                          {:placeholder-class [:placeholder]})
+        base-attrs (cond-> {:type (or (:type attrs) "text")
+                            :class class}
+                     (:placeholder attrs) (assoc :placeholder (:placeholder attrs))
+                     (:value attrs)       (assoc :value (:value attrs))
+                     (:name attrs)        (assoc :name (:name attrs)))
         filtered-attrs (dissoc attrs
                                :size :type :placeholder :value :name
                                :on-change :border-class :focus-class
                                :bg-class :text-class :placeholder-class)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
-
     [:input merged-attrs]))
 
 (defmethod c/resolve-alias ::label
@@ -483,47 +450,37 @@
   (let [size (or (:size attrs) :md)
         required? (:required? attrs)
         for-id (:for attrs)
-
-        ;; Get theme classes
-        base-class (get-theme-class :label :base)
-        size-class (get-size-class :label size)
-        theme-text (or (:text-class attrs) (get-theme-class :label :text))
-        theme-required (or (:required-class attrs) (get-theme-class :label :required))
-
-        ;; Build class using tw function
-        label-class (tw base-class size-class theme-text)
-
-        ;; Prepare attributes
-        base-attrs {:class label-class}
-        base-attrs (if for-id (assoc base-attrs :for for-id) base-attrs)
+        themed (resolve-theme-classes :label
+                 {:text-class     [:text]
+                  :required-class [:required]}
+                 attrs)
+        label-class (tw (get-theme-class :label :base)
+                        (get-size-class :label size)
+                        (:text-class themed))
+        base-attrs (cond-> {:class label-class}
+                     for-id (assoc :for for-id))
         filtered-attrs (dissoc attrs :size :required? :for :text-class :required-class)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
-
     [:label merged-attrs
      content
      (when required?
-       [:span {:class theme-required} " *"])]))
+       [:span {:class (:required-class themed)} " *"])]))
+
+(def ^:private alert-icons
+  {:success [::icon#solid-check-circle
+             {:class "h-5 w-5 text-green-400 dark:text-green-500"}]
+   :warning [::icon#solid-exclamation-triangle
+             {:class "h-5 w-5 text-yellow-400 dark:text-yellow-500"}]
+   :error [::icon#solid-x-circle
+           {:class "h-5 w-5 text-red-400 dark:text-red-500"}]
+   :info [::icon#solid-information-circle
+          {:class "h-5 w-5 text-blue-400 dark:text-blue-500"}]})
 
 (defmethod c/resolve-alias ::alert
   [_ attrs content]
   (let [alert-type (or (:type attrs) :info)
-
-        ;; Get theme classes
         base-class (get-theme-class :alert :base)
         variant-classes (get-in *theme* [:alert :variants alert-type])
-
-        ;; Alert icons using the icon component
-        alert-icons
-        {:success [::icon#solid-check-circle
-                   {:class "h-5 w-5 text-green-400 dark:text-green-500"}]
-         :warning [::icon#solid-exclamation-triangle
-                   {:class "h-5 w-5 text-yellow-400 dark:text-yellow-500"}]
-         :error [::icon#solid-x-circle
-                 {:class "h-5 w-5 text-red-400 dark:text-red-500"}]
-         :info [::icon#solid-information-circle
-                {:class "h-5 w-5 text-blue-400 dark:text-blue-500"}]}
-
-        ;; Build class using tw function
         alert-class (tw
                      base-class
                      (or (:bg-class attrs) (:bg variant-classes))
@@ -556,7 +513,7 @@
   [_ attrs content]
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :navbar :bg))
         logo-url (or (:logo-url attrs) "/weave.svg")
-        title (or (:title attrs) nil)
+        title (:title attrs)
         base-attrs {:id "app-header"
                     :class (tw theme-bg
                                "sm:flex sm:justify-between sm:items-center sm:px-4 sm:py-3")
@@ -595,38 +552,22 @@
 
 (defmethod c/resolve-alias ::select
   [_ attrs _content]
-  (let [size (or (:size attrs) :md)
+  (let [{:keys [class themed]} (form-control-classes :select attrs
+                                 {:icon-class [:icon]}
+                                 #{:icon-class})
         placeholder (:placeholder attrs)
-        value (or (:selected attrs) "")
-        name (or (:name attrs) "")
-        id (or (:id attrs) name)
+        value (:selected attrs)
+        name-val (:name attrs)
+        id (or (:id attrs) name-val)
         options (or (:options attrs) [])
-
-        base-class (get-theme-class :select :base)
-        size-class (get-size-class :select size)
-        theme-border (or (:border-class attrs) (get-theme-class :select :border))
-        theme-focus (or (:focus-class attrs) (get-theme-class :select :focus))
-        theme-bg (or (:bg-class attrs) (get-theme-class :select :bg))
-        theme-text (or (:text-class attrs) (get-theme-class :select :text))
-        theme-icon (or (:icon-class attrs) (get-theme-class :select :icon))
-
-        select-class (tw
-                      base-class
-                      size-class
-                      theme-text
-                      theme-border
-                      theme-focus
-                      theme-bg)
-
-        base-attrs {:class select-class
-                    :name name
-                    :id id}
+        base-attrs (cond-> {:class class}
+                     name-val (assoc :name name-val)
+                     id       (assoc :id id))
         filtered-attrs (dissoc attrs
                                :size :placeholder :selected :name :id :options
                                :border-class :focus-class :bg-class :text-class
                                :icon-class)
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
-
     [:div.relative
      [:select merged-attrs
       (when (and placeholder (str/blank? value))
@@ -635,136 +576,140 @@
         [:option {:value (:value option)
                   :selected (= value (:value option))}
          (:label option)])]
-     [:div {:class theme-icon}
+     [:div {:class (:icon-class themed)}
       [::icon#solid-chevron-up-down
        {:class "h-5 w-5 text-[#a3a3a3]"}]]]))
 
 (defmethod c/resolve-alias ::a
   [_ attrs content]
-  (let [base-class (get-theme-class :link :base)
-        base-attrs {:class base-class}
-        merged-attrs (merge-attrs base-attrs attrs)]
-    [:a merged-attrs (first content)]))
+  [:a (build-themed-attrs :link {:base-class [:base]} attrs)
+   (first content)])
+
+(def ^:private sidebar-close-js
+  (clj->js
+   (let [sidebar (js/document.getElementById "sidebar")
+         backdrop (js/document.getElementById "sidebar-backdrop")
+         content (js/document.getElementById "sidebar-content")
+         toggle (js/document.getElementById "sidebar-toggle")]
+     (.add (.-classList sidebar) "-translate-x-full")
+     (.add (.-classList backdrop) "hidden")
+     (.remove (.-classList toggle) "hidden")
+     (when content (.add (.-classList content) "ml-0")))))
+
+(def ^:private sidebar-toggle-js
+  (clj->js
+   (let [sidebar (js/document.getElementById "sidebar")
+         backdrop (js/document.getElementById "sidebar-backdrop")
+         content (js/document.getElementById "sidebar-content")
+         toggle (js/document.getElementById "sidebar-toggle")]
+     (if (.contains (.-classList sidebar) "-translate-x-full")
+       (do
+         (.remove (.-classList sidebar) "-translate-x-full")
+         (.remove (.-classList backdrop) "hidden")
+         (.add (.-classList toggle) "hidden")
+         (when content (.remove (.-classList content) "ml-0")))
+       (do
+         (.add (.-classList sidebar) "-translate-x-full")
+         (.add (.-classList backdrop) "hidden")
+         (.remove (.-classList toggle) "hidden")
+         (when content (.add (.-classList content) "ml-0")))))))
 
 (defmethod c/resolve-alias ::sidebar
   [_ attrs content]
-  (let [theme-bg (or (:bg-class attrs) (get-theme-class :sidebar :bg))]
+  (let [theme-bg (or (:bg-class attrs) (get-theme-class :sidebar :bg))
+        theme-mobile-bg (or (get-theme-class :sidebar :mobile-bg) "bg-[#252525]")]
 
     [:div.flex.min-h-full
-     ;; Sidebar backdrop for mobile
      [:div#sidebar-backdrop.fixed.inset-0.bg-opacity-75.z-20.hidden.lg:hidden
-      {:class "bg-[#252525]"
-       :onclick (clj->js
-                 (let [sidebar (js/document.getElementById "sidebar")
-                       backdrop (js/document.getElementById "sidebar-backdrop")
-                       content (js/document.getElementById "sidebar-content")
-                       toggle (js/document.getElementById "sidebar-toggle")]
-                   (.add (.-classList sidebar) "-translate-x-full")
-                   (.add (.-classList backdrop) "hidden")
-                   (.remove (.-classList toggle) "hidden")
-                   ;; On mobile, add ml-0 to override the margin
-                   (when content (.add (.-classList content) "ml-0"))))}]
+      {:class theme-mobile-bg
+       :onclick sidebar-close-js}]
 
      [:aside#sidebar
       {:class (tw theme-bg
                   "fixed left-0 bottom-0 z-30 w-64"
                   "transform -translate-x-full lg:translate-x-0"
                   "transition-transform duration-300 ease-in-out")}
-
       [:nav
        {:class "flex-1 px-2 py-4 overflow-y-auto flex flex-col h-full"}
        content]]
 
-     ;; Toggle button for mobile
      [:div#sidebar-toggle.fixed.bottom-4.left-4.lg:hidden.z-30
       [:button.p-2.rounded-full.text-white.shadow-lg
-       {:class "bg-[#252525]"
-        :onclick (clj->js
-                  (let [sidebar (js/document.getElementById "sidebar")
-                        backdrop (js/document.getElementById "sidebar-backdrop")
-                        content (js/document.getElementById "sidebar-content")
-                        toggle (js/document.getElementById "sidebar-toggle")]
-                    (if (.contains (.-classList sidebar) "-translate-x-full")
-                      (do
-                        (.remove (.-classList sidebar) "-translate-x-full")
-                        (.remove (.-classList backdrop) "hidden")
-                        (.add (.-classList toggle) "hidden")
-                        ;; On mobile, remove the ml-0 override to show the margin
-                        (when content (.remove (.-classList content) "ml-0")))
-                      (do
-                        (.add (.-classList sidebar) "-translate-x-full")
-                        (.add (.-classList backdrop) "hidden")
-                        (.remove (.-classList toggle) "hidden")
-                        ;; On mobile, add ml-0 to override the margin
-                        (when content (.add (.-classList content) "ml-0"))))))}
+       {:class theme-mobile-bg
+        :onclick sidebar-toggle-js}
        [::icon#solid-bars-3 {:class "h-6 w-6"}]]]]))
 
 (defmethod c/resolve-alias ::sidebar-group
   [_ attrs content]
-  (if (contains? attrs :collapsed)
-    ;; Collapsible version when :collapsed attribute is present
-    (let [collapsed? (:collapsed attrs)
-          group-id (or (:id attrs) (str "sidebar-group-" (gensym)))]
-      [:div.mb-6
-       ;; Hidden checkbox that controls the state
+  (let [theme-group-text (or (get-theme-class :sidebar :group-text) "text-[#a3a3a3]")
+        collapsible? (contains? attrs :collapsed)
+        collapsed? (:collapsed attrs)
+        group-id (when collapsible?
+                   (or (:id attrs) (str "sidebar-group-" (gensym))))]
+    [:div.mb-6
+     (when collapsible?
        [:input {:type "checkbox"
                 :id group-id
                 :class "peer hidden"
-                :checked (not collapsed?)}]
+                :checked (not collapsed?)}])
 
-       (when-let [title (:title attrs)]
+     (when-let [title (:title attrs)]
+       (if collapsible?
          [:label.px-3.mb-2.text-xs.font-semibold.uppercase.cursor-pointer.flex.items-center.justify-between.select-none
-          {:class "text-[#a3a3a3]"
+          {:class theme-group-text
            :for group-id}
           title
-          ;; Chevron icon that rotates based on state
           [:svg.w-4.h-4.transition-transform.peer-checked:rotate-180
            {:fill "none" :stroke "currentColor" :viewBox "0 0 24 24"}
            [:path {:stroke-linecap "round" :stroke-linejoin "round" :stroke-width "2"
-                   :d "M19 9l-7 7-7-7"}]]])
+                   :d "M19 9l-7 7-7-7"}]]]
+         [:h3.px-3.mb-2.text-xs.font-semibold.uppercase
+          {:class theme-group-text}
+          title]))
 
-       ;; Content that shows/hides based on checkbox state
+     (if collapsible?
        [:ul.space-y-1.overflow-hidden.transition-all.duration-300.ease-in-out
         {:class (if collapsed?
                   "peer-checked:max-h-0 max-h-96"
                   "peer-checked:max-h-96 max-h-0")}
-        content]])
+        content]
+       [:ul.space-y-1
+        content])]))
 
-    ;; Static version when :collapsed attribute is not present (original behavior)
-    [:div.mb-6
-     (when-let [title (:title attrs)]
-       [:h3.px-3.mb-2.text-xs.font-semibold.uppercase
-        {:class "text-[#a3a3a3]"}
-        title])
-     [:ul.space-y-1
-      content]]))
+(defn- nav-item-classes
+  "Resolve themed classes and build item class for navigation components.
+   Returns {:themed resolved-map, :item-class combined-string, :active-signal? bool}."
+  [theme-key attrs extra-classes]
+  (let [themed (resolve-theme-classes theme-key
+                 {:text-class   [:text]
+                  :hover-class  [:hover]
+                  :active-class [:active]
+                  :radius-class [:radius]}
+                 attrs)
+        active (:active attrs false)
+        active-signal? (string? active)
+        base-classes (tw extra-classes (:radius-class themed))
+        item-class (if active-signal?
+                     (tw (:text-class themed) (:hover-class themed) base-classes)
+                     (tw (:text-class themed)
+                         (if active (:active-class themed) (:hover-class themed))
+                         base-classes))]
+    {:themed themed :item-class item-class :active-signal? active-signal?}))
 
 (defmethod c/resolve-alias ::sidebar-item
   [_ attrs content]
-  (let [theme-text (or (:text-class attrs) (get-theme-class :sidebar :text))
-        theme-hover (or (:hover-class attrs) (get-theme-class :sidebar :hover))
-        theme-active (or (:active-class attrs) (get-theme-class :sidebar :active))
-        active (get attrs :active false)
-        active-signal? (string? active)
-        icon (get attrs :icon nil)
-        handler (get attrs :handler nil)
-        href (get attrs :href nil)
-        ;; Base classes always applied
-        base-classes "flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer"
-        ;; When using signals, we need data-class for reactive styling
-        ;; When not using signals, we apply classes statically
-        item-class (if active-signal?
-                     ;; Signal-based: apply base + text + hover, active handled by data-class
-                     (tw theme-text theme-hover base-classes)
-                     ;; Static: apply everything including active state
-                     (tw theme-text (if active theme-active theme-hover) base-classes))
+  (let [{:keys [themed item-class active-signal?]}
+        (nav-item-classes :sidebar attrs
+          "flex items-center px-3 py-2 text-sm font-medium cursor-pointer")
+        active (:active attrs false)
+        icon (:icon attrs)
+        handler (:handler attrs)
+        href (:href attrs)
         anchor-attrs (cond-> {:class item-class}
-                       ;; Add reactive active class when active is a signal expression
-                       active-signal? (assoc :data-class (str "{ '" theme-active "': " active " }"))
+                       active-signal? (assoc :data-class (str "{ '" (:active-class themed) "': " active " }"))
                        (and handler href) (assoc :data-on-click__prevent handler)
                        (and handler (not href)) (assoc :data-on-click handler)
                        href (assoc :href href))]
-
     [:li
      [:a anchor-attrs
       (when icon
@@ -783,35 +728,42 @@
 
 (defmethod c/resolve-alias ::tabs
   [_ attrs content]
-  [:div attrs
-   ;; Mobile vertical tabs (hidden on larger screens)
-   [:div.sm:hidden
-    [:nav {:aria-label "Tabs"
-           :class "flex flex-col space-y-1"}
-     content]]
+  (let [theme-border (get-theme-class :tab :border)]
+    [:div attrs
+     ;; Mobile vertical tabs (hidden on larger screens)
+     [:div.sm:hidden
+      [:nav {:aria-label "Tabs"
+             :class "flex flex-col space-y-1"}
+       content]]
 
-   ;; Desktop horizontal tabs (hidden on mobile)
-   [:div.hidden.sm:block
-    [:div.border-b {:class "border-[#e0e0e0]"}
-     [:nav {:aria-label "Tabs"
-            :class "-mb-px flex space-x-8"}
-      content]]]])
+     ;; Desktop horizontal tabs (hidden on mobile)
+     [:div.hidden.sm:block
+      [:div.border-b {:class theme-border}
+       [:nav {:aria-label "Tabs"
+              :class "-mb-px flex space-x-8"}
+        content]]]]))
 
 (defmethod c/resolve-alias ::tab-item
   [_ attrs content]
-  (let [active? (get attrs :active false)
-        icon (get attrs :icon nil)
-        handler (get attrs :handler nil)
+  (let [active? (:active attrs false)
+        icon (:icon attrs)
+        handler (:handler attrs)
         label (or content (:label attrs))
         base-classes "group inline-flex items-center text-sm font-medium"
         desktop-classes "sm:border-b-2 sm:border-l-0 sm:px-1 sm:py-4"
         mobile-classes "border-l-2 border-b-0 px-4 py-3 w-full sm:w-auto"
+        theme-active-border (get-theme-class :tab :active :border)
+        theme-active-text (get-theme-class :tab :active :text)
+        theme-text (get-theme-class :tab :text)
+        theme-hover (get-theme-class :tab :hover)
+        theme-icon-active (get-theme-class :tab :icon :active)
+        theme-icon-inactive (get-theme-class :tab :icon :inactive)
         active-classes (if active?
-                         "border-indigo-500 text-indigo-600"
-                         "border-transparent text-[#737373] hover:border-[#d0d0d0] hover:text-[#525252]")
+                         (tw theme-active-border theme-active-text)
+                         (tw "border-transparent" theme-text theme-hover))
         icon-classes (if active?
-                       "text-indigo-500"
-                       "text-[#a3a3a3] group-hover:text-[#737373]")]
+                       theme-icon-active
+                       theme-icon-inactive)]
     [:a {:class (tw base-classes desktop-classes mobile-classes active-classes "cursor-pointer")
          :aria-current (when active? "page")
          :data-on-click handler}
@@ -823,42 +775,39 @@
 
 (defmethod c/resolve-alias ::navbar-item
   [_ attrs content]
-  (let [theme-text (or (:text-class attrs) (get-theme-class :navbar :text))
-        theme-hover (or (:hover-class attrs) (get-theme-class :navbar :hover))
-        active? (get attrs :active false)
-        theme-active (or (:active-class attrs) (get-theme-class :navbar :active))
-        icon (get attrs :icon nil)
-        handler (get attrs :handler nil)
-        item-class (tw
-                    theme-text
-                    (if active? theme-active theme-hover)
-                    "rounded-md px-3 py-2 text-sm font-medium cursor-pointer block mb-1 sm:mb-0 sm:inline-block")]
-
+  (let [{:keys [item-class]} (nav-item-classes :navbar attrs
+                               "px-3 py-2 text-sm font-medium cursor-pointer block mb-1 sm:mb-0 sm:inline-block")]
     [:a {:class item-class
-         :data-on-click handler}
-     (when icon
+         :data-on-click (:handler attrs)}
+     (when-let [icon (:icon attrs)]
        [::icon {:id icon :class "h-5 w-5 mr-2 inline-block"}])
      (or content (:label attrs))]))
 
 (defmethod c/resolve-alias ::sign-in
   [_ attrs content]
-  (let [logo-url (or (:logo-url attrs) "/weave.svg")
-        logo-alt (or (:logo-alt attrs) "Your Company")
-        title (or (:title attrs) "Sign in to your account")
-        username-label (or (:username-label attrs) "Email")
-        username-placeholder (or (:username-placeholder attrs) "Enter your email")
-        password-label (or (:password-label attrs) "Password")
-        password-placeholder (or (:password-placeholder attrs) "Enter your password")
-        submit-text (or (:submit-text attrs) "Sign In")
-        forgot-password-text (or (:forgot-password-text attrs) "Forgot your password?")
-        forgot-password-url (or (:forgot-password-url attrs) "/#/forgot-password")
-        register-text (or (:register-text attrs) "Don't have an account? Sign up")
-        register-url (or (:register-url attrs) "/#/register")
-        error-message (or (:error-message attrs) "Invalid username or password.")
-        error-signal (or (:error-signal attrs) "$_error")
-        on-submit (or (:on-submit attrs) (core/handler []))
+  (let [{:keys [logo-url logo-alt title
+                username-label username-placeholder
+                password-label password-placeholder
+                submit-text forgot-password-text forgot-password-url
+                register-text register-url
+                error-message error-signal on-submit]
+         :or {logo-url "/weave.svg"
+              logo-alt "Your Company"
+              title "Sign in to your account"
+              username-label "Email"
+              username-placeholder "Enter your email"
+              password-label "Password"
+              password-placeholder "Enter your password"
+              submit-text "Sign In"
+              forgot-password-text "Forgot your password?"
+              forgot-password-url "/#/forgot-password"
+              register-text "Don't have an account? Sign up"
+              register-url "/#/register"
+              error-message "Invalid username or password."
+              error-signal "$_error"}}
+        attrs
+        on-submit (or on-submit (core/handler []))
 
-        ;; Container classes
         container-classes (get-theme-class :view :bg)
         card-container-classes "mx-auto w-full sm:max-w-lg"
         heading-classes "mt-10 text-center text-2xl/9 font-bold tracking-tight text-[#171717] dark:text-[#f5f5f5]"
@@ -866,8 +815,6 @@
         form-classes "space-y-6"
         footer-text-classes "mt-10 text-center text-sm/6 text-[#737373] dark:text-[#a3a3a3]"
         link-classes "font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer"
-
-        ;; Prepare base attributes
         base-attrs {:class (tw "flex min-h-full flex-col w-full md:w-96 justify-center px-6 py-6 lg:px-8" container-classes)}
         merged-attrs (merge-attrs
                       base-attrs (dissoc attrs
@@ -970,54 +917,51 @@
 (defmethod c/resolve-alias ::table
   [_ attrs _content]
   (let [{:keys [id columns rows class class-table class-header class-row]} attrs
-
-        ;; Get theme classes
-        container-class (or (:container-class attrs) (get-theme-class :table :container))
-        table-class (merge-classes (or (:base-class attrs) (get-theme-class :table :base)) (or class-table class))
-        header-bg (or (:header-bg-class attrs) (get-theme-class :table :header :bg))
-        header-text (or (:header-text-class attrs) (get-theme-class :table :header :text))
-        header-padding (or (:header-padding-class attrs) (get-theme-class :table :header :padding))
-        body-bg (or (:body-bg-class attrs) (get-theme-class :table :body :bg))
-        body-divider (or (:body-divider-class attrs) (get-theme-class :table :body :divider))
-        row-hover (or (:row-hover-class attrs) (get-theme-class :table :row :hover))
-        row-even (or (:row-even-class attrs) (get-theme-class :table :row :even))
-        row-odd (or (:row-odd-class attrs) (get-theme-class :table :row :odd))
-        cell-text (or (:cell-text-class attrs) (get-theme-class :table :cell :text))
-        cell-padding (or (:cell-padding-class attrs) (get-theme-class :table :cell :padding))
-
-        filtered-attrs (dissoc attrs :container-class :base-class :header-bg-class
+        themed (resolve-theme-classes :table
+                 {:container-class      [:container]
+                  :base-class           [:base]
+                  :header-bg-class      [:header :bg]
+                  :header-text-class    [:header :text]
+                  :header-padding-class [:header :padding]
+                  :body-bg-class        [:body :bg]
+                  :body-divider-class   [:body :divider]
+                  :row-hover-class      [:row :hover]
+                  :row-even-class       [:row :even]
+                  :row-odd-class        [:row :odd]
+                  :cell-text-class      [:cell :text]
+                  :cell-padding-class   [:cell :padding]}
+                 attrs)
+        table-class (merge-classes (:base-class themed) (or class-table class))
+        filtered-attrs (dissoc attrs
+                               :container-class :base-class :header-bg-class
                                :header-text-class :header-padding-class :body-bg-class
                                :body-divider-class :row-hover-class :row-even-class
                                :row-odd-class :cell-text-class :cell-padding-class
                                :class :class-table :class-header :class-row)]
-
-    [:div {:id id :class container-class}
+    [:div {:id id :class (:container-class themed)}
      [:table (merge-attrs {:class table-class} filtered-attrs)
-      ;; Header
-      [:thead {:class (tw header-bg class-header)}
+      [:thead {:class (tw (:header-bg-class themed) class-header)}
        [:tr
         (for [column columns]
           [:th
            {:key (:name column)
-            :class (tw header-padding header-text
+            :class (tw (:header-padding-class themed) (:header-text-class themed)
                        (case (:align column)
                          :right "text-right"
                          :left "text-left"
                          "text-left")
                        (:class column))}
            (:label column)])]]
-
-      ;; Body
-      [:tbody {:class (tw body-divider body-bg)}
+      [:tbody {:class (tw (:body-divider-class themed) (:body-bg-class themed))}
        (for [[index row] (map-indexed vector rows)]
          [:tr
-          {:class (tw row-hover
-                      (if (even? index) row-even row-odd)
+          {:class (tw (:row-hover-class themed)
+                      (if (even? index) (:row-even-class themed) (:row-odd-class themed))
                       class-row)}
           (for [column columns]
             [:td
              {:key (:name column)
-              :class (tw cell-padding cell-text
+              :class (tw (:cell-padding-class themed) (:cell-text-class themed)
                          (case (:align column)
                            :right "text-right"
                            :left "text-left"
@@ -1027,24 +971,17 @@
 
 (defmethod c/resolve-alias ::dropdown
   [_ attrs content]
-  (let [{:keys [label icon variant size use-fixed position min-width z-index]} attrs
-        ;; Defaults
-        variant (or variant :secondary)
-        size (or size :s)
-        use-fixed (or use-fixed false)
-        position (or position :right)
-        min-width (or min-width "min-w-[200px]")
-        z-index (or z-index "z-[9999]")
-        ;; Position and menu classes
+  (let [{:keys [label icon variant size use-fixed position min-width z-index]
+         :or {variant :secondary, size :s, use-fixed false
+              position :right, min-width "min-w-[200px]", z-index "z-[9999]"}}
+        attrs
         position-class (case position :left "left-0" :right "right-0" "right-0")
         positioning-type (if use-fixed "fixed" "absolute")
         menu-classes (tw positioning-type position-class "hidden"
                          min-width z-index "dropdown-menu")
-        ;; Get theme classes
         variant-classes (get-variant-classes :button variant)
         size-class (get-size-class :button size)
         base-class (get-theme-class :button :base)
-        ;; Build button class
         btn-class (tw base-class
                       size-class
                       (:bg variant-classes)
@@ -1052,15 +989,12 @@
                       (:hover variant-classes)
                       (:focus variant-classes)
                       "gap-x-1.5 dropdown-trigger")
-        ;; Menu theme classes
         menu-bg (get-theme-class :dropdown :menu :bg)
         menu-border (get-theme-class :dropdown :menu :border)
         menu-shadow (get-theme-class :dropdown :menu :shadow)
         menu-divider (get-theme-class :dropdown :menu :divider)
-        ;; Filter component-specific attrs
         container-attrs (dissoc attrs :label :icon :variant :size :use-fixed
                                 :position :min-width :z-index)
-        ;; Build button attributes
         button-attrs (cond-> {:type "button"
                               :class btn-class
                               :onclick "toggleDropdown(this)"}
@@ -1083,22 +1017,17 @@
 (defmethod c/resolve-alias ::dropdown-item
   [_ attrs content]
   (let [variant (or (:variant attrs) :default)
-        ;; Get theme classes
         item-base (get-theme-class :dropdown :item :base)
         variant-classes (get-in *theme* [:dropdown :item :variants variant])
-        ;; Build item class
         item-class (tw item-base
                        (:text variant-classes)
                        (:hover variant-classes))
-        ;; Get the child element
+        ;; Destructure child element to merge item classes into it
         child (first content)
-        ;; Merge classes with child's existing classes
         [tag child-attrs & child-content] (if (vector? child) child [:div {} child])
         child-attrs (if (map? child-attrs) child-attrs {})
         child-content (if (map? child-attrs) child-content (cons child-attrs child-content))
-        ;; Merge item class with child's class
         merged-class (merge-classes item-class (:class child-attrs ""))
-        ;; Filter component-specific attrs, merge with child attrs
         filtered-attrs (dissoc attrs :variant)
         final-attrs (merge filtered-attrs child-attrs {:class merged-class})]
     [:li (into [tag final-attrs] child-content)]))
@@ -1135,6 +1064,23 @@
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:time merged-attrs formatted]))
 
+(def ^:private default-badge-colors
+  "Default badge colour classes keyed by [color variant]."
+  {"green"  {:outlined "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 ring-green-600/20 dark:ring-green-500/30"
+             :pill     "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"}
+   "red"    {:outlined "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 ring-red-600/20 dark:ring-red-500/30"
+             :pill     "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"}
+   "blue"   {:outlined "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 ring-blue-600/20 dark:ring-blue-500/30"
+             :pill     "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400"}
+   "yellow" {:outlined "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 ring-yellow-600/20 dark:ring-yellow-500/30"
+             :pill     "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"}
+   "purple" {:outlined "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 ring-purple-600/20 dark:ring-purple-500/30"
+             :pill     "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400"}
+   "gray"   {:outlined "bg-[#f9f9f9] dark:bg-[#252525] text-[#525252] dark:text-[#a3a3a3] ring-[#525252]/20 dark:ring-[#737373]/30"
+             :pill     "bg-[#f5f5f5] dark:bg-[#252525] text-[#171717] dark:text-[#d0d0d0]"}
+   "indigo" {:outlined "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 ring-indigo-600/20 dark:ring-indigo-500/30"
+             :pill     "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400"}})
+
 (defmethod c/resolve-alias ::badge
   [_ attrs content]
   (let [color (or (:color attrs) "gray")
@@ -1147,26 +1093,12 @@
         shape-class (case variant
                       :pill "rounded-full"
                       :outlined "rounded-md ring-1 ring-inset")
+        theme-colors (get-in *theme* [:badge :colors (keyword color)])
+        fallback-colors (get default-badge-colors color (get default-badge-colors "gray"))
+        colors (or theme-colors fallback-colors)
         color-class (if (= variant :outlined)
-                      (case color
-                        "green" "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 ring-green-600/20 dark:ring-green-500/30"
-                        "red" "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 ring-red-600/20 dark:ring-red-500/30"
-                        "blue" "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 ring-blue-600/20 dark:ring-blue-500/30"
-                        "yellow" "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 ring-yellow-600/20 dark:ring-yellow-500/30"
-                        "purple" "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 ring-purple-600/20 dark:ring-purple-500/30"
-                        "gray" "bg-[#f9f9f9] dark:bg-[#252525] text-[#525252] dark:text-[#a3a3a3] ring-[#525252]/20 dark:ring-[#737373]/30"
-                        "indigo" "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 ring-indigo-600/20 dark:ring-indigo-500/30"
-                        "bg-[#f9f9f9] dark:bg-[#252525] text-[#525252] dark:text-[#a3a3a3] ring-[#525252]/20 dark:ring-[#737373]/30")
-                      ;; pill variant
-                      (case color
-                        "green" "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
-                        "red" "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
-                        "blue" "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400"
-                        "yellow" "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
-                        "purple" "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400"
-                        "gray" "bg-[#f5f5f5] dark:bg-[#252525] text-[#171717] dark:text-[#d0d0d0]"
-                        "indigo" "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400"
-                        "bg-[#f5f5f5] dark:bg-[#252525] text-[#171717] dark:text-[#d0d0d0]"))
+                      (or (:outlined colors) (:pill colors))
+                      (:pill colors))
         full-class (tw base-class size-class shape-class color-class (:class attrs))
         title (or (:title attrs)
                   (when (every? string? content)
