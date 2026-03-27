@@ -1,0 +1,1059 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Weave is a Clojure web framework that provides a simple and powerful way to build web applications.">
+      
+      
+      
+        <link rel="canonical" href="https://github.com/nakkaya/weave/reference/90_running/">
+      
+      
+        <link rel="prev" href="../70_resources/">
+      
+      
+        <link rel="next" href="../91_testing/">
+      
+      
+      <link rel="icon" href="https://raw.githubusercontent.com/nakkaya/weave/refs/heads/master/resources/public/weave.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.48">
+    
+    
+      
+        <title>Running Applications - Weave</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#running-applications" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Weave" class="md-header__button md-logo" aria-label="Weave" data-md-component="logo">
+      
+  <img src="https://raw.githubusercontent.com/nakkaya/weave/refs/heads/master/resources/public/weave.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Weave
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Running Applications
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1M8 13h8v-2H8zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4a5 5 0 0 0 5-5 5 5 0 0 0-5-5"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5M7 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Weave" class="md-nav__button md-logo" aria-label="Weave" data-md-component="logo">
+      
+  <img src="https://raw.githubusercontent.com/nakkaya/weave/refs/heads/master/resources/public/weave.svg" alt="logo">
+
+    </a>
+    Weave
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../create_a_project/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create a Project
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10_handlers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Handlers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20_push_broadcast/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Push and Broadcast
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../25_views/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Views
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../30_session/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Session Management
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../40_javascript/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    JavaScript
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../45_custom_routes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Custom Routes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../50_pwa/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Progressive Web Apps (PWA)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../60_components/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Components
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../70_resources/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bundling Resources
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Running Applications
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Running Applications
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-signature" class="md-nav__link">
+    <span class="md-ellipsis">
+      Function Signature
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#base-path-base-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      Base Path (:base-path)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http-server-options-http-kit" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTTP Server Options (:http-kit)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nrepl-server-options-nrepl" class="md-nav__link">
+    <span class="md-ellipsis">
+      nREPL Server Options (:nrepl)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#server-sent-events-options-sse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Server-Sent Events Options (:sse)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Page Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-routes-and-middleware" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Routes and Middleware
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#progressive-web-app-pwa-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Progressive Web App (PWA) Configuration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Complete Example
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#health-check-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      Health Check Endpoint
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../91_testing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Testing Applications
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-signature" class="md-nav__link">
+    <span class="md-ellipsis">
+      Function Signature
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#base-path-base-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      Base Path (:base-path)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http-server-options-http-kit" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTTP Server Options (:http-kit)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nrepl-server-options-nrepl" class="md-nav__link">
+    <span class="md-ellipsis">
+      nREPL Server Options (:nrepl)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#server-sent-events-options-sse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Server-Sent Events Options (:sse)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Page Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-routes-and-middleware" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Routes and Middleware
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#progressive-web-app-pwa-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Progressive Web App (PWA) Configuration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Complete Example
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#health-check-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      Health Check Endpoint
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="running-applications">Running Applications</h1>
+<p>The <code>weave.core/run</code> function is the main entry point for starting a
+Weave application. It creates and starts an integrated web
+server with all the necessary components for your application.</p>
+<h2 id="basic-usage">Basic Usage</h2>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">(</span><span class="kd">ns </span><span class="nv">my-app.core</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="p">(</span><span class="ss">:require</span><span class="w"> </span><span class="p">[</span><span class="nv">weave.core</span><span class="w"> </span><span class="ss">:as</span><span class="w"> </span><span class="nv">weave</span><span class="p">]))</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">(</span><span class="kd">defn </span><span class="nv">my-view</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="p">[</span><span class="ss">:div</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">   </span><span class="p">[</span><span class="ss">:h1</span><span class="w"> </span><span class="s">&quot;Hello, Weave!&quot;</span><span class="p">]</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">   </span><span class="p">[</span><span class="ss">:p</span><span class="w"> </span><span class="s">&quot;Welcome to my application&quot;</span><span class="p">]])</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">(</span><span class="kd">defn </span><span class="nv">-main</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="p">(</span><span class="nf">weave/run</span><span class="w"> </span><span class="nv">my-view</span><span class="w"> </span><span class="p">{}))</span>
+</span></code></pre></div>
+<h2 id="function-signature">Function Signature</h2>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">(</span><span class="nf">run</span><span class="w"> </span><span class="nv">view</span><span class="w"> </span><span class="nv">options</span><span class="p">)</span>
+</span></code></pre></div>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>view</code> - A function that returns the Hiccup view to render</li>
+<li><code>options</code> - A map of server configuration options</li>
+</ul>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>An integrant system that can be halted with <code>(integrant.core/halt! system)</code></li>
+</ul>
+<h2 id="configuration-options">Configuration Options</h2>
+<h3 id="base-path-base-path">Base Path (<code>:base-path</code>)</h3>
+<p>By default, Weave serves the application shell from the root path (<code>/</code>).
+Use <code>:base-path</code> to serve the app from a subfolder.</p>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">(</span><span class="nf">weave/run</span><span class="w"> </span><span class="nv">my-view</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="p">{</span><span class="ss">:base-path</span><span class="w"> </span><span class="s">&quot;/app&quot;</span><span class="p">})</span>
+</span></code></pre></div>
+<p>With this configuration:</p>
+<ul>
+<li><code>/</code> - Returns 404 (or can be handled by a custom handler or static resource)</li>
+<li><code>/app</code> - Serves the Weave application</li>
+<li><code>/app/#/dashboard</code> - Example client-side route within the Weave app</li>
+</ul>
+<p>Note: Only the app route is affected by <code>:base-path</code>. Static resources,
+<code>/app-loader</code>, <code>/h/*</code> handlers, <code>/health</code>, and other routes remain at root.</p>
+<p><strong>Example with landing page:</strong></p>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">(</span><span class="nf">require</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="nv">compojure.core</span><span class="w"> </span><span class="ss">:refer</span><span class="w"> </span><span class="p">[</span><span class="nv">GET</span><span class="p">]])</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="p">(</span><span class="nf">weave/run</span><span class="w"> </span><span class="nv">my-view</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="p">{</span><span class="ss">:base-path</span><span class="w"> </span><span class="s">&quot;/app&quot;</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">   </span><span class="ss">:handlers</span><span class="w"> </span><span class="p">[(</span><span class="nf">GET</span><span class="w"> </span><span class="s">&quot;/&quot;</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">               </span><span class="p">{</span><span class="ss">:status</span><span class="w"> </span><span class="mi">200</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">                </span><span class="ss">:headers</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;Content-Type&quot;</span><span class="w"> </span><span class="s">&quot;text/html&quot;</span><span class="p">}</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">                </span><span class="ss">:body</span><span class="w"> </span><span class="s">&quot;&lt;html&gt;&lt;body&gt;&lt;a href=&#39;/app&#39;&gt;Launch App&lt;/a&gt;&lt;/body&gt;&lt;/html&gt;&quot;</span><span class="p">})]})</span>
+</span></code></pre></div>
+<h3 id="http-server-options-http-kit">HTTP Server Options (<code>:http-kit</code>)</h3>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">(</span><span class="nf">weave/run</span><span class="w"> </span><span class="nv">my-view</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="p">{</span><span class="ss">:http-kit</span><span class="w"> </span><span class="p">{</span><span class="ss">:bind</span><span class="w"> </span><span class="s">&quot;127.0.0.1&quot;</span><span class="w">  </span><span class="c1">; IP address to bind to (default: &quot;0.0.0.0&quot;)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">              </span><span class="ss">:port</span><span class="w"> </span><span class="mi">3000</span><span class="p">}})</span><span class="w">      </span><span class="c1">; HTTP server port (default: 8080)</span>
+</span></code></pre></div>
+<h3 id="nrepl-server-options-nrepl">nREPL Server Options (<code>:nrepl</code>)</h3>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">(</span><span class="nf">weave/run</span><span class="w"> </span><span class="nv">my-view</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="p">{</span><span class="ss">:nrepl</span><span class="w"> </span><span class="p">{</span><span class="ss">:bind</span><span class="w"> </span><span class="s">&quot;127.0.0.1&quot;</span><span class="w">     </span><span class="c1">; IP address to bind to (default: &quot;0.0.0.0&quot;)</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">           </span><span class="ss">:port</span><span class="w"> </span><span class="mi">7888</span><span class="p">}})</span><span class="w">         </span><span class="c1">; nREPL server port (default: 8888)</span>
+</span></code></pre></div>
+<h3 id="server-sent-events-options-sse">Server-Sent Events Options (<code>:sse</code>)</h3>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">(</span><span class="nf">weave/run</span><span class="w"> </span><span class="nv">my-view</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="p">{</span><span class="ss">:sse</span><span class="w"> </span><span class="p">{</span><span class="ss">:enabled</span><span class="w"> </span><span class="nv">true</span><span class="w">          </span><span class="c1">; Whether to enable SSE (default: true)</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">         </span><span class="ss">:keep-alive</span><span class="w"> </span><span class="nv">false</span><span class="p">}})</span><span class="w">   </span><span class="c1">; Keep SSE connections alive when tab is hidden (default: false)</span>
+</span></code></pre></div>
+<h3 id="page-configuration">Page Configuration</h3>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">(</span><span class="nf">weave/run</span><span class="w"> </span><span class="nv">my-view</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="p">{</span><span class="ss">:title</span><span class="w"> </span><span class="s">&quot;My Application&quot;</span><span class="w">                             </span><span class="c1">; Page title</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">   </span><span class="ss">:head</span><span class="w"> </span><span class="p">[</span><span class="ss">:meta</span><span class="w"> </span><span class="p">{</span><span class="ss">:name</span><span class="w"> </span><span class="s">&quot;description&quot;</span><span class="w"> </span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">                 </span><span class="ss">:content</span><span class="w"> </span><span class="s">&quot;My app description&quot;</span><span class="p">}]</span><span class="w">       </span><span class="c1">; Additional HTML for head section</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">   </span><span class="ss">:view-port</span><span class="w"> </span><span class="s">&quot;width=device-width, initial-scale=1&quot;</span><span class="p">})</span><span class="w">  </span><span class="c1">; Viewport meta tag</span>
+</span></code></pre></div>
+<h3 id="security-options">Security Options</h3>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">(</span><span class="nf">weave/run</span><span class="w"> </span><span class="nv">my-view</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="p">{</span><span class="ss">:csrf-secret</span><span class="w"> </span><span class="s">&quot;my-secret-key&quot;</span><span class="w">        </span><span class="c1">; Secret for CSRF token generation</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">   </span><span class="ss">:jwt-secret</span><span class="w"> </span><span class="s">&quot;my-jwt-secret&quot;</span><span class="w">         </span><span class="c1">; Secret for JWT token generation/validation</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">   </span><span class="ss">:handler-options</span><span class="w"> </span><span class="p">{</span><span class="ss">:auth-required?</span><span class="w"> </span><span class="nv">true</span><span class="p">}})</span><span class="w"> </span><span class="c1">; Require authentication for all handlers by default</span>
+</span></code></pre></div>
+<h3 id="custom-routes-and-middleware">Custom Routes and Middleware</h3>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">(</span><span class="nf">require</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="nv">compojure.core</span><span class="w"> </span><span class="ss">:refer</span><span class="w"> </span><span class="p">[</span><span class="nv">GET</span><span class="w"> </span><span class="nv">POST</span><span class="p">]])</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="p">(</span><span class="nf">weave/run</span><span class="w"> </span><span class="nv">my-view</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="p">{</span><span class="ss">:handlers</span><span class="w"> </span><span class="p">[(</span><span class="nf">GET</span><span class="w"> </span><span class="s">&quot;/api/status&quot;</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="p">{</span><span class="ss">:status</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="ss">:body</span><span class="w"> </span><span class="s">&quot;OK&quot;</span><span class="p">})</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">              </span><span class="p">(</span><span class="nf">POST</span><span class="w"> </span><span class="s">&quot;/api/data&quot;</span><span class="w"> </span><span class="nv">req</span><span class="w"> </span><span class="p">(</span><span class="nf">handle-data</span><span class="w"> </span><span class="nv">req</span><span class="p">))]</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">   </span><span class="ss">:middleware</span><span class="w"> </span><span class="p">[</span><span class="nv">my-logging-middleware</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">                </span><span class="nv">my-cors-middleware</span><span class="p">]})</span>
+</span></code></pre></div>
+<h3 id="progressive-web-app-pwa-configuration">Progressive Web App (PWA) Configuration</h3>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">(</span><span class="nf">weave/run</span><span class="w"> </span><span class="nv">my-view</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="p">{</span><span class="ss">:icon</span><span class="w"> </span><span class="s">&quot;icons/app-icon.png&quot;</span><span class="w">          </span><span class="c1">; Path to icon file in classpath (PNG format)</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">   </span><span class="ss">:pwa</span><span class="w"> </span><span class="p">{</span><span class="ss">:name</span><span class="w"> </span><span class="s">&quot;My Application&quot;</span><span class="w">        </span><span class="c1">; Application name (defaults to :title)</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">         </span><span class="ss">:short-name</span><span class="w"> </span><span class="s">&quot;MyApp&quot;</span><span class="w">           </span><span class="c1">; Application shortname (defaults to :name)</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">         </span><span class="ss">:description</span><span class="w"> </span><span class="s">&quot;A great app&quot;</span><span class="w">    </span><span class="c1">; Application description</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">         </span><span class="ss">:display</span><span class="w"> </span><span class="s">&quot;standalone&quot;</span><span class="w">         </span><span class="c1">; Display mode (default: &quot;standalone&quot;)</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">         </span><span class="ss">:background-color</span><span class="w"> </span><span class="s">&quot;#f2f2f2&quot;</span><span class="w">   </span><span class="c1">; Background color (default: &quot;#f2f2f2&quot;)</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">         </span><span class="ss">:theme-color</span><span class="w"> </span><span class="s">&quot;#ffffff&quot;</span><span class="w">        </span><span class="c1">; Theme color (default: &quot;#ffffff&quot;)</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">         </span><span class="ss">:start-url</span><span class="w"> </span><span class="s">&quot;/&quot;</span><span class="p">}})</span><span class="w">             </span><span class="c1">; Start URL when launched (default: &quot;/&quot;)</span>
+</span></code></pre></div>
+<h2 id="complete-example">Complete Example</h2>
+<div class="language-clojure highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">(</span><span class="kd">ns </span><span class="nv">my-app.core</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="p">(</span><span class="ss">:require</span><span class="w"> </span><span class="p">[</span><span class="nv">weave.core</span><span class="w"> </span><span class="ss">:as</span><span class="w"> </span><span class="nv">weave</span><span class="p">]</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">            </span><span class="p">[</span><span class="nv">compojure.core</span><span class="w"> </span><span class="ss">:refer</span><span class="w"> </span><span class="p">[</span><span class="nv">GET</span><span class="p">]]</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">            </span><span class="p">[</span><span class="nv">integrant.core</span><span class="w"> </span><span class="ss">:as</span><span class="w"> </span><span class="nv">ig</span><span class="p">]))</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="p">(</span><span class="kd">defn </span><span class="nv">my-view</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="p">[</span><span class="ss">:div</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">   </span><span class="p">[</span><span class="ss">:h1</span><span class="w"> </span><span class="s">&quot;My Weave Application&quot;</span><span class="p">]</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">   </span><span class="p">[</span><span class="ss">:button</span><span class="w"> </span><span class="p">{</span><span class="ss">:data-on-click</span><span class="w"> </span><span class="p">(</span><span class="nf">weave/handler</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">                              </span><span class="p">(</span><span class="nf">weave/push-html!</span><span class="w"> </span><span class="s">&quot;body&quot;</span><span class="w"> </span><span class="p">[</span><span class="ss">:p</span><span class="w"> </span><span class="s">&quot;Button clicked!&quot;</span><span class="p">]))}</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="s">&quot;Click me&quot;</span><span class="p">]])</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="p">(</span><span class="k">def </span><span class="nv">app</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">  </span><span class="p">(</span><span class="nf">weave/run</span><span class="w"> </span><span class="nv">my-view</span>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">    </span><span class="p">{</span><span class="ss">:title</span><span class="w"> </span><span class="s">&quot;My App&quot;</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">     </span><span class="ss">:http-kit</span><span class="w"> </span><span class="p">{</span><span class="ss">:port</span><span class="w"> </span><span class="mi">3000</span><span class="p">}</span>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="w">     </span><span class="ss">:nrepl</span><span class="w"> </span><span class="p">{</span><span class="ss">:port</span><span class="w"> </span><span class="mi">7888</span><span class="p">}</span>
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="w">     </span><span class="ss">:sse</span><span class="w"> </span><span class="p">{</span><span class="ss">:enabled</span><span class="w"> </span><span class="nv">true</span>
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="w">           </span><span class="ss">:keep-alive</span><span class="w"> </span><span class="nv">true</span><span class="p">}</span>
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="w">     </span><span class="ss">:handlers</span><span class="w"> </span><span class="p">[(</span><span class="nf">GET</span><span class="w"> </span><span class="s">&quot;/healthz&quot;</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="p">{</span><span class="ss">:status</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="ss">:body</span><span class="w"> </span><span class="s">&quot;healthy&quot;</span><span class="p">})]</span>
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="w">     </span><span class="ss">:icon</span><span class="w"> </span><span class="s">&quot;icons/app.png&quot;</span>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="w">     </span><span class="ss">:pwa</span><span class="w"> </span><span class="p">{</span><span class="ss">:name</span><span class="w"> </span><span class="s">&quot;My Application&quot;</span>
+</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="w">           </span><span class="ss">:description</span><span class="w"> </span><span class="s">&quot;A sample Weave application&quot;</span><span class="p">}}))</span>
+</span><span id="__span-11-24"><a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a>
+</span><span id="__span-11-25"><a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a><span class="c1">;; To stop the server:</span>
+</span><span id="__span-11-26"><a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a><span class="c1">;; (ig/halt! app)</span>
+</span></code></pre></div>
+<h2 id="health-check-endpoint">Health Check Endpoint</h2>
+<p>Weave automatically provides a health check endpoint at <code>/health</code> that returns:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">{</span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="s2">&quot;ok&quot;</span><span class="p">}</span>
+</span></code></pre></div>
+<p>This can be used for container orchestration health checks and load balancer monitoring.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand", "navigation.path"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      
+    
+  </body>
+</html>
