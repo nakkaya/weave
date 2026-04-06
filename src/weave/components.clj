@@ -457,6 +457,7 @@
            btn-attrs# (-> ~(dissoc attrs :label :busy :handler-opts)
                           (assoc :id id#))
            selector#  {:selector (str "#" id#)}
+           self#      (promise)
            handler#   (core/handler ~handler-args
                         (core/push-html! [::button (disable-attrs btn-attrs#)
                                           (busy-content ~(:busy attrs) label#)]
@@ -464,9 +465,10 @@
                         (try
                           ~@body
                           (finally
-                            (core/push-html! [::button (assoc btn-attrs# :data-on-click (core/handler-expr))
+                            (core/push-html! [::button (assoc btn-attrs# :data-on-click @self#)
                                               label#]
                                              selector#))))]
+       (deliver self# handler#)
        [::button (assoc btn-attrs# :data-on-click handler#) label#])))
 
 (defn- form-control-classes
