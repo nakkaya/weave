@@ -245,6 +245,18 @@
            :xmlns "http://www.w3.org/2000/svg"}
      [:use {:href (str "/heroicons-sprite.svg#" icon-id)}]]))
 
+(defn spinner
+  "Inline SVG spinner that inherits the current text color and  font size."
+  []
+  [:svg.animate-spin {:style "height:1em;width:1em"
+                      :xmlns "http://www.w3.org/2000/svg"
+                      :fill "none"
+                      :viewBox "0 0 24 24"}
+   [:circle {:class "opacity-25" :cx "12" :cy "12" :r "10"
+             :stroke "currentColor" :stroke-width "4"}]
+   [:path {:class "opacity-75" :fill "currentColor"
+           :d "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"}]])
+
 (defmethod c/resolve-alias ::view
   [_ attrs content]
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :view :bg))
@@ -407,6 +419,55 @@
         body (or (seq content) [(:title attrs)])]
 
     (into [:button merged-attrs] body)))
+
+(defn busy-content [busy label]
+  (cond
+    (string? busy)    busy
+    (vector? busy)    busy
+    (= :spinner busy) [:span.flex.items-center.justify-center.gap-2
+                        (spinner)
+                        (when (string? label) label)]
+    :else             label))
+
+(defn disable-attrs [attrs]
+  (-> attrs
+      (assoc :disabled true)
+      (update :class (fn [c] (tw c "cursor-not-allowed opacity-60")))))
+
+(defmacro button
+  "A button that automatically disables itself while its handler runs.
+
+   attrs - map of button attributes:
+     :label         - button content: string or hiccup (required)
+     :busy          - content shown while handler runs:
+                        string  → disabled button with that text
+                        vector  → disabled button with that hiccup
+                        :spinner → disabled button with a themed spinner + :label
+                      when omitted the button disables with original :label
+     :id            - button id
+     :handler-opts  - metadata map passed to weave/handler (e.g. {:auth-required? false})
+     :variant, :size, :class, etc. - forwarded to ::button
+
+   body - forms that become the handler body"
+  [attrs & body]
+  (let [handler-opts (or (:handler-opts attrs) {})
+        handler-args (with-meta [] handler-opts)]
+    `(let [id#        (or ~(:id attrs) (str (gensym "btn-")))
+           label#     ~(:label attrs)
+           btn-attrs# (-> ~(dissoc attrs :label :busy :handler-opts)
+                          (assoc :id id#))
+           selector#  {:selector (str "#" id#)}
+           handler#   (core/handler ~handler-args
+                        (core/push-html! [::button (disable-attrs btn-attrs#)
+                                          (busy-content ~(:busy attrs) label#)]
+                                         selector#)
+                        (try
+                          ~@body
+                          (finally
+                            (core/push-html! [::button (assoc btn-attrs# :data-on-click (core/handler-expr))
+                                              label#]
+                                             selector#))))]
+       [::button (assoc btn-attrs# :data-on-click handler#) label#])))
 
 (defn- form-control-classes
   "Resolve themed classes common to form controls (input, select).
