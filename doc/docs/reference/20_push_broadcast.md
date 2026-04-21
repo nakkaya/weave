@@ -105,10 +105,10 @@ Signals are client-side state values that can be accessed in the
 browser using [Datastar](https://data-star.dev/).  They can be used
 for reactive UI updates, storing user preferences, or maintaining
 application state. Signals are stored in the browser and can be
-accessed in HTML attributes using the `data-signals-` prefix:
+accessed in HTML attributes using the `data-signals:` prefix:
 
 ```clojure
-[:div {:data-signals-username "''"}
+[:div {:data-signals:username "''"}
  "Welcome, "
  [:span {:data-text "$username"}]]
 
@@ -122,7 +122,7 @@ accessed in HTML attributes using the `data-signals-` prefix:
 
 ```clojure
 [:form
- {:data-on-submit
+ {:data-on:submit
   (weave/handler ^{:type :form} []
    (let [form-data (:params weave/*request*)]
      (save-data! form-data)
@@ -137,7 +137,7 @@ accessed in HTML attributes using the `data-signals-` prefix:
 ```clojure
 (let [panel-visible (atom false)]
   [:button
-   {:data-on-click
+   {:data-on:click
     (weave/handler [panel-visible]
      (weave/push-html!
       [:div#panel
@@ -153,7 +153,7 @@ accessed in HTML attributes using the `data-signals-` prefix:
 (defn notify-all-users [message]
   (weave/broadcast-html!
    [:div#notification.fixed.top-0.right-0.m-4.p-4.bg-blue-500.text-white.rounded
-    {:data-on-load
+    {:data-init
      (weave/handler []
       (weave/push-script!
        "setTimeout(() => document.getElementById('notification').remove(), 5000)"))}

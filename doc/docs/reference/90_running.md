@@ -148,7 +148,7 @@ Note: Only the app route is affected by `:base-path`. Static resources,
 (defn my-view []
   [:div
    [:h1 "My Weave Application"]
-   [:button {:data-on-click (weave/handler []
+   [:button {:data-on:click (weave/handler []
                               (weave/push-html! "body" [:p "Button clicked!"]))}
     "Click me"]])
 

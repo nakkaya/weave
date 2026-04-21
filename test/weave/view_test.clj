@@ -36,15 +36,15 @@
 (defn nav-test-view []
   [:div#view
    [:button#go-one
-    {:data-on-click (weave/handler [test-views]
+    {:data-on:click (weave/handler [test-views]
                       (view/render test-views :page-one))}
     "Go One"]
    [:button#go-two
-    {:data-on-click (weave/handler [test-views]
+    {:data-on:click (weave/handler [test-views]
                       (view/render test-views :page-two))}
     "Go Two"]
    [:button#go-welcome
-    {:data-on-click (weave/handler [test-views]
+    {:data-on:click (weave/handler [test-views]
                       (view/render test-views :welcome))}
     "Go Welcome"]
    (view/render test-views)])
@@ -163,7 +163,7 @@
 (defn param-test-view []
   [:div#view
    [:button#go-with-params
-    {:data-on-click (weave/handler [param-views]
+    {:data-on:click (weave/handler [param-views]
                       (view/render param-views :param-view {:id 42}))}
     "Go With Params"]
    (view/render param-views)])
@@ -207,9 +207,9 @@
 
 (defn signal-access-test-view []
   [:div#view
-   {:data-signals-nested.value "123"}
+   {:data-signals:nested.value "123"}
    [:button#read-signal
-    {:data-on-click (weave/handler [signal-access-views]
+    {:data-on:click (weave/handler [signal-access-views]
                       (weave/push-html! (view/render signal-access-views)))}
     "Read Signal"]
    (view/render signal-access-views)])
@@ -242,12 +242,12 @@
 
 (defn signal-test-view []
   [:div#view
-   {:data-signals-search-view.count "5"}
+   {:data-signals:search-view.count "5"}
    [:button#reset-signals
-    {:data-on-click (weave/handler [signal-views]
+    {:data-on:click (weave/handler [signal-views]
                       (view/reset-signals! signal-views :search-view))}
     "Reset Signals"]
-   [:input#count-input {:data-bind-search-view.count true}]])
+   [:input#count-input {:data-bind:search-view.count true}]])
 
 (deftest reset-signals-test
   (with-browser signal-test-view weave-options
@@ -297,15 +297,15 @@
 (defn multi-app-test-view []
   [:div#view
    [:button#outer-two-btn
-    {:data-on-click (weave/handler [outer-views]
+    {:data-on:click (weave/handler [outer-views]
                       (view/render outer-views :outer-two))}
     "Outer Two"]
    [:button#inner-two-btn
-    {:data-on-click (weave/handler [inner-views]
+    {:data-on:click (weave/handler [inner-views]
                       (view/render inner-views :inner-two))}
     "Inner Two"]
    [:button#outer-default-btn
-    {:data-on-click (weave/handler [outer-views]
+    {:data-on:click (weave/handler [outer-views]
                       (view/render outer-views :outer-one))}
     "Outer Default"]
    (view/render outer-views)

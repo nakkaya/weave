@@ -51,7 +51,7 @@ sudo apt-get install chromium-chromedriver
   [:div
    [:h1 {:id "title"} "Hello, Weave!"]
    [:button {:id "click-me"
-             :data-on-click (weave/handler []
+             :data-on:click (weave/handler []
                               (weave/push-html!
                                 [:h1 {:id "title"} "Clicked!"]))}
     "Click Me"]])
@@ -158,7 +158,7 @@ Switches to a specific tab.
    [:input {:id "name" :type "text" :placeholder "Name"}]
    [:input {:id "email" :type "email" :placeholder "Email"}]
    [:button {:id "submit"
-             :data-on-click (weave/handler []
+             :data-on:click (weave/handler []
                               (let [{:keys [name email]} (:params weave/*request*)]
                                 (weave/push-html! "#result"
                                   [:div {:id "result"}

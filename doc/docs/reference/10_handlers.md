@@ -139,9 +139,9 @@ converted from camelCase to kebab-case keywords:
 
 ```html
 <!-- In your HTML -->
-<div data-signals-userName="John"
-     data-signals-isActive="true"
-     data-signals-itemCount="42">
+<div data-signals:userName="John"
+     data-signals:isActive="true"
+     data-signals:itemCount="42">
 ```
 
 ```clojure
@@ -173,7 +173,7 @@ https://your-app.com/#/dashboard?tab=settings&view=compact&debug
 (defn dashboard-view []
   [:div
    [:button
-    {:data-on-click
+    {:data-on:click
      (weave/handler []
        (let [{:keys [tab view debug]} weave/*query-params*]
          (weave/push-html!
@@ -190,7 +190,7 @@ https://your-app.com/#/dashboard?tab=settings&view=compact&debug
 
 ```clojure
 (let [message "Hello from server!"]
-  {:data-on-click
+  {:data-on:click
    (weave/handler [message]
     (weave/push-html! [:div#message message]))})
 ```
@@ -216,12 +216,12 @@ you can store state as signals in the browser and access them via
    [::c/center-hv
     [::c/card
      [:div.text-center.text-6xl.font-bold.mb-6.text-blue-600
-      {:data-signals-count "0"
+      {:data-signals:count "0"
        :data-text "$count"}]
      [::c/button
       {:size :xl
        :variant :primary
-       :data-on-click (weave/handler []
+       :data-on:click (weave/handler []
                         (let [count (or (:count weave/*signals*) 0)]
                           (weave/push-signal! {:count (inc count)})))}
       "Increment Count"]]]])
@@ -229,14 +229,14 @@ you can store state as signals in the browser and access them via
 
 In this example:
 
-- `data-signals-click-count="0"` initializes the signal with value 0
+- `data-signals:click-count="0"` initializes the signal with value 0
 - `data-text="$click"` displays the signal value reactively
 - The handler reads the current value from `weave/*signals*` and
   updates it with `push-signal!`
 
-## With `:data-call-with-*`
+## With `:data-call-with:*`
 
-The `:data-call-with-*` attribute is a Weave-specific feature that
+The `:data-call-with:*` attribute is a Weave-specific feature that
 provides way to pass arguments to handlers while avoiding variable
 capture.
 
@@ -251,14 +251,14 @@ capture.
                              [:div#result (str "Action: " action ", Item: " item-id)])))]
      [:div.button-group
       [::c/button
-       {:data-call-with-action "edit"
-        :data-call-with-item-id "123"
-        :data-on-click handle-action}
+       {:data-call-with:action "edit"
+        :data-call-with:item-id "123"
+        :data-on:click handle-action}
        "Edit"]
       [::c/button
-       {:data-call-with-action "delete"
-        :data-call-with-item-id "123"
-        :data-on-click handle-action}
+       {:data-call-with:action "delete"
+        :data-call-with:item-id "123"
+        :data-on:click handle-action}
        "Delete"]])])
 ```
 
@@ -266,10 +266,10 @@ capture.
 
 ```clojure
 ;; Example showing inheritance
-[:div {:data-call-with-action "noop"}  ; Parent element
- [:button {:data-call-with-action "edit"  ; Child element
-           :data-call-with-id "123"
-           :data-on-click handler}
+[:div {:data-call-with:action "noop"}  ; Parent element
+ [:button {:data-call-with:action "edit"  ; Child element
+           :data-call-with:id "123"
+           :data-on:click handler}
   "Edit User"]]
 ;; Result: signals will be {:action "edit", :id "123"}
 ```
@@ -278,7 +278,7 @@ capture.
 
 ```clojure
 ;; Simple delete confirmation
-{:data-on-click
+{:data-on:click
  (weave/handler ^{:confirm "Are you sure you want to delete this item?"} []
    (delete-item!)
    (weave/push-html! [:div "Item deleted"]))}
@@ -304,12 +304,12 @@ nothing shared:
       [:td (:name user)]
       [:td
        [::c/button
-        {:data-on-click (weave/handler [user] ; Captures user - creates unique route!
+        {:data-on:click (weave/handler [user] ; Captures user - creates unique route!
                           (delete-user! (:id user))
                           (weave/push-html! (user-table-bad (get-updated-users))))}
         "Delete"]
        [::c/button
-        {:data-on-click (weave/handler [user] ; Another unique route per user!
+        {:data-on:click (weave/handler [user] ; Another unique route per user!
                           (promote-user! (:id user))
                           (weave/push-html! (user-table-bad (get-updated-users))))}
         "Promote"]]])])
@@ -317,7 +317,7 @@ nothing shared:
 ;; With 100 users × 2 actions = 200 different routes registered!
 ```
 
-### Solution: Shared Handlers with `:data-call-with-*`
+### Solution: Shared Handlers with `:data-call-with:*`
 
 ```clojure
 ;; GOOD: Only 1 handler total, regardless of number of users
@@ -334,22 +334,22 @@ nothing shared:
         [:td (:name user)]
         [:td
          [::c/button
-          {:data-call-with-user-id (:id user)
-           :data-call-with-action "delete"
-           :data-on-click handle-action}
+          {:data-call-with:user-id (:id user)
+           :data-call-with:action "delete"
+           :data-on:click handle-action}
           "Delete"]
          [::c/button
-          {:data-call-with-user-id (:id user)
-           :data-call-with-action "promote"
-           :data-on-click handle-action}
+          {:data-call-with:user-id (:id user)
+           :data-call-with:action "promote"
+           :data-on:click handle-action}
           "Promote"]]])]))
 
 ;; Only 1 handler registered total - shared across all rows and actions!
 ```
 
-### Request Cancellation with `:data-call-with-*`
+### Request Cancellation with `:data-call-with:*`
 
-When using `:data-call-with-*` attributes, the request cancellation behavior is controlled by the handler's metadata:
+When using `:data-call-with:*` attributes, the request cancellation behavior is controlled by the handler's metadata:
 
 ```clojure
 (defn payment-view []
@@ -358,9 +358,9 @@ When using `:data-call-with-*` attributes, the request cancellation behavior is 
                             (process-payment! amount)
                             (weave/push-html! [:div "Payment processed"])))]
     [:button
-     {:data-call-with-action "process-payment"
-      :data-call-with-amount "100"
-      :data-on-click payment-handler}
+     {:data-call-with:action "process-payment"
+      :data-call-with:amount "100"
+      :data-on:click payment-handler}
      "Process Payment"]))
 ```
 

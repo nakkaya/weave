@@ -12,8 +12,8 @@
         com.cnuernber/charred                {:mvn/version "1.037"}
         backtick/backtick                    {:mvn/version "0.4.0"}
         com.cognitect/transit-clj            {:mvn/version "1.0.333"}
-        dev.data-star.clojure/http-kit       {:mvn/version "1.0.0-RC5"}
-        dev.data-star.clojure/sdk            {:mvn/version "1.0.0-RC5"}
+        dev.data-star.clojure/http-kit       {:mvn/version "1.0.0-RC9"}
+        dev.data-star.clojure/sdk            {:mvn/version "1.0.0-RC9"}
         io.github.squint-cljs/squint         {:git/url "https://github.com/squint-cljs/squint.git"
                                               :git/sha "79a9468c71881de85e80953eb407e6fe11ecf2ca"}
         integrant/integrant                  {:mvn/version "1.0.1"}}

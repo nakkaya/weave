@@ -48,7 +48,7 @@ To send JavaScript to all connected browser tabs for the current user:
 You can combine DOM updates with JavaScript execution:
 
 ```clojure
-{:data-on-click
+{:data-on:click
  (weave/handler []
   ;; Update the DOM
   (weave/push-html! [:div#status "Processing..."])
@@ -126,7 +126,7 @@ Here's a complete example of a timer application using JavaScript interoperabili
    [:h1#timer.text-4xl.font-bold "0"]
    [:div.flex.gap-2.mt-4
     [:button.bg-green-500.text-white.px-4.py-2.rounded
-     {:data-on-click
+     {:data-on:click
       (weave/handler []
        (weave/push-script!
         (squint/clj->js
@@ -140,7 +140,7 @@ Here's a complete example of a timer application using JavaScript interoperabili
      "Start"]
     
     [:button.bg-red-500.text-white.px-4.py-2.rounded
-     {:data-on-click
+     {:data-on:click
       (weave/handler []
        (weave/push-script!
         (squint/clj->js
@@ -150,7 +150,7 @@ Here's a complete example of a timer application using JavaScript interoperabili
      "Stop"]
     
     [:button.bg-blue-500.text-white.px-4.py-2.rounded
-     {:data-on-click
+     {:data-on:click
       (weave/handler []
        (weave/push-script!
         (squint/clj->js

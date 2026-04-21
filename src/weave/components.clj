@@ -465,11 +465,11 @@
                         (try
                           ~@body
                           (finally
-                            (core/push-html! [::button (assoc btn-attrs# :data-on-click @self#)
+                            (core/push-html! [::button (assoc btn-attrs# :data-on:click @self#)
                                               label#]
                                              selector#))))]
        (deliver self# handler#)
-       [::button (assoc btn-attrs# :data-on-click handler#) label#])))
+       [::button (assoc btn-attrs# :data-on:click handler#) label#])))
 
 (defn- form-control-classes
   "Resolve themed classes common to form controls (input, select).
@@ -580,7 +580,7 @@
         base-attrs {:id "app-header"
                     :class (tw theme-bg
                                "sm:flex sm:justify-between sm:items-center sm:px-4 sm:py-3")
-                    :data-signals-navbar-open "false"}
+                    :data-signals:navbar-open "false"}
         merged-attrs (merge-attrs base-attrs attrs)]
 
     [:header merged-attrs
@@ -598,7 +598,7 @@
       [:div.sm:hidden
        [:button.block.hover:text-white.focus:text-white.focus:outline-none
         {:class "text-[#d0d0d0]"
-         :data-on-click "$navbarOpen = !$navbarOpen"
+         :data-on:click "$navbarOpen = !$navbarOpen"
          :type "button"}
         [:div
          [:div {:data-if "$navbarOpen"}
@@ -608,7 +608,7 @@
 
      ;; Navbar content/links
      [:nav.px-2.pt-2.pb-4.sm:flex.sm:p-0
-      {:data-class-hidden "!$navbarOpen"
+      {:data-class:hidden "!$navbarOpen"
        :class (tw theme-bg "sm:block")}
       [:div.flex.flex-col.sm:flex-row
        content]]]))
@@ -770,8 +770,8 @@
         href (:href attrs)
         anchor-attrs (cond-> {:class item-class}
                        active-signal? (assoc :data-class (str "{ '" (:active-class themed) "': " active " }"))
-                       (and handler href) (assoc :data-on-click__prevent handler)
-                       (and handler (not href)) (assoc :data-on-click handler)
+                       (and handler href) (assoc :data-on:click__prevent handler)
+                       (and handler (not href)) (assoc :data-on:click handler)
                        href (assoc :href href))]
     [:li
      [:a anchor-attrs
@@ -829,7 +829,7 @@
                        theme-icon-inactive)]
     [:a {:class (tw base-classes desktop-classes mobile-classes active-classes "cursor-pointer")
          :aria-current (when active? "page")
-         :data-on-click handler}
+         :data-on:click handler}
      (when icon
        [::icon {:id icon
                 :size 5
@@ -841,7 +841,7 @@
   (let [{:keys [item-class]} (nav-item-classes :navbar attrs
                                "px-3 py-2 text-sm font-medium cursor-pointer block mb-1 sm:mb-0 sm:inline-block")]
     [:a {:class item-class
-         :data-on-click (:handler attrs)}
+         :data-on:click (:handler attrs)}
      (when-let [icon (:icon attrs)]
        [::icon {:id icon :class "h-5 w-5 mr-2 inline-block"}])
      (or content (:label attrs))]))
@@ -900,7 +900,7 @@
         title]]
 
       [:div {:class form-container-classes
-             :data-signals-_error "false"}
+             :data-signals:_error "false"}
        [:div {:id "sign-in-error"
               :class "p-3 mb-4 text-sm text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/20 rounded-lg border border-red-400 dark:border-red-700"
               :data-show error-signal
@@ -908,7 +908,7 @@
         error-message]
 
        [:form {:class form-classes
-               :data-on-submit on-submit}
+               :data-on:submit on-submit}
 
         [:div
          [::label {:for "username"}

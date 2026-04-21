@@ -272,7 +272,7 @@
                     (:retry-interval opts)
                     (:retry-scaler opts))
             (.append sb ", "))
-          (.append sb "retryMaxWaitMs: ")
+          (.append sb "retryMaxWait: ")
           (.append sb retry-max-wait-ms))
         (when-let [retry-max-count (:retry-max-count opts)]
           (when (or (= (:type opts) :form)
@@ -367,9 +367,9 @@
            (when (:dev-mode opts)
              [:div {:id "weave-dev-debug"
                     :class "fixed top-1 right-1 z-50 flex flex-col items-end gap-2"
-                    :data-signals-weave-signals "false"}
+                    :data-signals:weave-signals "false"}
               [:button {:class "bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded shadow-lg border border-blue-500"
-                        :data-on-click "$weaveSignals = !$weaveSignals"}
+                        :data-on:click "$weaveSignals = !$weaveSignals"}
                "↖"]
               [:div {:class "bg-gray-900 text-green-400 text-xs p-3 rounded shadow-lg max-w-md max-h-96 overflow-auto"
                      :data-show "$weaveSignals"

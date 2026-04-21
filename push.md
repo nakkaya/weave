@@ -206,7 +206,7 @@ Using existing Etaoin test infrastructure with real push services:
    [:div#last-push "No push received"]
    [:button
     {:id "subscribe-btn"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-script! "weave.push.subscribe()"))}
     "Subscribe"]])
@@ -301,7 +301,7 @@ Using existing Etaoin test infrastructure with real push services:
 
 (defn my-view []
   [:div
-   [:button {:data-on-click "@post('/enable-push')"}
+   [:button {:data-on:click "@post('/enable-push')"}
     "Enable Notifications"]])
 
 (weave/handler ["/enable-push"]

@@ -33,7 +33,7 @@ Then in `src/app/core.clj`
   [:div.p-6
    [:h1#label.text-2xl.font-bold "Hello Weave!"]
    [:button.bg-blue-500.text-white.px-4.py-2.rounded
-	{:data-on-click
+	{:data-on:click
 	 (weave/handler []
 	  (weave/push-html!
 	   [:h1#label.text-2xl.font-bold "Button was clicked!"]))}
@@ -62,8 +62,8 @@ Weave uses Chassis DSL for defining HTML elements in Clojure.
 Weave uses [Datastar](https://data-star.dev/) on the client side for
 its reactive event handling system:
 
-- Events are attached with data attributes: `:data-on-click /
-  :data-on-load /` etc.
+- Events are attached with data attributes: `:data-on:click /
+  :data-init /` etc.
 - The `weave/handler` macro creates server-side event handlers
 - Handlers can update the DOM, merge one or more fragments using
   `push-html!` or `broadcast-html!`. By default,

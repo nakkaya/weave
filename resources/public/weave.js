@@ -360,7 +360,7 @@ window.weave = {
     }
 }
 
-import('./datastar@v1.0.0-RC.5.js').then(({ load, apply }) => {
+import('./datastar@v1.0.1.js').then(({ action, actions, mergePatch }) => {
     // Monkey patch fetch to dynamically add app path and query params header on every d* request
     const originalFetch = window.fetch;
     window.fetch = (input, init) => {
@@ -379,23 +379,6 @@ import('./datastar@v1.0.0-RC.5.js').then(({ load, apply }) => {
     // requests in serialize mode
     const activeRouteRequests = new Map()
 
-    const lcFirst = (s) => s.charAt(0).toLowerCase() + s.slice(1)
-
-    const deepMerge = (target, source) => {
-        const result = { ...target }
-        for (const key of Object.keys(source)) {
-            if (
-                source[key] && typeof source[key] === 'object' && !Array.isArray(source[key]) &&
-                result[key] && typeof result[key] === 'object' && !Array.isArray(result[key])
-            ) {
-                result[key] = deepMerge(result[key], source[key])
-            } else {
-                result[key] = source[key]
-            }
-        }
-        return result
-    }
-
     const setNested = (obj, keys, value) => {
         let current = obj
         for (let i = 0; i < keys.length - 1; i++) {
@@ -411,25 +394,25 @@ import('./datastar@v1.0.0-RC.5.js').then(({ load, apply }) => {
         }
     }
 
-    const CallAction = {
-	type: 'action',
+    action({
 	name: 'call',
-	fn: async (ctx, url, options = {}) => {
+	apply: async (ctx, url, options = {}) => {
             const callWithData = {}
-            const prefix = 'callWith'
+            const prefix = 'data-call-with:'
 
-            // Find closest element with data-call-with-* attributes
+            // Find closest element with data-call-with:* attributes
             let currentEl = ctx.el
             while (currentEl) {
 		let foundCallWith = false
 
-		for (const [key, value] of Object.entries(currentEl.dataset)) {
-		    if (key.startsWith(prefix)) {
-			foundCallWith = true
-			const paramName = key.slice(prefix.length)
-			const keys = paramName.split('.')
-			keys[0] = lcFirst(keys[0])
-			setNested(callWithData, keys, value)
+		if (currentEl.attributes) {
+		    for (const attr of currentEl.attributes) {
+			if (attr.name.startsWith(prefix)) {
+			    foundCallWith = true
+			    const paramName = attr.name.slice(prefix.length)
+			    const keys = paramName.split('.')
+			    setNested(callWithData, keys, attr.value)
+			}
 		    }
 		}
 
@@ -463,29 +446,13 @@ import('./datastar@v1.0.0-RC.5.js').then(({ load, apply }) => {
                 }
             }
 
+            // If call-with data found, merge into signals so post picks them up
+            if (Object.keys(callWithData).length > 0) {
+                mergePatch(callWithData)
+            }
+
             try {
-                // If no call-with data found, just use normal post with enhanced options
-                if (Object.keys(callWithData).length === 0) {
-		    const postAction = ctx.actions.post
-		    return await postAction.fn(ctx, url, enhancedOptions)
-                }
-
-                // Create a custom filtered function that includes our call-with data
-                const originalFiltered = ctx.filtered
-                const enhancedFiltered = (filterOptions) => {
-		    const signals = originalFiltered(filterOptions)
-		    return deepMerge(signals, callWithData)
-                }
-
-                // Create enhanced context with our custom filtered function
-                const enhancedCtx = {
-		    ...ctx,
-		    filtered: enhancedFiltered
-                }
-
-                // Call the original post action with enhanced context and options
-                const postAction = ctx.actions.post
-                return await postAction.fn(enhancedCtx, url, enhancedOptions)
+                return await actions.post(ctx, url, enhancedOptions)
             } finally {
                 // Clean up the route lock when request completes (success or error)
                 if (requestCancellation === 'serialize') {
@@ -493,15 +460,13 @@ import('./datastar@v1.0.0-RC.5.js').then(({ load, apply }) => {
                 }
             }
 	}
-    }
-
-    load(CallAction)
+    })
 
     setTimeout(() => {
         const mainEl = document.getElementById('weave-main')
         if (mainEl) {
             const options = window.weaveKeepAlive ? '{openWhenHidden: true}' : '{}'
-            mainEl.setAttribute('data-on-load', `@call('/app-loader', ${options})`)
+            mainEl.setAttribute('data-init', `@call('/app-loader', ${options})`)
         }
 
 	if (window.weaveDevMode) {

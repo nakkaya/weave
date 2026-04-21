@@ -63,7 +63,7 @@ Call `view/render` with just the view to render based on the current URL:
   [:div#app
    [:nav
     [:button {:href (view/href views :users)
-              :data-on-click (weave/handler [views]
+              :data-on:click (weave/handler [views]
                                (view/render views :users))}
      "Users"]]
    (view/render views)])
@@ -160,7 +160,7 @@ datastar attributes:
 ```clojure
 (defn search-view [_views]
   [:div
-   [:input {:data-bind-search.query true
+   [:input {:data-bind:search.query true
             :placeholder "Search..."}]
    [:span {:data-text "$search.page"}]])
 ```
@@ -254,7 +254,7 @@ This works both during rendering and in handlers:
     [:div
      [:h1 "Edit User"]
      [:p (str "Editing user: " id)]
-     [:button {:data-on-click (weave/handler [views]
+     [:button {:data-on:click (weave/handler [views]
                                 (view/render views :users))}
       "Back to Users"]]))
 
@@ -273,12 +273,12 @@ This works both during rendering and in handlers:
    [:nav.flex.gap-4.p-4
     [:button
      {:href (view/href views :users)
-      :data-on-click (weave/handler [views]
+      :data-on:click (weave/handler [views]
                        (view/render views :users))}
      "Users"]
     [:button
      {:href (view/href views :user-edit {:id 1})
-      :data-on-click (weave/handler [views]
+      :data-on:click (weave/handler [views]
                        (view/render views :user-edit {:id 1}))}
      "Edit User 1"]]
 

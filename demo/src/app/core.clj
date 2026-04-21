@@ -21,7 +21,7 @@
        [::c/button
         {:size :xl
          :variant :primary
-         :data-on-click (weave/handler [click-count]
+         :data-on:click (weave/handler [click-count]
                          (swap! click-count inc)
                          (weave/push-html!
                           (click-count-view)))}
@@ -45,7 +45,7 @@
             [::c/button
              {:size :md
               :variant :danger
-              :data-on-click (weave/handler [todos]
+              :data-on:click (weave/handler [todos]
                               (swap! todos (fn [items]
                                              (vec (concat
                                                    (subvec items 0 idx)
@@ -56,7 +56,7 @@
          @todos)]
        [:form
         {:class "mt-4 space-y-4"
-         :data-on-submit (weave/handler ^{:type :form} [todos]
+         :data-on:submit (weave/handler ^{:type :form} [todos]
                           (swap! todos conj (-> weave/*request* :params :bar))
                           (weave/push-html!
                            (todo-view)))}
@@ -108,14 +108,14 @@
         {:size :md
          :variant :primary
          :href (view/href nav-app :page-one)
-         :data-on-click (weave/handler [nav-app]
+         :data-on:click (weave/handler [nav-app]
                           (view/render nav-app :page-one))}
         "Page One"]
        [::c/button
         {:size :md
          :variant :primary
          :href (view/href nav-app :page-two)
-         :data-on-click (weave/handler [nav-app]
+         :data-on:click (weave/handler [nav-app]
                           (view/render nav-app :page-two))}
         "Page Two"]]]]
 
@@ -139,7 +139,7 @@
     [::c/button
      {:size :xl
       :variant :primary
-      :data-on-click (weave/handler []
+      :data-on:click (weave/handler []
                        (weave/set-cookie! (session/sign-out))
                        (weave/broadcast-path! "/sign-in")
                        (weave/push-reload!))}
@@ -311,18 +311,18 @@
        [::c/flex-between.m-4
         [::c/button
          {:variant :secondary
-          :data-on-click "$demo_modal = false"}
+          :data-on:click "$demo_modal = false"}
          "Cancel"]
         [::c/button
          {:variant :primary
-          :data-on-click (weave/handler []
+          :data-on:click (weave/handler []
                            (weave/push-signal! {:demo_modal false}))}
          "Confirm"]]]]
 
      [::c/button
       {:size :lg
        :variant :primary
-       :data-on-click "$demo_modal = true"}
+       :data-on:click "$demo_modal = true"}
       "Open Modal"]]]])
 
 (defn tabs-example []
@@ -389,7 +389,7 @@
        {:size :lg
         :variant :primary
         :class "w-full"
-        :data-on-click (weave/handler []
+        :data-on:click (weave/handler []
                          (weave/push-script!
                           "weave.push.subscribe().then(() => {
                                  document.getElementById('push-status').textContent = 'Status: Subscribed!';
@@ -402,7 +402,7 @@
        {:size :lg
         :variant :secondary
         :class "w-full"
-        :data-on-click (weave/handler [push-options]
+        :data-on:click (weave/handler [push-options]
                          (let [results (push/send!
                                         weave/*session-id*
                                         {:title "Hello from Weave!"
@@ -420,7 +420,7 @@
        {:size :lg
         :variant :danger
         :class "w-full"
-        :data-on-click (weave/handler []
+        :data-on:click (weave/handler []
                          (weave/push-script!
                           "weave.push.unsubscribe().then(() => {
                                  document.getElementById('push-status').textContent = 'Status: Unsubscribed';

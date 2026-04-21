@@ -128,14 +128,14 @@ Use the `weave.push` JavaScript API to subscribe users:
 ```clojure
 ;; Session-based (default)
 [::c/button
- {:data-on-click (weave/handler []
+ {:data-on:click (weave/handler []
                    (weave/push-script!
                     "weave.push.subscribe()"))}
  "Enable Notifications"]
 
 ;; User-based (pass user ID)
 [::c/button
- {:data-on-click (weave/handler []
+ {:data-on:click (weave/handler []
                    (let [user-id (get-in weave/*request* [:identity :id])]
                      (weave/push-script!
                       (str "weave.push.subscribe('" user-id "')"))))}

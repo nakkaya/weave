@@ -70,7 +70,7 @@
            (#'core/request-options {:retry-interval 2000})))
     (is (= "{retryScaler: 1.5}"
            (#'core/request-options {:retry-scaler 1.5})))
-    (is (= "{retryMaxWaitMs: 60000}"
+    (is (= "{retryMaxWait: 60000}"
            (#'core/request-options {:retry-max-wait-ms 60000})))
     (is (= "{retryMaxCount: 5}"
            (#'core/request-options {:retry-max-count 5})))
@@ -82,12 +82,12 @@
     (is (= "{openWhenHidden: true, retryScaler: 2}"
            (#'core/request-options {:keep-alive true :retry-scaler 2})))
 
-    (is (= "{retryInterval: 1000, retryScaler: 2, retryMaxWaitMs: 30000}"
+    (is (= "{retryInterval: 1000, retryScaler: 2, retryMaxWait: 30000}"
            (#'core/request-options {:retry-interval 1000
                                     :retry-scaler 2
                                     :retry-max-wait-ms 30000})))
 
-    (is (= "{contentType: 'form', openWhenHidden: true, selector: '#form', retryInterval: 1500, retryScaler: 2.5, retryMaxWaitMs: 45000, retryMaxCount: 8, requestCancellation: 'auto'}"
+    (is (= "{contentType: 'form', openWhenHidden: true, selector: '#form', retryInterval: 1500, retryScaler: 2.5, retryMaxWait: 45000, retryMaxCount: 8, requestCancellation: 'auto'}"
            (#'core/request-options {:type :form
                                     :keep-alive true
                                     :selector "#form"
@@ -97,7 +97,7 @@
                                     :retry-max-count 8
                                     :request-cancellation "auto"})))
 
-    (is (= "{contentType: 'form', openWhenHidden: true, selector: '#form', filterSignals: { include: /.*test.*/, exclude: /(^|\\.)_/ }, retryInterval: 1500, retryScaler: 2.5, retryMaxWaitMs: 45000, retryMaxCount: 8, requestCancellation: 'auto'}"
+    (is (= "{contentType: 'form', openWhenHidden: true, selector: '#form', filterSignals: { include: /.*test.*/, exclude: /(^|\\.)_/ }, retryInterval: 1500, retryScaler: 2.5, retryMaxWait: 45000, retryMaxCount: 8, requestCancellation: 'auto'}"
            (#'core/request-options {:type :form
                                     :keep-alive true
                                     :selector "#form"
@@ -146,7 +146,7 @@
     [:p "Session Storage: " [:span#session-storage-id "Loading..."]]]
    [:button
     {:id "get-instance-id"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-script!
         (squint/clj->js
@@ -220,7 +220,7 @@
    [:div#count @click-count]
    [:button
     {:id "increment-button"
-     :data-on-click
+     :data-on:click
      (core/handler [click-count]
        (swap! click-count inc)
        (core/push-html!
@@ -246,7 +246,7 @@
     [:li "Item 2"]]
    [:button
     {:id "append-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-html!
         [:li "New Item"]
@@ -284,7 +284,7 @@
     [:li "Item 2"]]
    [:button
     {:id "append-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/broadcast-html!
         [:li "New Item"]
@@ -327,7 +327,7 @@
   [:div {:id "view"}
    [:h1 "Form Submission Test"]
    [:form {:id "test-form"
-           :data-on-submit
+           :data-on:submit
            (core/handler ^{:type :form} []
              (let [form-data (:params core/*request*)
                    name (:name form-data)
@@ -370,7 +370,7 @@
    [:div#count @click-count]
    [:button
     {:id "increment-button"
-     :data-on-click
+     :data-on:click
      (core/handler [click-count]
        (swap! click-count inc)
        (core/broadcast-html!
@@ -408,12 +408,12 @@
   [:div {:id "view"}
    [:div
     [:a {:id "trigger-view-one"
-         :data-on-click
+         :data-on:click
          (core/handler []
            (core/push-path! "/views/one" push-path-test-view))}
      "Page One"]
     [:a {:id "trigger-view-two"
-         :data-on-click
+         :data-on:click
          (core/handler []
            (core/push-path! "/views/two" push-path-test-view))}
      "Page Two"]]
@@ -444,7 +444,7 @@
   [:div {:id "view"}
    [:button
     {:id "render"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-path!
         "/new-path")
@@ -473,12 +473,12 @@
   [:div {:id "view"}
    [:div
     [:a {:id "trigger-view-one"
-         :data-on-click
+         :data-on:click
          (core/handler []
            (core/broadcast-path! "/views/one" broadcast-path-test-view))}
      "Page One"]
     [:a {:id "trigger-view-two"
-         :data-on-click
+         :data-on:click
          (core/handler []
            (core/broadcast-path! "/views/two" broadcast-path-test-view))}
      "Page Two"]]
@@ -558,7 +558,7 @@
    [:div#content "Initial content"]
    [:button
     {:id "execute-script-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-script!
         (squint/clj->js
@@ -586,7 +586,7 @@
    [:div#content "Initial content"]
    [:button
     {:id "execute-script-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/broadcast-script!
         (squint/clj->js
@@ -631,12 +631,12 @@
   [:div {:id "view"}
    [:button
     {:id "increment-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-signal! {:foo 42}))}
     "Update Signal"]
-   [:div {:data-signals-foo "0"}
-    [:input#signal-value {:data-bind-foo true}]]])
+   [:div {:data-signals:foo "0"}
+    [:input#signal-value {:data-bind:foo true}]]])
 
 (test-with-sse-variants
  'push-signal-test
@@ -655,7 +655,7 @@
     [:div {:id "view"}
      [:button
       {:id "render"
-       :data-on-click
+       :data-on:click
        (core/handler []
          (core/push-signal!
           {:foo 42})
@@ -684,7 +684,7 @@
   [:div {:id "view"}
    [:button
     {:id "show-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-signal! {:_show-div true}))}
     "Show Hidden Div"]
@@ -706,13 +706,13 @@
 
 (defn filter-signals-test-view []
   [:div {:id "view"
-         :data-signals-public-data "1"
-         :data-signals-other-field "-1"
-         :data-signals-public-name "2"}
+         :data-signals:public-data "1"
+         :data-signals:other-field "-1"
+         :data-signals:public-name "2"}
    [:div#result "No signals received"]
    [:button
     {:id "send-signals-button"
-     :data-on-click
+     :data-on:click
      (core/handler ^{:filter-signals {:include ".*public.*"
                                       :exclude ".*private.*"}} []
        (let [signals core/*signals*]
@@ -725,7 +725,7 @@
     "Send Signals"]
    [:button
     {:id "send-all-signals-button"
-     :data-on-click
+     :data-on:click
      (core/handler [] ;; no filter
        (let [signals core/*signals*]
          (core/push-html!
@@ -770,14 +770,14 @@
                             [:div#result (str "Action: " action ", Item: " item-id)])))]
      [:div.button-group
       [:button#edit-button
-       {:data-call-with-action "edit"
-        :data-call-with-item-id "123"
-        :data-on-click handle-action}
+       {:data-call-with:action "edit"
+        :data-call-with:item-id "123"
+        :data-on:click handle-action}
        "Edit"]
       [:button#delete-button
-       {:data-call-with-action "delete"
-        :data-call-with-item-id "456"
-        :data-on-click handle-action}
+       {:data-call-with:action "delete"
+        :data-call-with:item-id "456"
+        :data-on:click handle-action}
        "Delete"]])])
 
 (defn data-call-with-nested-test-view []
@@ -790,14 +790,14 @@
                             [:div#result (str "User: " name ", ID: " id)])))]
      [:div.button-group
       [:button#user-one-button
-       {:data-call-with-user.name "Alice"
-        :data-call-with-user.id "123"
-        :data-on-click handle-action}
+       {:data-call-with:user.name "Alice"
+        :data-call-with:user.id "123"
+        :data-on:click handle-action}
        "User One"]
       [:button#user-two-button
-       {:data-call-with-user.name "Bob"
-        :data-call-with-user.id "456"
-        :data-on-click handle-action}
+       {:data-call-with:user.name "Bob"
+        :data-call-with:user.id "456"
+        :data-on:click handle-action}
        "User Two"]])])
 
 (test-with-sse-variants
@@ -846,12 +846,12 @@
 
 (defn bind-with-call-with-test-view []
   [:div {:id "view"
-         :data-signals-approval.selected-account ""}
+         :data-signals:approval.selected-account ""}
    [:div#result "No selection yet"]
    [:select#account-select
-    {:data-bind-approval.selected-account true
-     :data-call-with-approval.item-id "999"
-     :data-on-change
+    {:data-bind:approval.selected-account true
+     :data-call-with:approval.item-id "999"
+     :data-on:change
      (core/handler []
        (let [{:keys [approval]} core/*signals*
              {:keys [selected-account item-id]} approval]
@@ -875,12 +875,12 @@
 
 (defn flat-bind-with-flat-call-with-test-view []
   [:div {:id "view"
-         :data-signals-selected-value ""}
+         :data-signals:selected-value ""}
    [:div#result "No selection yet"]
    [:select#color-select
-    {:data-bind-selected-value true
-     :data-call-with-action "paint"
-     :data-on-change
+    {:data-bind:selected-value true
+     :data-call-with:action "paint"
+     :data-on:change
      (core/handler []
        (let [{:keys [selected-value action]} core/*signals*]
          (core/push-html!
@@ -903,15 +903,15 @@
 
 (defn multi-bind-with-call-with-test-view []
   [:div {:id "view"
-         :data-signals-form.name ""
-         :data-signals-form.email ""}
+         :data-signals:form.name ""
+         :data-signals:form.email ""}
    [:div#result "No submission yet"]
-   [:input#name-input {:data-bind-form.name true}]
-   [:input#email-input {:data-bind-form.email true}]
+   [:input#name-input {:data-bind:form.name true}]
+   [:input#email-input {:data-bind:form.email true}]
    [:button#submit-btn
-    {:data-call-with-form.record-id "123"
-     :data-call-with-form.action "update"
-     :data-on-click
+    {:data-call-with:form.record-id "123"
+     :data-call-with:form.action "update"
+     :data-on:click
      (core/handler []
        (let [{:keys [form]} core/*signals*
              {:keys [name email record-id action]} form]
@@ -935,12 +935,12 @@
 
 (defn deep-nested-bind-with-call-with-test-view []
   [:div {:id "view"
-         :data-signals-a.b.selected ""}
+         :data-signals:a.b.selected ""}
    [:div#result "No selection yet"]
    [:select#deep-select
-    {:data-bind-a.b.selected true
-     :data-call-with-a.b.static-id "xyz"
-     :data-on-change
+    {:data-bind:a.b.selected true
+     :data-call-with:a.b.static-id "xyz"
+     :data-on:change
      (core/handler []
        (let [b (get-in core/*signals* [:a :b])
              {:keys [selected static-id]} b]
@@ -967,7 +967,7 @@
    [:div#status "Ready"]
    [:button
     {:id "confirm-button"
-     :data-on-click
+     :data-on:click
      (core/handler ^{:confirm "Are you sure?"} []
        (core/push-html! [:div#status "Confirmed!"]))}
     "Delete Item"]])
@@ -991,7 +991,7 @@
    [:div#cookie-status "No cookie set"]
    [:button
     {:id "set-cookie-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/set-cookie! "test-cookie=cookie-value; Path=/; Max-Age=3600")
        (core/push-script!
@@ -1027,14 +1027,14 @@
       "Not authenticated")]
    [:button
     {:id "sign-in-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
        (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/set-cookie! (session/sign-out))
        (core/push-reload!))}
@@ -1073,21 +1073,21 @@
       "Not authenticated")]
    [:button
     {:id "sign-in-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
        (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/set-cookie! (session/sign-out))
        (core/push-reload!))}
     "Sign Out"]
    [:button
     {:id "protected-action-button"
-     :data-on-click
+     :data-on:click
      (core/handler ^{:auth-required? true} []
        (core/push-script!
         (squint/clj->js
@@ -1210,21 +1210,21 @@
       "Not authenticated")]
    [:button
     {:id "sign-in-button"
-     :data-on-click
+     :data-on:click
      (core/handler ^{:auth-required? false} []
        (core/set-cookie! (session/sign-in {:name "TestUser" :role "User"}))
        (core/push-reload!))}
     "Sign In"]
    [:button
     {:id "sign-out-button"
-     :data-on-click
+     :data-on:click
      (core/handler ^{:auth-required? false} []
        (core/set-cookie! (session/sign-out))
        (core/push-reload!))}
     "Sign Out"]
    [:button
     {:id "secure-action-button"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-script!
         (squint/clj->js
@@ -1235,7 +1235,7 @@
     "Execute Secure Action"]
    [:button
     {:id "public-action-button"
-     :data-on-click
+     :data-on:click
      (core/handler ^{:auth-required? false} []
        (core/push-script!
         (squint/clj->js
@@ -1470,7 +1470,7 @@
   [:div#view
    [:div#count @count]
    [:button#auto-button
-    {:data-on-click (core/handler [count]
+    {:data-on:click (core/handler [count]
                       (try
                         (swap! count inc)
                         (core/push-html!
@@ -1501,7 +1501,7 @@
   [:div#view
    [:div#count @count]
    [:button#serialize-button
-    {:data-on-click (core/handler ^{:request-cancellation "serialize"} [count]
+    {:data-on:click (core/handler ^{:request-cancellation "serialize"} [count]
                       (try
                         (swap! count inc)
                         (core/push-html!
@@ -1535,7 +1535,7 @@
    [:div#language-display "Loading..."]
    [:button
     {:id "get-locale-info"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-html!
         [:div#view
@@ -1567,7 +1567,7 @@
    [:h1 "Query Parameters Test"]
    [:button
     {:id "get-query-params"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-html!
         [:div#view
@@ -1602,7 +1602,7 @@
    [:div#status "Ready"]
    [:button
     {:id "test-btn"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-html! [:div#status "Clicked!"]))}
     "Click Me"]])
@@ -1647,7 +1647,7 @@
    [:h1#content "Hello from Base Path!"]
    [:button
     {:id "test-btn"
-     :data-on-click
+     :data-on:click
      (core/handler []
        (core/push-html! [:h1#content "Button Clicked!"]))}
     "Click Me"]])
@@ -1682,7 +1682,7 @@
 (defn shared-action-button [{:keys [id on-click]}]
   [:button
    {:id id
-    :data-on-click (core/handler [on-click] (on-click))}
+    :data-on:click (core/handler [on-click] (on-click))}
    (str "Button " id)])
 
 (defn fn-param-handler-bug-test-view
