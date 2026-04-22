@@ -360,7 +360,7 @@ window.weave = {
     }
 }
 
-import('./datastar@v1.0.1.js').then(({ action, actions, mergePatch }) => {
+import('./datastar@v1.0.1.js').then(({ action, actions, filtered }) => {
     // Monkey patch fetch to dynamically add app path and query params header on every d* request
     const originalFetch = window.fetch;
     window.fetch = (input, init) => {
@@ -378,6 +378,21 @@ import('./datastar@v1.0.1.js').then(({ action, actions, mergePatch }) => {
     // Global store for active requests per route to prevent duplicate
     // requests in serialize mode
     const activeRouteRequests = new Map()
+
+    const deepMerge = (target, source) => {
+        const result = { ...target }
+        for (const key of Object.keys(source)) {
+            if (
+                source[key] && typeof source[key] === 'object' && !Array.isArray(source[key]) &&
+                result[key] && typeof result[key] === 'object' && !Array.isArray(result[key])
+            ) {
+                result[key] = deepMerge(result[key], source[key])
+            } else {
+                result[key] = source[key]
+            }
+        }
+        return result
+    }
 
     const setNested = (obj, keys, value) => {
         let current = obj
@@ -446,9 +461,10 @@ import('./datastar@v1.0.1.js').then(({ action, actions, mergePatch }) => {
                 }
             }
 
-            // If call-with data found, merge into signals so post picks them up
+            // If call-with data found, include it in the payload
             if (Object.keys(callWithData).length > 0) {
-                mergePatch(callWithData)
+                const signals = filtered({include: /.*/, exclude: /(^|\.)_/})
+                enhancedOptions.payload = deepMerge(signals, callWithData)
             }
 
             try {
