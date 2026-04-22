@@ -304,6 +304,14 @@
       (.append sb "{}"))
     (.toString sb)))
 
+(defn- resource-hash-aux
+  "Compute a short hash of a classpath resource for cache-busting."
+  [path]
+  (when-let [res (io/resource path)]
+    (Integer/toUnsignedString (hash (slurp res)) 36)))
+
+(def ^:private resource-hash (memoize resource-hash-aux))
+
 (defn- app-outer
   "Generate the outer HTML shell for the application.
 
@@ -340,7 +348,7 @@
              [[:meta {:name "mobile-web-app-capable" :content "yes"}]
               [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
               [:meta {:name "apple-mobile-web-app-status-bar-style" :content "black-translucent"}]
-              [:link {:rel "stylesheet" :href "/weave.css"}]
+              [:link {:rel "stylesheet" :href (str "/weave.css?v=" (resource-hash "public/weave.css"))}]
               [:style (str "html { background-color: " (or bg-color "#ffffff") "; }")]
               (when bg-color
                 [:meta {:name "theme-color" :content bg-color}])])
@@ -354,7 +362,7 @@
            (when (get opts :tailwind true)
              [:script {:src "/tailwind@3.4.16.js"}])
            [:script {:src "/squint.core.umd@0.9.182.js"}]
-           [:script {:type "module" :src "/weave.js"}]
+           [:script {:type "module" :src (str "/weave.js?v=" (resource-hash "public/weave.js"))}]
            (when-let [push-opts (:push opts)]
              [:script
               (str "window.WEAVE_VAPID_PUBLIC_KEY = '" (:vapid-public-key push-opts) "';")])
