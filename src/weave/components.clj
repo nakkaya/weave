@@ -237,12 +237,13 @@
   (let [icon-id (or (:id attrs) "")
         icon-class (or (:class attrs) "")
         size (:size attrs)
+        other-attrs (or (:attrs attrs) {})
         size-class (when size (str "h-" size " w-" size))
         final-class (tw (or size-class (when-not (seq icon-class) "h-5 w-5")) icon-class)]
-    [:svg {:class final-class
+    [:svg (merge {:class final-class
            :viewBox "0 0 24 24"
            :fill "currentColor"
-           :xmlns "http://www.w3.org/2000/svg"}
+           :xmlns "http://www.w3.org/2000/svg"} other-attrs)
      [:use {:href (str "/heroicons-sprite.svg#" icon-id)}]]))
 
 (defn spinner
