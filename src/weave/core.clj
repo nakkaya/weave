@@ -323,6 +323,7 @@
      server-id - A unique identifier for this server instance
      opts - A map of options:
             :title - The page title (defaults to \"Weave\")
+            :lang - The page language (defaults to \"en\")
             :icon - Path to an icon file in the classpath (PNG format)
             :head - Additional HTML to include in the head section
             :view-port - The viewport meta tag
@@ -334,7 +335,8 @@
   (-> (resp/response
        (c/html
         [c/doctype-html5
-         [:html {:class "w-full h-full"}
+         [:html {:class "w-full h-full"
+                 :lang (or (:lang opts) "en")}
           [:head
            [:meta {:charset "UTF-8"}]
            (or (:viewport opts)
