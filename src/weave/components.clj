@@ -237,13 +237,21 @@
   (let [icon-id (or (:id attrs) "")
         icon-class (or (:class attrs) "")
         size (:size attrs)
+        title (:title attrs)
+        desc (:desc attrs)
         other-attrs (or (:attrs attrs) {})
         size-class (when size (str "h-" size " w-" size))
-        final-class (tw (or size-class (when-not (seq icon-class) "h-5 w-5")) icon-class)]
-    [:svg (merge {:class final-class
-           :viewBox "0 0 24 24"
-           :fill "currentColor"
-           :xmlns "http://www.w3.org/2000/svg"} other-attrs)
+        final-class (tw (or size-class (when-not (seq icon-class) "h-5 w-5")) icon-class)
+        svg-attrs (merge {:class final-class
+                          :viewBox "0 0 24 24"
+                          :fill "currentColor"
+                          :xmlns "http://www.w3.org/2000/svg"}
+                         (when title {:role "img"})
+                         (when-not title {:aria-hidden "true"})
+                         other-attrs)]
+    [:svg svg-attrs
+     (when title [:title title])
+     (when desc [:desc desc])
      [:use {:href (str "/heroicons-sprite.svg#" icon-id)}]]))
 
 (defn spinner
@@ -252,7 +260,8 @@
   [:svg.animate-spin {:style "height:1em;width:1em"
                       :xmlns "http://www.w3.org/2000/svg"
                       :fill "none"
-                      :viewBox "0 0 24 24"}
+                      :viewBox "0 0 24 24"
+                      :aria-hidden "true"}
    [:circle {:class "opacity-25" :cx "12" :cy "12" :r "10"
              :stroke "currentColor" :stroke-width "4"}]
    [:path {:class "opacity-75" :fill "currentColor"
