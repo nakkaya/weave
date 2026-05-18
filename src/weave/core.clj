@@ -530,9 +530,11 @@
                           (->sse-response
                            {hk-gen/on-open
                             (fn [sse-gen#]
-                              (binding [*sse-gen* sse-gen#]
-                                ~@body)
-                              (d*/close-sse! sse-gen#))})))))))
+                              (try
+                                (binding [*sse-gen* sse-gen#]
+                                  ~@body)
+                                (finally
+                                  (d*/close-sse! sse-gen#))))})))))))
                route# (str "/h/" route-hash#)
                base-expr# (str "@call('" route# "', " (#'request-options merged-opts#) ")")
                dstar-expr# (if-let [confirm-msg# (:confirm merged-opts#)]
