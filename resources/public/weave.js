@@ -467,6 +467,22 @@ import('./datastar@v1.0.1.js').then(({ action, actions, filtered }) => {
                 enhancedOptions.payload = deepMerge(signals, callWithData)
             }
 
+            // Pre-validate form before calling post to avoid datastar's
+            // unresolved promise bug when checkValidity() fails
+            if (enhancedOptions.contentType === 'form') {
+                const selector = enhancedOptions.selector
+                const form = selector
+                    ? document.querySelector(selector)
+                    : ctx.el.closest('form')
+                if (form && !form.noValidate && !form.checkValidity()) {
+                    form.reportValidity()
+                    if (requestCancellation === 'serialize') {
+                        activeRouteRequests.delete(url)
+                    }
+                    return
+                }
+            }
+
             try {
                 return await actions.post(ctx, url, enhancedOptions)
             } finally {
