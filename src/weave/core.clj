@@ -15,10 +15,9 @@
    [ring.middleware.defaults :as def]
    [ring.middleware.gzip :refer [wrap-gzip]]
    [ring.util.response :as resp]
-   [starfederation.datastar.clojure.adapter.http-kit :as hk-gen]
-   [starfederation.datastar.clojure.api :as d*]
    [weave.push :as push]
-   [weave.session :as session])
+   [weave.session :as session]
+   [weave.sse :as sse])
   (:import
    [java.awt RenderingHints]
    [java.awt.image BufferedImage]
@@ -162,23 +161,12 @@
   (defn get-signals
     "Extract and parse client-side signals from the request."
     [req]
-    (let [signals (-> req d*/get-signals)]
+    (let [signals (case (:request-method req)
+                    (:get :delete) (get-in req [:query-params "datastar"])
+                    (:body req))]
       (if (empty? signals)
         {}
         (read-json signals)))))
-
-(defn- client-accepts-gzip? [request]
-  (when-let [accept (get-in request [:headers "accept-encoding"])]
-    (s/includes? accept "gzip")))
-
-(defn ->sse-response
-  "Create a Server-Sent Events (SSE) response with the given options."
-  [opts]
-  (let [request *request*
-        opts (if (client-accepts-gzip? request)
-               (assoc opts hk-gen/write-profile hk-gen/gzip-profile)
-               opts)]
-    (hk-gen/->sse-response request opts)))
 
 (defn- request-options
   "Generate a JavaScript object string with request options for datastar.
@@ -399,38 +387,37 @@
 
 (defmethod app-loader true
   [_req _server-id view _options]
-  (->sse-response
-   {hk-gen/on-open
-    (fn [sse-gen]
-      (d*/patch-elements!
-       sse-gen
-       (c/html
-        [:div {:id "weave-main"
-               :class "w-full h-full"}
-         (binding [*sse-gen* sse-gen]
-           (view))]))
-      (session/add-connection!
-       *session-id* *instance-id* sse-gen)
-      (session/record-activity!
-       *session-id* *instance-id*))
-    hk-gen/on-close
-    (fn [_sse-gen _status]
-      (session/remove-connection!
-       *session-id* *instance-id*))}))
+  (let [session-id *session-id*
+        instance-id *instance-id*]
+    (sse/response
+     *request*
+     {:on-open
+      (fn [conn]
+        (sse/html!
+         conn
+         [:div {:id "weave-main"
+                :class "w-full h-full"}
+          (binding [*sse-gen* conn]
+            (view))])
+        (session/add-connection! session-id instance-id conn)
+        (session/record-activity! session-id instance-id))
+      :on-close
+      (fn [_status]
+        (session/remove-connection! session-id instance-id))})))
 
 (defmethod app-loader false
   [_req _server-id view _options]
-  (->sse-response
-   {hk-gen/on-open
-    (fn [sse-gen]
-      (d*/patch-elements!
-       sse-gen
-       (c/html
-        [:div {:id "weave-main"
-               :class "w-full h-full"}
-         (binding [*sse-gen* sse-gen]
-           (view))]))
-      (d*/close-sse! sse-gen))}))
+  (sse/response
+   *request*
+   {:on-open
+    (fn [conn]
+      (sse/html!
+       conn
+       [:div {:id "weave-main"
+              :class "w-full h-full"}
+        (binding [*sse-gen* conn]
+          (view))])
+      (sse/close! conn))}))
 
 (defn authenticated?
   "Return `true` if the `request` is an authenticated request."
@@ -470,14 +457,12 @@
                           (session/verify-csrf sid csrf-token))]
           (if valid?
             (handler request)
-            (hk-gen/->sse-response
+            (sse/response
              request
-             (cond-> {hk-gen/on-open
-                      (fn [sse-gen]
-                        (d*/execute-script! sse-gen "weave.reload();")
-                        (d*/close-sse! sse-gen))}
-               (client-accepts-gzip? request)
-               (assoc hk-gen/write-profile hk-gen/gzip-profile)))))
+             {:on-open
+              (fn [conn]
+                (sse/script! conn "weave.reload();")
+                (sse/close! conn))})))
         ;; Not internal - pass through
         (handler request)))))
 
@@ -527,14 +512,15 @@
                           (when *sse-enabled*
                             (session/record-activity!
                              *session-id* *instance-id*))
-                          (->sse-response
-                           {hk-gen/on-open
-                            (fn [sse-gen#]
+                          (sse/response
+                           *request*
+                           {:on-open
+                            (fn [conn#]
                               (try
-                                (binding [*sse-gen* sse-gen#]
+                                (binding [*sse-gen* conn#]
                                   ~@body)
                                 (finally
-                                  (d*/close-sse! sse-gen#))))})))))))
+                                  (sse/close! conn#))))})))))))
                route# (str "/h/" route-hash#)
                base-expr# (str "@call('" route# "', " (#'request-options merged-opts#) ")")
                dstar-expr# (if-let [confirm-msg# (:confirm merged-opts#)]
@@ -582,22 +568,7 @@
   ([html]
    (push-html! html {}))
   ([html opts]
-   (let [mode-map {:outer d*/pm-outer
-                   :inner d*/pm-inner
-                   :replace d*/pm-replace
-                   :prepend d*/pm-prepend
-                   :append d*/pm-append
-                   :before d*/pm-before
-                   :after d*/pm-after
-                   :remove d*/pm-remove}
-         mode (get mode-map (:mode opts) d*/pm-outer)
-         patch-opts (cond-> {d*/patch-mode mode}
-                      (:selector opts) (assoc d*/selector (:selector opts))
-                      (:use-view-transition opts) (assoc d*/use-view-transition (:use-view-transition opts))
-                      (:id opts) (assoc d*/id (:id opts))
-                      (:retry-duration opts) (assoc d*/retry-duration (:retry-duration opts)))]
-
-     (d*/patch-elements! (sse-conn) (c/html html) patch-opts))))
+   (sse/html! (sse-conn) html opts)))
 
 (defn broadcast-html!
   "Pushes HTML to all browser tabs/windows that share the same
@@ -609,43 +580,27 @@
   ([html]
    (broadcast-html! html {}))
   ([html opts]
-   (let [mode-map {:outer d*/pm-outer
-                   :inner d*/pm-inner
-                   :replace d*/pm-replace
-                   :prepend d*/pm-prepend
-                   :append d*/pm-append
-                   :before d*/pm-before
-                   :after d*/pm-after
-                   :remove d*/pm-remove}
-         mode (get mode-map (:mode opts) d*/pm-outer)
-         patch-opts (cond-> {d*/patch-mode mode}
-                      (:selector opts) (assoc d*/selector (:selector opts))
-                      (:use-view-transition opts) (assoc d*/use-view-transition (:use-view-transition opts))
-                      (:id opts) (assoc d*/id (:id opts))
-                      (:retry-duration opts) (assoc d*/retry-duration (:retry-duration opts)))
-         connections (session/session-connections *session-id*)]
-     (doseq [sse connections]
-       (d*/patch-elements! sse (c/html html) patch-opts)))))
+   (doseq [conn (session/session-connections *session-id*)]
+     (sse/html! conn html opts))))
 
 (defn push-script!
   "Send JavaScript to the specific browser tab/window that
    triggered the current handler for execution."
   [script]
-  (d*/execute-script! (sse-conn) script))
+  (sse/script! (sse-conn) script))
 
 (defn push-reload!
   "Send a reload command to the specific browser tab/window that
    triggered the current handler."
   []
-  (d*/execute-script! (sse-conn) "weave.reload();"))
+  (sse/script! (sse-conn) "weave.reload();"))
 
 (defn broadcast-script!
   "Send JavaScript to all browser tabs/windows that share the same
    session ID for execution."
   [script]
-  (let [connections (session/session-connections *session-id*)]
-    (doseq [sse connections]
-      (d*/execute-script! sse script))))
+  (doseq [conn (session/session-connections *session-id*)]
+    (sse/script! conn script)))
 
 (defn- to-camel-case
   [x]
@@ -689,7 +644,7 @@
   [signal]
   (let [resolved (resolve-signal-fns signal)]
     (set! *signals* (deep-merge *signals* resolved))
-    (d*/patch-signals!
+    (sse/signals!
      (sse-conn) (->> resolved
                      (cske/transform-keys to-camel-case)
                      (charred/write-json-str)))))
@@ -713,12 +668,11 @@
   ([url view-fn]
    (let [connections (session/session-connections *session-id*)]
      (set! *app-path* url)
-     (doseq [sse connections]
-       (binding [*sse-gen* sse]
-         (push-script! (str "weave.pushHistoryState('" url "');"))))
+     (doseq [conn connections]
+       (sse/script! conn (str "weave.pushHistoryState('" url "');")))
      (when view-fn
-       (doseq [sse connections]
-         (d*/patch-elements! sse (c/html (view-fn))))))))
+       (doseq [conn connections]
+         (sse/html! conn (view-fn)))))))
 
 (defn set-cookie!
   "Send a Set-Cookie header to the specific browser tab/window that
