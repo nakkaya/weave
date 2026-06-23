@@ -360,7 +360,7 @@ window.weave = {
     }
 }
 
-import('./datastar@v1.0.1.js').then(({ action, actions, filtered }) => {
+import('./datastar@v1.0.2.js').then(({ action, actions, filtered }) => {
     // Monkey patch fetch to dynamically add app path and query params header on every d* request
     const originalFetch = window.fetch;
     window.fetch = (input, init) => {
