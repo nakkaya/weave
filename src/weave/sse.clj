@@ -166,8 +166,9 @@
     (SSEConnection. ch (ReentrantLock.) buff scratch baos wrapped osw gzip? false)))
 
 (defn- headers [ring-request gzip?]
-  (cond-> {"Cache-Control" "no-cache"
-           "Content-Type"  "text/event-stream"}
+  (cond-> {"Cache-Control"     "no-cache"
+           "Content-Type"      "text/event-stream"
+           "X-Accel-Buffering" "no"}
     (or (nil? (:protocol ring-request))
         (neg? (compare (:protocol ring-request) "HTTP/1.1")))
     (assoc "Connection" "keep-alive")
