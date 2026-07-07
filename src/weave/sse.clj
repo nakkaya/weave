@@ -148,7 +148,7 @@
       (.append buff "data: mode append\n")
       (.append buff ^String data-elements-prefix)
       (let [body-start (.length buff)]
-        (c/write-html buff [:script {:data-effect "el.remove()"} script])
+        (c/write-html buff [:script {:data-effect "el.remove()"} (c/raw script)])
         (add-data-lines! buff body-start)))))
 
 (defn close! [^SSEConnection conn]
