@@ -114,6 +114,8 @@
            :bg "bg-white dark:bg-[#1a1a1a]"
            :text "text-[#171717] dark:text-[#e5e5e5]"
            :placeholder "placeholder:text-[#a3a3a3] dark:placeholder:text-[#707070]"}
+   :checkbox {:base "relative [&+label]:mb-0 appearance-none w-4 h-4 shrink-0 cursor-pointer rounded border border-[#d0d0d0] bg-white transition dark:border-[#333333] dark:bg-[#1a1a1a] hover:border-[#4f46e5] dark:hover:border-[#5b8ff9] checked:bg-[#4f46e5] checked:border-[#4f46e5] dark:checked:bg-[#5b8ff9] dark:checked:border-[#5b8ff9] checked:after:content-['✓'] after:absolute after:left-1/2 after:top-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[11px] after:font-bold after:leading-none after:text-white focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/40 dark:focus:ring-[#5b8ff9]/40"}
+   :toggle {:track "w-11 h-6 bg-[#e0e0e0] dark:bg-[#333333] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#d0d0d0] dark:after:border-[#737373] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"}
    :label {:base "mb-1.5 block font-medium"
            :sizes {:xs "text-xs"
                    :sm "text-sm"
@@ -1181,6 +1183,11 @@
                            (cond-> title (assoc :title title)))]
     (into [:span filtered-attrs] content)))
 
+(defmethod c/resolve-alias ::checkbox
+  [_ attrs _content]
+  [:input (merge (build-themed-attrs :checkbox {:base-class [:base]} attrs)
+                 {:type "checkbox"})])
+
 (defmethod c/resolve-alias ::toggle
   [_ attrs _content]
   (let [disabled (:disabled attrs)
@@ -1197,11 +1204,11 @@
     [:label {:class label-class}
      [:input.sr-only.peer input-attrs]
      [:div
-      {:class "w-11 h-6 bg-[#e0e0e0] dark:bg-[#333333] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#d0d0d0] dark:after:border-[#737373] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"}]]))
+      {:class (or (get-theme-class :toggle :track)
+                  "w-11 h-6 bg-[#e0e0e0] dark:bg-[#333333] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#d0d0d0] dark:after:border-[#737373] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600")}]]))
 
 ;; GOV.UK Design System theme
 ;; Light-mode only, based on https://design-system.service.gov.uk
-
 (def theme-gov-uk
   {:view {:bg "bg-[#f3f3f3]"}
 
@@ -1285,6 +1292,10 @@
            :bg "bg-white"
            :text "text-[#0b0c0c]"
            :placeholder "placeholder:text-[#484949]"}
+
+   :checkbox {:base "relative [&+label]:mb-0 appearance-none shrink-0 cursor-pointer w-[40px] h-[40px] bg-white border-2 border-[#0b0c0c] rounded-none after:content-[''] after:absolute after:top-[11px] after:left-[9px] after:w-[23px] after:h-[12px] after:border-solid after:border-[#0b0c0c] after:border-b-[5px] after:border-l-[5px] after:-rotate-45 after:opacity-0 checked:after:opacity-100 focus:outline-none focus:shadow-[0_0_0_3px_#ffdd00]"}
+
+   :toggle {:track "w-11 h-6 bg-[#f3f3f3] border-2 border-[#0b0c0c] rounded-full peer peer-focus:outline-none peer-focus:shadow-[0_0_0_3px_#ffdd00] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#0b0c0c] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0f7a52] peer-checked:border-[#0f7a52] peer-checked:after:translate-x-full peer-checked:after:bg-white"}
 
    :label {:base "mb-1.5 block font-bold"
            :sizes {:xs "text-sm"
@@ -1393,3 +1404,199 @@
                                :outlined "bg-[#fde4d7] text-[#7a3c1c] ring-[#7a3c1c]/20"}
                     :indigo  {:pill "bg-[#ddd6ec] text-[#2a1950]"
                                :outlined "bg-[#ddd6ec] text-[#2a1950] ring-[#2a1950]/20"}}}})
+
+;; Cyberpunk Color Palette
+;; background:      #0a0a0f  - Deep void black
+;; card:            #12121a  - Card background
+;; muted:           #1c1c2e  - Elevated backgrounds
+;; border:          #2a2a3a  - Subtle borders
+;; foreground:      #e0e0e0  - Primary text
+;; mutedForeground: #6b7280  - Secondary text
+;; accent:          #00ff88  - Primary neon green
+;; accentSecondary: #ff00ff  - Magenta
+;; accentTertiary:  #00d4ff  - Cyan
+;; destructive:     #ff3366  - Error red-pink
+;;
+(def theme-cyberpunk
+  {:view {:bg "relative bg-[#0a0a0f] [background-image:linear-gradient(rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(rgba(0,255,136,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.05)_1px,transparent_1px),radial-gradient(ellipse_at_0%_0%,rgba(0,255,136,0.08)_0%,transparent_50%),radial-gradient(ellipse_at_100%_100%,rgba(255,0,255,0.05)_0%,transparent_50%)] [background-size:25px_25px,25px_25px,100px_100px,100px_100px,100%_100%,100%_100%] before:content-[''] before:fixed before:inset-0 before:pointer-events-none before:z-[9999] before:opacity-30 before:[background:repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.1)_2px,rgba(0,0,0,0.1)_4px)]"}
+
+   :card {:bg "bg-[#12121a]"
+          :border "border border-[#2a2a3a]"
+          :shadow "shadow-[0_0_10px_rgba(0,255,136,0.1)]"
+          :radius "relative [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] before:content-[''] before:absolute before:top-0 before:left-0 before:w-[17px] before:h-[2px] before:bg-[#00ff88] before:origin-top-left before:[transform:rotate(-45deg)] before:z-10 after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-[17px] after:h-[2px] after:bg-[#00ff88] after:origin-bottom-right after:[transform:rotate(-45deg)] after:z-10"
+          :ring ""}
+
+   :card-with-header {:bg "bg-[#12121a]"
+                      :border "divide-y divide-[#2a2a3a]"
+                      :shadow "shadow-[0_0_10px_rgba(0,255,136,0.1)]"
+                      :radius "relative [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] before:content-[''] before:absolute before:top-0 before:left-0 before:w-[17px] before:h-[2px] before:bg-[#00ff88] before:origin-top-left before:[transform:rotate(-45deg)] before:z-10 after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-[17px] after:h-[2px] after:bg-[#00ff88] after:origin-bottom-right after:[transform:rotate(-45deg)] after:z-10"
+                      :ring ""}
+
+   :sidebar {:bg "bg-[#0a0a0f] lg:bg-transparent"
+             :text "text-[#9ca3af]"
+             :hover "hover:bg-[#1c1c2e] hover:text-[#00ff88]"
+             :active "bg-[#1c1c2e] text-[#00ff88]"
+             :radius "rounded-none"
+             :mobile-bg "bg-[#0a0a0f]"
+             :group-text "text-[#6b7280]"}
+
+   :button {:base "inline-flex items-center justify-center text-center gap-2 shadow-none transition-all duration-150 uppercase tracking-wider font-mono [clip-path:polygon(6px_0,100%_0,100%_calc(100%-6px),calc(100%-6px)_100%,0_100%,0_6px)]"
+            :sizes {:xs "px-2 py-1.5 text-xs"
+                    :sm "px-3 py-2 text-sm"
+                    :md "px-4 py-3 text-sm"
+                    :lg "px-5 py-3.5 text-base"
+                    :xl "px-6 py-4 text-lg"
+                    :icon "p-2"}
+            :variants {:primary {:bg "bg-transparent border-2 border-[#00ff88]"
+                                 :hover "hover:bg-[#00ff88] hover:text-[#0a0a0f] hover:shadow-[0_0_20px_rgba(0,255,136,0.5)]"
+                                 :focus "focus:outline-none focus:ring-2 focus:ring-[#00ff88]"
+                                 :text "text-[#00ff88] font-medium"}
+                       :danger {:bg "bg-transparent border-2 border-[#ff3366]"
+                                :hover "hover:bg-[#ff3366] hover:text-[#0a0a0f] hover:shadow-[0_0_20px_rgba(255,51,102,0.5)]"
+                                :focus "focus:outline-none focus:ring-2 focus:ring-[#ff3366]"
+                                :text "text-[#ff3366] font-medium"}
+                       :secondary {:bg "bg-transparent border border-[#2a2a3a]"
+                                   :hover "hover:border-[#00ff88] hover:text-[#00ff88] hover:shadow-[0_0_10px_rgba(0,255,136,0.3)]"
+                                   :focus "focus:outline-none focus:ring-2 focus:ring-[#00ff88]"
+                                   :text "text-[#e0e0e0] font-medium"}
+                       :ghost {:bg "bg-transparent"
+                               :hover "hover:bg-[#00ff88]/10 hover:text-[#00ff88]"
+                               :focus "focus:outline-none"
+                               :text "text-[#6b7280] font-medium"}}}
+
+   :input {:base "block w-full h-11 border bg-transparent shadow-none focus:outline-hidden focus:ring-2 font-mono [clip-path:polygon(6px_0,100%_0,100%_calc(100%-6px),calc(100%-6px)_100%,0_100%,0_6px)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
+           :sizes {:xs "px-3 py-2 text-xs"
+                   :sm "px-3.5 py-2 text-sm"
+                   :md "px-4 py-2.5 text-sm"
+                   :lg "px-4 py-3 text-base"
+                   :xl "px-5 py-3.5 text-lg"}
+           :border "border-[#2a2a3a] focus:border-[#00ff88]"
+           :focus "focus:ring-[#00ff88]/20"
+           :bg "bg-[#12121a]"
+           :text "text-[#00ff88]"
+           :placeholder "placeholder:text-[#6b7280]"}
+
+   :checkbox {:base "relative [&+label]:mb-0 appearance-none w-4 h-4 shrink-0 cursor-pointer bg-[#12121a] border border-[#2a2a3a] transition-all [clip-path:polygon(3px_0,100%_0,100%_calc(100%-3px),calc(100%-3px)_100%,0_100%,0_3px)] hover:border-[#00ff88] hover:shadow-[0_0_8px_rgba(0,255,136,0.3)] checked:bg-[#00ff88] checked:border-[#00ff88] checked:after:content-['✓'] after:absolute after:left-1/2 after:top-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[12px] after:font-bold after:text-[#0a0a0f] after:leading-none focus:outline-none focus:ring-2 focus:ring-[#00ff88]/20"}
+
+   :toggle {:track "w-11 h-6 bg-[#1c1c2e] border border-[#2a2a3a] rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#00ff88]/30 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#6b7280] after:border after:border-[#2a2a3a] after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00ff88]/20 peer-checked:border-[#00ff88]/50 peer-checked:after:translate-x-full peer-checked:after:bg-[#00ff88] peer-checked:after:border-[#00ff88]"}
+
+   :label {:base "mb-1.5 block font-medium uppercase tracking-wider font-mono"
+           :sizes {:xs "text-xs"
+                   :sm "text-sm"
+                   :md "text-sm"
+                   :lg "text-base"
+                   :xl "text-lg"}
+           :text "text-[#6b7280]"
+           :required "text-[#ff3366]"}
+
+   :select {:base "block w-full h-11 border bg-transparent shadow-none focus:outline-hidden focus:ring-2 appearance-none font-mono [clip-path:polygon(6px_0,100%_0,100%_calc(100%-6px),calc(100%-6px)_100%,0_100%,0_6px)]"
+            :sizes {:xs "px-3 py-2 text-xs"
+                    :sm "px-3.5 py-2 text-sm"
+                    :md "px-4 py-2.5 text-sm"
+                    :lg "px-4 py-3 text-base"
+                    :xl "px-5 py-3.5 text-lg"}
+            :border "border-[#2a2a3a] focus:border-[#00ff88]"
+            :focus "focus:ring-[#00ff88]/20"
+            :bg "bg-[#12121a]"
+            :text "text-[#e0e0e0]"
+            :icon "absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-[#00ff88]"}
+
+   :table {:container "w-full overflow-x-auto border border-[#2a2a3a] shadow-[0_0_10px_rgba(0,255,136,0.1)] [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]"
+           :base "min-w-full divide-y divide-[#2a2a3a]"
+           :header {:bg "bg-[#0a0a0f]"
+                    :text "text-xs font-mono font-medium text-[#00ff88] uppercase tracking-wider"
+                    :padding "px-6 py-3"}
+           :body {:bg "bg-[#12121a]"
+                  :divider "divide-y divide-[#2a2a3a]"}
+           :row {:hover "hover:bg-[#1c1c2e]"
+                 :even "bg-[#12121a]"
+                 :odd "bg-[#0a0a0f]"}
+           :cell {:text "text-sm text-[#e0e0e0] font-mono"
+                  :padding "px-6 py-4 whitespace-nowrap"}}
+
+   :alert {:base "p-4 border relative [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] before:content-[''] before:absolute before:top-0 before:left-0 before:w-[17px] before:h-[2px] before:bg-[#00ff88] before:origin-top-left before:[transform:rotate(-45deg)] before:z-10 after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-[17px] after:h-[2px] after:bg-[#00ff88] after:origin-bottom-right after:[transform:rotate(-45deg)] after:z-10"
+           :variants {:success {:bg "bg-[#00ff88]/10"
+                                :border "border-[#00ff88]"
+                                :text "text-[#00ff88]"}
+                      :warning {:bg "bg-[#ff9500]/10"
+                                :border "border-[#ff9500]"
+                                :text "text-[#ff9500]"}
+                      :error {:bg "bg-[#ff3366]/10"
+                              :border "border-[#ff3366]"
+                              :text "text-[#ff3366]"}
+                      :info {:bg "bg-[#00d4ff]/10"
+                             :border "border-[#00d4ff]"
+                             :text "text-[#00d4ff]"}}}
+
+   :modal {:overlay "fixed inset-0 z-50 bg-black/80 transition-opacity"
+           :container "fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+           :dialog "relative bg-[#12121a] border border-[#2a2a3a] shadow-[0_0_30px_rgba(0,255,136,0.2)] overflow-hidden [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]"
+           :sizes {:sm "max-w-sm w-full"
+                   :md "max-w-md w-full"
+                   :lg "max-w-lg w-full"
+                   :xl "max-w-xl w-full"
+                   :2xl "max-w-2xl w-full"
+                   :full "max-w-full mx-4"}}
+
+   :hr {:border "border-[#2a2a3a]"
+        :light "border-[#1c1c2e]"}
+
+   :code {:bg "bg-[#12121a]"
+          :text "text-[#00ff88]"
+          :base "font-mono text-sm rounded-none p-3 overflow-x-auto whitespace-pre-wrap"}
+
+   :link {:base "text-[#00d4ff] hover:text-[#00ff88] hover:underline transition-colors"}
+
+   :stat {:bg "bg-[#12121a]"
+          :base "overflow-hidden px-4 py-5 border border-[#2a2a3a] shadow-[0_0_10px_rgba(0,255,136,0.1)] sm:p-6 relative [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] before:content-[''] before:absolute before:top-0 before:left-0 before:w-[17px] before:h-[2px] before:bg-[#00ff88] before:origin-top-left before:[transform:rotate(-45deg)] before:z-10 after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-[17px] after:h-[2px] after:bg-[#00ff88] after:origin-bottom-right after:[transform:rotate(-45deg)] after:z-10"
+          :label "truncate text-sm font-medium uppercase tracking-wider font-mono text-[#6b7280]"
+          :value "mt-1 text-3xl font-semibold tracking-tight font-mono text-[#00ff88]"}
+
+   :navbar {:bg "bg-[#0a0a0f]"
+            :text "text-[#9ca3af]"
+            :hover "hover:bg-[#1c1c2e] hover:text-[#00ff88]"
+            :active "bg-[#1c1c2e] text-[#00ff88]"
+            :radius "rounded-none"}
+
+   :heading {:text "text-[#e0e0e0]"
+             :variants {:secondary {:text "text-[#9ca3af]"}
+                        :caption {:text "text-[#6b7280]"}}}
+
+   :text {:text "text-[#e0e0e0]"
+          :variants {:secondary {:text "text-[#9ca3af]"}
+                     :caption {:text "text-[#6b7280]"}}}
+
+   :tab {:border "border-[#2a2a3a]"
+         :text "text-[#6b7280]"
+         :hover "hover:border-[#2a2a3a] hover:text-[#e0e0e0]"
+         :active {:border "border-[#00ff88]"
+                  :text "text-[#00ff88]"}
+         :icon {:active "text-[#00ff88]"
+                :inactive "text-[#6b7280]"}}
+
+   :dropdown {:menu {:bg "bg-[#12121a]"
+                     :border "ring-1 ring-[#2a2a3a]"
+                     :shadow "shadow-[0_0_20px_rgba(0,255,136,0.15)]"
+                     :divider "divide-y divide-[#2a2a3a]"}
+              :item {:base "flex items-center gap-3 px-4 py-3 text-sm font-medium font-mono transition-colors"
+                     :variants {:default {:text "text-[#e0e0e0]"
+                                          :hover "hover:bg-[#1c1c2e] hover:text-[#00ff88]"}
+                                :danger {:text "text-[#ff3366]"
+                                         :hover "hover:bg-[#ff3366]/10 hover:text-[#ff3366]"}}}}
+
+   :badge {:colors {:green  {:pill "bg-[#00ff88]/15 text-[#00ff88]"
+                             :outlined "bg-[#00ff88]/15 text-[#00ff88] ring-[#00ff88]/30"}
+                    :red    {:pill "bg-[#ff3366]/15 text-[#ff3366]"
+                             :outlined "bg-[#ff3366]/15 text-[#ff3366] ring-[#ff3366]/30"}
+                    :blue   {:pill "bg-[#00d4ff]/15 text-[#00d4ff]"
+                             :outlined "bg-[#00d4ff]/15 text-[#00d4ff] ring-[#00d4ff]/30"}
+                    :yellow {:pill "bg-[#ffcc00]/15 text-[#ffcc00]"
+                             :outlined "bg-[#ffcc00]/15 text-[#ffcc00] ring-[#ffcc00]/30"}
+                    :purple {:pill "bg-[#ff00ff]/15 text-[#ff00ff]"
+                             :outlined "bg-[#ff00ff]/15 text-[#ff00ff] ring-[#ff00ff]/30"}
+                    :gray   {:pill "bg-[#1c1c2e] text-[#9ca3af]"
+                             :outlined "bg-[#1c1c2e] text-[#9ca3af] ring-[#2a2a3a]"}
+                    :orange {:pill "bg-[#ff9500]/15 text-[#ff9500]"
+                             :outlined "bg-[#ff9500]/15 text-[#ff9500] ring-[#ff9500]/30"}
+                    :indigo {:pill "bg-[#818cf8]/15 text-[#818cf8]"
+                             :outlined "bg-[#818cf8]/15 text-[#818cf8] ring-[#818cf8]/30"}}}})
