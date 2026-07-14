@@ -274,7 +274,8 @@
                                     :hover (pre "hover" (u "bg" danger 10) (u "text" danger))}}}}
 
        :badge
-       {:colors
+       {:radius "rounded"
+        :colors
         {:green  {:pill     (cx (u "bg" accent 15) (u "text" accent))
                   :outlined (cx (u "bg" accent 15) (u "text" accent) (u "ring" accent 30))}
          :red    {:pill     (cx (u "bg" danger 15) (u "text" danger))

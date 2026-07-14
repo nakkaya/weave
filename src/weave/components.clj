@@ -1015,7 +1015,7 @@
                      :sm "px-2.5 py-0.5"
                      :md "px-2 py-1")
         shape-class (case variant
-                      :pill "rounded-full"
+                      :pill (or (get-theme-class :badge :radius) "rounded-full")
                       :outlined "rounded-md ring-1 ring-inset")
         colors (or (get-theme-class :badge :colors (keyword color))
                    (get-theme-class :badge :colors :gray))
