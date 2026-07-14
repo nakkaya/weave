@@ -83,6 +83,9 @@
 
        :button {:base  (cx "inline-flex items-center justify-center text-center gap-2 rounded-none"
                            btn-shadow "transition font-sans font-bold")
+                :link  (cx "flex items-center gap-2 text-sm transition-colors"
+                           (u "text" link-blue) "hover:underline"
+                           (pre "hover" (u "text" link-hover)))
                 :sizes {:xs "px-2 py-1.5 text-sm"
                         :s  "px-3 py-2 text-base"
                         :sm "px-3 py-2 text-base"

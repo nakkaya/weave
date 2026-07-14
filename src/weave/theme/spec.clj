@@ -21,6 +21,7 @@
    :sidebar {:bg :req :text :req :hover :req :active :req :radius :req}
    :navbar {:bg :req :text :req :hover :req :radius :req}
    :button {:base :req
+            :link :req
             :sizes {:xs :req :sm :req :md :req :lg :req :xl :req :icon :req}
             :variants {:primary   {:bg :req :hover :req :focus :req :text :req}
                        :secondary {:bg :req :hover :req :focus :req :text :req}

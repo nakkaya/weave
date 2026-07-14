@@ -272,16 +272,20 @@
   [_ attrs content]
   (let [size (or (:size attrs) :md)
         variant (or (:variant attrs) :primary)
-        variant-classes (get-variant-classes :button variant)
-        size-class (get-size-class :button size)
-        base-class (get-theme-class :button :base)
-        btn-class (tw
-                   base-class
-                   size-class
-                   (or (:bg-class attrs) (:bg variant-classes))
-                   (or (:text-class attrs) (:text variant-classes))
-                   (or (:hover-class attrs) (:hover variant-classes))
-                   (or (:focus-class attrs) (:focus variant-classes)))
+        btn-class
+        (if (= variant :link)
+          (tw (get-theme-class :button :link)
+              (:text-class attrs)
+              (:hover-class attrs))
+          (let [variant-classes (get-variant-classes :button variant)
+                size-class (get-size-class :button size)
+                base-class (get-theme-class :button :base)]
+            (tw base-class
+                size-class
+                (or (:bg-class attrs) (:bg variant-classes))
+                (or (:text-class attrs) (:text variant-classes))
+                (or (:hover-class attrs) (:hover variant-classes))
+                (or (:focus-class attrs) (:focus variant-classes)))))
         base-attrs {:type (or (:type attrs) "button")
                     :class btn-class}
         filtered-attrs (dissoc attrs

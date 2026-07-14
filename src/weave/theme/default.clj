@@ -99,6 +99,10 @@
 
        :button {:base  (cx "inline-flex items-center justify-center text-center gap-2"
                            "rounded-lg shadow-theme-xs transition")
+                :link  (cx "flex items-center gap-2 text-sm transition-colors"
+                           (duo "text" text3 text3-d)
+                           (pre "hover" (u "text" accent))
+                           (pre "dark:hover" (u "text" accent-d)))
                 :sizes {:xs "px-2 py-1.5 text-xs"
                         :sm "px-3 py-2 text-sm"
                         :md "px-4 py-2.5 text-sm"
