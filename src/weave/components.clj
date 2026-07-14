@@ -855,7 +855,7 @@
 ;;                     {:name "Bob" :age 25}]}]
 (defmethod c/resolve-alias ::table
   [_ attrs _content]
-  (let [{:keys [id columns rows class class-table class-header class-row]} attrs
+  (let [{:keys [id columns rows class class-table class-header class-row row-attrs]} attrs
         themed (resolve-theme-classes :table
                  {:container-class      [:container]
                   :base-class           [:base]
@@ -876,7 +876,7 @@
                                :header-text-class :header-padding-class :body-bg-class
                                :body-divider-class :row-hover-class :row-even-class
                                :row-odd-class :cell-text-class :cell-padding-class
-                               :class :class-table :class-header :class-row)]
+                               :class :class-table :class-header :class-row :row-attrs)]
     [:div {:id id :class (:container-class themed)}
      [:table (merge-attrs {:class table-class} filtered-attrs)
       [:thead {:class (tw (:header-bg-class themed) class-header)}
@@ -894,9 +894,11 @@
       [:tbody {:class (tw (:body-divider-class themed) (:body-bg-class themed))}
        (for [[index row] (map-indexed vector rows)]
          [:tr
-          {:class (tw (:row-hover-class themed)
-                      (if (even? index) (:row-even-class themed) (:row-odd-class themed))
-                      class-row)}
+          (merge-attrs
+           {:class (tw (:row-hover-class themed)
+                       (if (even? index) (:row-even-class themed) (:row-odd-class themed))
+                       class-row)}
+           (if row-attrs (row-attrs row index) {}))
           (for [column columns]
             [:td
              {:key (:name column)
