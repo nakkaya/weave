@@ -247,7 +247,7 @@
                        :2xl "max-w-2xl w-full"
                        :full "max-w-full mx-4"}}
 
-       :heading {:text (u "text" fg)
+       :heading {:text (u "text" accent)
                  :variants {:secondary {:text (u "text" fg-dim)}
                             :caption   {:text (u "text" fg-mute)}}}
 
