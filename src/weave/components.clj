@@ -4,7 +4,10 @@
    [clojure.string :as str]
    [dev.onionpancakes.chassis.core :as c]
    [weave.core :as core]
-   [weave.squint :refer [clj->js]])
+   [weave.squint :refer [clj->js]]
+   [weave.theme.cyberpunk :as theme-cyberpunk-ns]
+   [weave.theme.default :as theme-default-ns]
+   [weave.theme.gov-uk :as theme-gov-uk-ns])
   (:import
    [java.time
     Instant
@@ -48,159 +51,27 @@
         (assoc :class merged-class))))
 
 (def ^:dynamic *theme*
-  {:view {:bg "bg-[#f7f7f7] dark:bg-[#1a1a1a]"}
-   :hr {:border "border-[#e0e0e0] dark:border-[#333333]"
-        :light "border-[#f0f0f0] dark:border-[#2a2a2a]"}
-   :card {:bg "bg-white dark:bg-[#252525]"
-          :border "border border-[#e0e0e0] dark:border-[#333333]"
-          :radius "rounded-lg"}
-   :card-with-header {:bg "bg-white dark:bg-[#252525]"
-                      :border "divide-y divide-[#e0e0e0] dark:divide-[#333333]"
-                      :shadow "shadow-sm"
-                      :radius "rounded-lg"
-                      :ring "ring-1 ring-[#e0e0e0] dark:ring-[#333333]"}
-   :code {:bg "bg-[#f5f5f5] dark:bg-[#1a1a1a]"
-          :text "text-[#171717] dark:text-[#e5e5e5]"
-          :base "font-mono text-sm rounded p-3 overflow-x-auto whitespace-pre-wrap"}
-   :stat {:bg "bg-white dark:bg-[#252525]"
-          :base "overflow-hidden rounded-lg px-4 py-5 shadow ring-1 ring-inset ring-[#e0e0e0] dark:ring-[#333333] sm:p-6"
-          :label "truncate text-sm font-medium text-[#737373] dark:text-[#a0a0a0]"
-          :value "mt-1 text-3xl font-semibold tracking-tight text-[#171717] dark:text-[#e5e5e5]"}
-   :link {:base "text-[#4f46e5] hover:text-[#4338ca] dark:text-[#5b8ff9] dark:hover:text-[#7ba8ff]"}
-   :sidebar {:bg "bg-[#f7f7f7] dark:bg-[#202020]"
-             :text "text-[#525252] dark:text-[#d0d0d0]"
-             :hover "hover:bg-[#e5e5e5] hover:text-[#171717] dark:hover:bg-[#2a2a2a] dark:hover:text-white"
-             :active "bg-[#e0e0e0] text-[#171717] dark:bg-[#2a2a2a] dark:text-white"
-             :radius "rounded-md"}
-   :button {:base "inline-flex items-center justify-center text-center gap-2 rounded-lg shadow-theme-xs transition"
-            :sizes {:xs "px-2 py-1.5 text-xs"
-                    :sm "px-3 py-2 text-sm"
-                    :md "px-4 py-2.5 text-sm"
-                    :lg "px-5 py-3.5 text-base"
-                    :xl "px-6 py-4 text-lg"
-                    :icon "p-2"}
-            :variants {:primary {:bg "bg-[#4f46e5] dark:bg-[#5b8ff9]"
-                                 :hover "hover:bg-[#4338ca] dark:hover:bg-[#7ba8ff]"
-                                 :focus "focus:outline-none"
-                                 :text "text-white font-medium"}
-                       :danger {:bg "bg-red-600 dark:bg-red-500"
-                                :hover "hover:bg-red-500 dark:hover:bg-red-400"
-                                :focus "focus:outline-none"
-                                :text "text-white font-medium"}
-                       :secondary {:bg "bg-white dark:bg-[#252525]"
-                                   :hover "hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a]"
-                                   :focus "focus:outline-none"
-                                   :text "text-[#525252] dark:text-[#d0d0d0] font-medium ring-1 ring-inset ring-[#e0e0e0] dark:ring-[#333333]"}
-                       :success {:bg "bg-green-500 dark:bg-green-600"
-                                 :hover "hover:bg-green-600 dark:hover:bg-green-500"
-                                 :focus "focus:outline-none"
-                                 :text "text-white font-medium"}
-                       :info {:bg "bg-blue-500 dark:bg-blue-600"
-                              :hover "hover:bg-blue-600 dark:hover:bg-blue-500"
-                              :focus "focus:outline-none"
-                              :text "text-white font-medium"}
-                       :ghost {:bg ""
-                               :hover ""
-                               :focus "focus:outline-none"
-                               :text "text-[#737373] dark:text-[#a0a0a0] hover:text-[#4f46e5] dark:hover:text-[#5b8ff9] font-medium"}}}
-   :input {:base "block w-full h-11 rounded-lg border bg-transparent shadow-sm focus:outline-hidden focus:ring-3"
-           :sizes {:xs "px-3 py-2 text-xs"
-                   :sm "px-3.5 py-2 text-sm"
-                   :md "px-4 py-2.5 text-sm"
-                   :lg "px-4 py-3 text-base"
-                   :xl "px-5 py-3.5 text-lg"}
-           :border "border-[#d0d0d0] dark:border-[#333333] focus:border-[#4f46e5] dark:focus:border-[#5b8ff9]"
-           :focus "focus:ring-[#4f46e5]/10 dark:focus:ring-[#5b8ff9]/20"
-           :bg "bg-white dark:bg-[#1a1a1a]"
-           :text "text-[#171717] dark:text-[#e5e5e5]"
-           :placeholder "placeholder:text-[#a3a3a3] dark:placeholder:text-[#707070]"}
-   :checkbox {:base "relative [&+label]:mb-0 appearance-none w-4 h-4 shrink-0 cursor-pointer rounded border border-[#d0d0d0] bg-white transition dark:border-[#333333] dark:bg-[#1a1a1a] hover:border-[#4f46e5] dark:hover:border-[#5b8ff9] checked:bg-[#4f46e5] checked:border-[#4f46e5] dark:checked:bg-[#5b8ff9] dark:checked:border-[#5b8ff9] checked:after:content-['✓'] after:absolute after:left-1/2 after:top-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[11px] after:font-bold after:leading-none after:text-white focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/40 dark:focus:ring-[#5b8ff9]/40"}
-   :toggle {:track "w-11 h-6 bg-[#e0e0e0] dark:bg-[#333333] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#d0d0d0] dark:after:border-[#737373] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"}
-   :label {:base "mb-1.5 block font-medium"
-           :sizes {:xs "text-xs"
-                   :sm "text-sm"
-                   :md "text-sm"
-                   :lg "text-base"
-                   :xl "text-lg"}
-           :text "text-[#525252] dark:text-[#d0d0d0]"
-           :required "text-red-500 dark:text-red-400"}
-   :alert {:base "rounded-md p-4 border"
-           :variants {:success {:bg "bg-green-50 dark:bg-green-900/20"
-                                :border "border-green-400 dark:border-green-700"
-                                :text "text-green-800 dark:text-green-300"}
-                      :warning {:bg "bg-[#fff7ed] dark:bg-[#ff9500]/20"
-                                :border "border-[#fb923c] dark:border-[#ff9500]"
-                                :text "text-[#c2410c] dark:text-[#ffa500]"}
-                      :error {:bg "bg-red-50 dark:bg-red-900/20"
-                              :border "border-red-400 dark:border-red-700"
-                              :text "text-red-800 dark:text-red-300"}
-                      :info {:bg "bg-blue-50 dark:bg-[#5b8ff9]/20"
-                             :border "border-blue-400 dark:border-[#5b8ff9]"
-                             :text "text-blue-800 dark:text-[#7ba8ff]"}}}
-   :navbar {:bg "bg-[#f7f7f7] dark:bg-[#202020]"
-            :text "text-[#525252] dark:text-[#d0d0d0]"
-            :hover "hover:bg-[#e5e5e5] hover:text-[#171717] dark:hover:bg-[#2a2a2a] dark:hover:text-white"
-            :radius "rounded-md"}
-   :select {:base "block w-full h-11 rounded-lg border bg-transparent shadow-sm focus:outline-hidden focus:ring-3 appearance-none"
-            :sizes {:xs "px-3 py-2 text-xs"
-                    :s "px-3.5 py-2 text-sm"
-                    :md "px-4 py-2.5 text-sm"
-                    :lg "px-4 py-3 text-base"
-                    :xl "px-5 py-3.5 text-lg"}
-            :border "border-[#d0d0d0] dark:border-[#333333] focus:border-[#4f46e5] dark:focus:border-[#5b8ff9]"
-            :focus "focus:ring-[#4f46e5]/10 dark:focus:ring-[#5b8ff9]/20"
-            :bg "bg-white dark:bg-[#1a1a1a]"
-            :text "text-[#171717] dark:text-[#e5e5e5]"
-            :icon "absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"}
-   :modal {:overlay "fixed inset-0 z-50 bg-black/50 dark:bg-black/80 transition-opacity"
-           :container "fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-           :dialog "relative bg-white dark:bg-[#252525] text-[#171717] dark:text-[#e5e5e5] rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-           :sizes {:sm "max-w-sm"
-                   :md "max-w-md"
-                   :lg "max-w-lg"
-                   :xl "max-w-xl"
-                   :2xl "max-w-2xl"
-                   :full "max-w-full mx-4"}}
-   :table {:container "w-full overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg dark:ring-[#333333] dark:ring-opacity-50"
-           :base "min-w-full divide-y divide-[#e0e0e0] dark:divide-[#333333]"
-           :header {:bg "bg-[#f9f9f9] dark:bg-[#202020]"
-                    :text "text-xs font-medium text-[#737373] dark:text-[#a0a0a0] uppercase tracking-wider"
-                    :padding "px-6 py-3"}
-           :body {:bg "bg-white dark:bg-[#1a1a1a]"
-                  :divider "divide-y divide-[#f0f0f0] dark:divide-[#2a2a2a]"}
-           :row {:hover "hover:bg-[#f9f9f9] dark:hover:bg-[#252525]"
-                 :even "bg-white dark:bg-[#1a1a1a]"
-                 :odd "bg-[#fafafa] dark:bg-[#202020]"}
-           :cell {:text "text-sm text-[#171717] dark:text-[#e5e5e5]"
-                  :padding "px-6 py-4 whitespace-nowrap"}}
-   :heading {:text "text-[#171717] dark:text-[#e5e5e5]"
-             :variants {:secondary {:text "text-[#525252] dark:text-[#d0d0d0]"}
-                        :caption {:text "text-[#737373] dark:text-[#a0a0a0]"}}}
-   :text {:text "text-[#171717] dark:text-[#e5e5e5]"
-          :variants {:secondary {:text "text-[#525252] dark:text-[#d0d0d0]"}
-                     :caption {:text "text-[#737373] dark:text-[#a0a0a0]"}}}
-   :tab {:border "border-[#e0e0e0]"
-         :text "text-[#737373]"
-         :hover "hover:border-[#d0d0d0] hover:text-[#525252]"
-         :active {:border "border-indigo-500"
-                  :text "text-indigo-600"}
-         :icon {:active "text-indigo-500"
-                :inactive "text-[#a3a3a3]"}}
-   :dropdown {:menu {:bg "bg-white dark:bg-[#2a2a2a]"
-                     :border "ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10"
-                     :shadow "shadow-xl"
-                     :divider "divide-y divide-[#f0f0f0] dark:divide-[#2a2a2a]"}
-              :item {:base "flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors"
-                     :variants {:default {:text "text-[#525252] dark:text-[#e5e5e5]"
-                                          :hover "hover:bg-indigo-50 dark:hover:bg-[#333333] hover:text-indigo-600 dark:hover:text-white"}
-                                :danger {:text "text-red-700 dark:text-red-400"
-                                         :hover "hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-300"}}}}})
+  "The active theme. Bind or alter-var-root to one of the named themes
+   (theme-default, theme-gov-uk, theme-cyberpunk) or any conforming map.
+   See weave.theme.spec for the contract; weave.theme.* for the definitions."
+  theme-default-ns/theme)
+
+(def theme-default theme-default-ns/theme)
+(def theme-gov-uk theme-gov-uk-ns/theme)
+(def theme-cyberpunk theme-cyberpunk-ns/theme)
 
 
 (defn- get-theme-class
-  "Get a class string from the theme configuration"
+  "Get a class string from the active theme, falling back to the default theme
+   for any slot the active theme leaves unset (nil). This lets shared, semantic
+   defaults (status colours, chrome) live in weave.theme.default as the base,
+   so named themes only override what actually differs. An explicit \"\" is
+   treated as a defined value and is NOT overridden by the fallback."
   [component-type & path]
-  (get-in *theme* (into [component-type] path)))
+  (let [p (into [component-type] path)]
+    (if-some [v (get-in *theme* p)]
+      v
+      (get-in theme-default-ns/theme p))))
 
 (defn- get-size-class
   "Get the size-specific class for a component"
@@ -374,18 +245,6 @@
      [:div {:class (tw "px-4 py-5 sm:px-6" (:header-bg-class themed))} header]
      [:div {:class "px-4 py-5 sm:p-6"} body]]))
 
-(def ^:private stat-colors
-  {"green"  {:value "text-green-600 dark:text-green-400"
-             :icon  "text-green-500 dark:text-green-400"}
-   "red"    {:value "text-red-600 dark:text-red-400"
-             :icon  "text-red-500 dark:text-red-400"}
-   "blue"   {:value "text-blue-600 dark:text-blue-400"
-             :icon  "text-blue-500 dark:text-blue-400"}
-   "yellow" {:value "text-yellow-600 dark:text-yellow-400"
-             :icon  "text-yellow-500 dark:text-yellow-400"}
-   "purple" {:value "text-purple-600 dark:text-purple-400"
-             :icon  "text-purple-500 dark:text-purple-400"}})
-
 (defmethod c/resolve-alias ::stat
   [_ attrs content]
   (let [theme-bg (get-theme-class :stat :bg)
@@ -393,7 +252,7 @@
         theme-label (get-theme-class :stat :label)
         theme-value (get-theme-class :stat :value)
         color (:color attrs)
-        colors (get stat-colors color)
+        colors (get (get-theme-class :stat :colors) color)
         icon (:icon attrs)
         filtered-attrs (dissoc attrs :color :value :label :icon)]
     [:div (merge-attrs {:class (tw theme-bg theme-base)} filtered-attrs)
@@ -405,7 +264,8 @@
                       theme-value)}
         (:value attrs)]]
       (when icon
-        [:div {:class (tw "h-10 w-10 opacity-50" (:icon colors "text-[#a0a0a0] dark:text-[#707070]"))}
+        [:div {:class (tw "h-10 w-10 opacity-50"
+                          (:icon colors (get-theme-class :stat :icon-default)))}
          icon])]]))
 
 (defmethod c/resolve-alias ::button
@@ -541,15 +401,13 @@
      (when required?
        [:span {:class (:required-class themed)} " *"])]))
 
-(def ^:private alert-icons
-  {:success [::icon#solid-check-circle
-             {:class "h-5 w-5 text-green-400 dark:text-green-500"}]
-   :warning [::icon#solid-exclamation-triangle
-             {:class "h-5 w-5 text-yellow-400 dark:text-yellow-500"}]
-   :error [::icon#solid-x-circle
-           {:class "h-5 w-5 text-red-400 dark:text-red-500"}]
-   :info [::icon#solid-information-circle
-          {:class "h-5 w-5 text-blue-400 dark:text-blue-500"}]})
+;; Which icon each alert type shows (structural); the icon colour is themed,
+;; read from [:alert :icon <type>].
+(def ^:private alert-icon-ids
+  {:success "solid-check-circle"
+   :warning "solid-exclamation-triangle"
+   :error   "solid-x-circle"
+   :info    "solid-information-circle"})
 
 (defmethod c/resolve-alias ::alert
   [_ attrs content]
@@ -570,14 +428,15 @@
     [:div merged-attrs
      [:div.flex.relative.items-center
       [:div.flex-shrink-0
-       (get alert-icons alert-type)]
+       [::icon {:id (get alert-icon-ids alert-type)
+                :class (tw "h-5 w-5" (get-theme-class :alert :icon alert-type))}]]
       [:div.ml-3.flex-1
        [:div.text-sm
         content]]
       (when dismissible?
         [:div.ml-auto.pl-3
          [:button.focus:outline-none
-          {:class "text-[#a3a3a3] hover:text-[#737373]"
+          {:class (get-theme-class :alert :dismiss)
            :type "button"
            :onclick "this.closest('[class*=\"rounded-md p-4 border\"]').remove()"}
           [:span.sr-only "Dismiss"]
@@ -603,13 +462,13 @@
         {:src logo-url}]
        (when title
          [:div
-          {:class "font-medium text-lg text-[#d0d0d0] dark:text-[#d0d0d0]"}
+          {:class (tw "font-medium text-lg" (get-theme-class :navbar :title))}
           title])]
 
       ;; Mobile menu toggle button
       [:div.sm:hidden
        [:button.block.hover:text-white.focus:text-white.focus:outline-none
-        {:class "text-[#d0d0d0]"
+        {:class (get-theme-class :navbar :toggle)
          :data-on:click "$navbarOpen = !$navbarOpen"
          :type "button"}
         [:div
@@ -653,7 +512,7 @@
          (:label option)])]
      [:div {:class (:icon-class themed)}
       [::icon#solid-chevron-up-down
-       {:class "h-5 w-5 text-[#a3a3a3]"}]]]))
+       {:class (tw "h-5 w-5" (get-theme-class :select :chevron))}]]]))
 
 (defmethod c/resolve-alias ::a
   [_ attrs content]
@@ -692,7 +551,7 @@
 (defmethod c/resolve-alias ::sidebar
   [_ attrs content]
   (let [theme-bg (or (:bg-class attrs) (get-theme-class :sidebar :bg))
-        theme-mobile-bg (or (get-theme-class :sidebar :mobile-bg) "bg-[#252525]")]
+        theme-mobile-bg (get-theme-class :sidebar :mobile-bg)]
 
     [:div.flex.min-h-full
      [:div#sidebar-backdrop.fixed.inset-0.bg-opacity-75.z-20.hidden.lg:hidden
@@ -716,7 +575,7 @@
 
 (defmethod c/resolve-alias ::sidebar-group
   [_ attrs content]
-  (let [theme-group-text (or (get-theme-class :sidebar :group-text) "text-[#a3a3a3]")
+  (let [theme-group-text (get-theme-class :sidebar :group-text)
         collapsible? (contains? attrs :collapsed)
         collapsed? (:collapsed attrs)
         group-id (when collapsible?
@@ -885,11 +744,12 @@
 
         container-classes (get-theme-class :view :bg)
         card-container-classes "mx-auto w-full sm:max-w-lg"
-        heading-classes "mt-10 text-center text-2xl/9 font-bold tracking-tight text-[#171717] dark:text-[#f5f5f5]"
+        heading-classes (tw "mt-10 text-center text-2xl/9 font-bold tracking-tight"
+                            (get-theme-class :sign-in :heading))
         form-container-classes "mt-10 mx-auto w-full sm:max-w-lg"
         form-classes "space-y-6"
-        footer-text-classes "mt-10 text-center text-sm/6 text-[#737373] dark:text-[#a3a3a3]"
-        link-classes "font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer"
+        footer-text-classes (tw "mt-10 text-center text-sm/6" (get-theme-class :sign-in :footer))
+        link-classes (tw "font-semibold" (get-theme-class :sign-in :link) "cursor-pointer")
         base-attrs {:class (tw "flex min-h-full flex-col w-full md:w-96 justify-center px-6 py-6 lg:px-8" container-classes)}
         merged-attrs (merge-attrs
                       base-attrs (dissoc attrs
@@ -914,7 +774,7 @@
       [:div {:class form-container-classes
              :data-signals:_error "false"}
        [:div {:id "sign-in-error"
-              :class "p-3 mb-4 text-sm text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/20 rounded-lg border border-red-400 dark:border-red-700"
+              :class (tw "p-3 mb-4 text-sm rounded-lg border" (get-theme-class :sign-in :error))
               :data-show error-signal
               :style "display: none"}
         error-message]
@@ -1139,23 +999,6 @@
         merged-attrs (merge-attrs base-attrs filtered-attrs)]
     [:time merged-attrs formatted]))
 
-(def ^:private default-badge-colors
-  "Default badge colour classes keyed by [color variant]."
-  {"green"  {:outlined "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 ring-green-600/20 dark:ring-green-500/30"
-             :pill     "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"}
-   "red"    {:outlined "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 ring-red-600/20 dark:ring-red-500/30"
-             :pill     "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"}
-   "blue"   {:outlined "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 ring-blue-600/20 dark:ring-blue-500/30"
-             :pill     "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400"}
-   "yellow" {:outlined "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 ring-yellow-600/20 dark:ring-yellow-500/30"
-             :pill     "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"}
-   "purple" {:outlined "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 ring-purple-600/20 dark:ring-purple-500/30"
-             :pill     "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400"}
-   "gray"   {:outlined "bg-[#f9f9f9] dark:bg-[#252525] text-[#525252] dark:text-[#a3a3a3] ring-[#525252]/20 dark:ring-[#737373]/30"
-             :pill     "bg-[#f5f5f5] dark:bg-[#252525] text-[#171717] dark:text-[#d0d0d0]"}
-   "indigo" {:outlined "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 ring-indigo-600/20 dark:ring-indigo-500/30"
-             :pill     "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400"}})
-
 (defmethod c/resolve-alias ::badge
   [_ attrs content]
   (let [color (or (:color attrs) "gray")
@@ -1168,9 +1011,8 @@
         shape-class (case variant
                       :pill "rounded-full"
                       :outlined "rounded-md ring-1 ring-inset")
-        theme-colors (get-in *theme* [:badge :colors (keyword color)])
-        fallback-colors (get default-badge-colors color (get default-badge-colors "gray"))
-        colors (or theme-colors fallback-colors)
+        colors (or (get-theme-class :badge :colors (keyword color))
+                   (get-theme-class :badge :colors :gray))
         color-class (if (= variant :outlined)
                       (or (:outlined colors) (:pill colors))
                       (:pill colors))
@@ -1203,400 +1045,4 @@
                         (:class attrs))]
     [:label {:class label-class}
      [:input.sr-only.peer input-attrs]
-     [:div
-      {:class (or (get-theme-class :toggle :track)
-                  "w-11 h-6 bg-[#e0e0e0] dark:bg-[#333333] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#d0d0d0] dark:after:border-[#737373] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600")}]]))
-
-;; GOV.UK Design System theme
-;; Light-mode only, based on https://design-system.service.gov.uk
-(def theme-gov-uk
-  {:view {:bg "bg-[#f3f3f3]"}
-
-   :hr {:border "border-[#cecece]"
-        :light "border-[#f3f3f3]"}
-
-   :card {:bg "bg-white"
-          :border "border border-[#cecece]"
-          :shadow ""
-          :radius "rounded-none"
-          :ring ""}
-
-   :card-with-header {:bg "bg-white"
-                      :border "divide-y divide-[#cecece]"
-                      :shadow ""
-                      :radius "rounded-none"
-                      :ring "ring-1 ring-[#cecece]"
-                      :header-bg "bg-[#f3f3f3]"}
-
-   :code {:bg "bg-[#f3f3f3]"
-          :text "text-[#0b0c0c]"
-          :base "font-mono text-sm rounded-none p-3 overflow-x-auto whitespace-pre-wrap"}
-
-   :stat {:bg "bg-white"
-          :base "overflow-hidden px-4 py-5 border-l-4 border-[#1d70b8] sm:p-6"
-          :label "truncate text-base font-normal text-[#484949]"
-          :value "mt-1 text-3xl font-bold tracking-tight text-[#0b0c0c]"}
-
-   :link {:base "text-[#1a65a6] underline hover:text-[#0f385c] visited:text-[#54319f] focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:no-underline"}
-
-   :sidebar {:bg "bg-[#f4f8fb] lg:bg-transparent"
-             :text "text-[#484949]"
-             :hover "hover:bg-[#f4f8fb] hover:text-[#0b0c0c]"
-             :active "border-l-[5px] border-[#1a65a6] bg-[#f4f8fb] text-[#0b0c0c] font-bold"
-             :radius "rounded-none"
-             :mobile-bg "bg-[#0b0c0c]"
-             :group-text "text-[#484949]"}
-
-   :button {:base "inline-flex items-center justify-center text-center gap-2 rounded-none shadow-[0_2px_0_#083d29] transition font-sans font-bold"
-            :sizes {:xs "px-2 py-1.5 text-sm"
-                    :s "px-3 py-2 text-base"
-                    :sm "px-3 py-2 text-base"
-                    :md "px-4 py-2.5 text-base"
-                    :lg "px-5 py-3 text-lg"
-                    :xl "px-6 py-3.5 text-lg"
-                    :icon "p-2"}
-            :variants {:primary {:bg "bg-[#0f7a52]"
-                                 :hover "hover:bg-[#0b5c3e]"
-                                 :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:shadow-[0_2px_0_#0b0c0c]"
-                                 :text "text-white font-bold"}
-                       :danger {:bg "bg-[#ca3535]"
-                                :hover "hover:bg-[#982828]"
-                                :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:shadow-[0_2px_0_#0b0c0c]"
-                                :text "text-white font-bold"}
-                       :secondary {:bg "bg-[#f3f3f3] shadow-[0_2px_0_#858686]"
-                                   :hover "hover:bg-[#cecece]"
-                                   :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:shadow-[0_2px_0_#0b0c0c]"
-                                   :text "text-[#0b0c0c] font-bold"}
-                       :success {:bg "bg-[#0f7a52]"
-                                 :hover "hover:bg-[#0b5c3e]"
-                                 :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:shadow-[0_2px_0_#0b0c0c]"
-                                 :text "text-white font-bold"}
-                       :info {:bg "bg-[#1d70b8]"
-                              :hover "hover:bg-[#16548a]"
-                              :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:shadow-[0_2px_0_#0b0c0c]"
-                              :text "text-white font-bold"}
-                       :ghost {:bg "bg-transparent"
-                               :hover "hover:bg-[#f3f3f3] hover:text-[#0b0c0c]"
-                               :focus "focus:outline-3 focus:outline-[#ffdd00] focus:bg-[#ffdd00] focus:text-[#0b0c0c]"
-                               :text "text-[#1a65a6] underline font-bold"}}}
-
-   :input {:base "block w-full h-11 border-2 bg-transparent shadow-none focus:outline-3 focus:outline-[#ffdd00] rounded-none font-sans"
-           :sizes {:xs "px-3 py-2 text-sm"
-                   :s "px-3 py-2 text-base"
-                   :sm "px-3 py-2 text-base"
-                   :md "px-4 py-2.5 text-base"
-                   :lg "px-4 py-3 text-lg"
-                   :xl "px-5 py-3.5 text-lg"}
-           :border "border-[#0b0c0c] focus:border-[#0b0c0c]"
-           :focus "focus:ring-0"
-           :bg "bg-white"
-           :text "text-[#0b0c0c]"
-           :placeholder "placeholder:text-[#484949]"}
-
-   :checkbox {:base "relative [&+label]:mb-0 appearance-none shrink-0 cursor-pointer w-[40px] h-[40px] bg-white border-2 border-[#0b0c0c] rounded-none after:content-[''] after:absolute after:top-[11px] after:left-[9px] after:w-[23px] after:h-[12px] after:border-solid after:border-[#0b0c0c] after:border-b-[5px] after:border-l-[5px] after:-rotate-45 after:opacity-0 checked:after:opacity-100 focus:outline-none focus:shadow-[0_0_0_3px_#ffdd00]"}
-
-   :toggle {:track "w-11 h-6 bg-[#f3f3f3] border-2 border-[#0b0c0c] rounded-full peer peer-focus:outline-none peer-focus:shadow-[0_0_0_3px_#ffdd00] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#0b0c0c] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0f7a52] peer-checked:border-[#0f7a52] peer-checked:after:translate-x-full peer-checked:after:bg-white"}
-
-   :label {:base "mb-1.5 block font-bold"
-           :sizes {:xs "text-sm"
-                   :s "text-base"
-                   :sm "text-base"
-                   :md "text-base"
-                   :lg "text-lg"
-                   :xl "text-xl"}
-           :text "text-[#0b0c0c]"
-           :required "text-[#ca3535]"}
-
-   :select {:base "block w-full h-11 border-2 bg-transparent shadow-none focus:outline-3 focus:outline-[#ffdd00] appearance-none rounded-none font-sans"
-            :sizes {:xs "px-3 py-2 text-sm"
-                    :s "px-3 py-2 text-base"
-                    :md "px-4 py-2.5 text-base"
-                    :lg "px-4 py-3 text-lg"
-                    :xl "px-5 py-3.5 text-lg"}
-            :border "border-[#0b0c0c] focus:border-[#0b0c0c]"
-            :focus "focus:ring-0"
-            :bg "bg-white"
-            :text "text-[#0b0c0c]"
-            :icon "absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-[#0b0c0c]"}
-
-   :table {:container "w-full overflow-x-auto border border-[#cecece]"
-           :base "min-w-full divide-y divide-[#cecece]"
-           :header {:bg "bg-[#f3f3f3]"
-                    :text "text-sm font-bold text-[#0b0c0c]"
-                    :padding "px-5 py-3"}
-           :body {:bg "bg-white"
-                  :divider "divide-y divide-[#cecece]"}
-           :row {:hover "hover:bg-[#f3f3f3]"
-                 :even "bg-white"
-                 :odd "bg-white"}
-           :cell {:text "text-base text-[#0b0c0c]"
-                  :padding "px-5 py-3 whitespace-nowrap"}}
-
-   :alert {:base "p-4 border-l-4"
-           :variants {:success {:bg "bg-white"
-                                :border "border-[#0f7a52]"
-                                :text "text-[#0b0c0c]"}
-                      :warning {:bg "bg-white"
-                                :border "border-[#f47738]"
-                                :text "text-[#0b0c0c]"}
-                      :error {:bg "bg-white"
-                              :border "border-[#ca3535]"
-                              :text "text-[#0b0c0c]"}
-                      :info {:bg "bg-white"
-                             :border "border-[#1d70b8]"
-                             :text "text-[#0b0c0c]"}}}
-
-   :modal {:overlay "fixed inset-0 z-50 bg-black/50 transition-opacity"
-           :container "fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-           :dialog "relative bg-white text-[#0b0c0c] rounded-none shadow-lg overflow-hidden"
-           :sizes {:sm "max-w-sm w-full"
-                   :md "max-w-md w-full"
-                   :lg "max-w-lg w-full"
-                   :xl "max-w-xl w-full"
-                   :2xl "max-w-2xl w-full"
-                   :full "max-w-full mx-4"}}
-
-   :navbar {:bg "bg-[#1d70b8]"
-            :text "text-white"
-            :hover "hover:underline hover:decoration-2 hover:underline-offset-[10px] hover:text-white"
-            :active "underline decoration-2 underline-offset-[10px] text-white font-bold"
-            :radius "rounded-none"}
-
-   :heading {:text "text-[#0b0c0c]"
-             :variants {:secondary {:text "text-[#484949]"}
-                        :caption {:text "text-[#484949]"}}}
-
-   :text {:text "text-[#0b0c0c]"
-          :variants {:secondary {:text "text-[#484949]"}
-                     :caption {:text "text-[#484949]"}}}
-
-   :tab {:border "border-[#cecece]"
-         :text "text-[#484949]"
-         :hover "hover:border-[#cecece] hover:text-[#0b0c0c]"
-         :active {:border "border-[#1a65a6]"
-                  :text "text-[#0b0c0c]"}
-         :icon {:inactive "text-[#484949]"
-                :active "text-[#1a65a6]"}}
-
-   :dropdown {:menu {:bg "bg-white"
-                     :border "ring-1 ring-[#cecece]"
-                     :shadow "shadow-lg"
-                     :divider "divide-y divide-[#cecece]"}
-              :item {:base "flex items-center gap-3 px-4 py-3 text-base font-normal transition-colors"
-                     :variants {:default {:text "text-[#0b0c0c]"
-                                          :hover "hover:bg-[#f3f3f3] hover:text-[#0b0c0c]"}
-                                :danger {:text "text-[#ca3535]"
-                                         :hover "hover:bg-[#fcf5f5] hover:text-[#982828]"}}}}
-
-   :badge {:colors {:green   {:pill "bg-[#cfe4dc] text-[#083d29]"
-                               :outlined "bg-[#cfe4dc] text-[#083d29] ring-[#083d29]/20"}
-                    :red     {:pill "bg-[#f4d7d7] text-[#651b1b]"
-                               :outlined "bg-[#f4d7d7] text-[#651b1b] ring-[#651b1b]/20"}
-                    :blue    {:pill "bg-[#d2e2f1] text-[#0f385c]"
-                               :outlined "bg-[#d2e2f1] text-[#0f385c] ring-[#0f385c]/20"}
-                    :yellow  {:pill "bg-[#ffee80] text-[#7a3c1c]"
-                               :outlined "bg-[#ffee80] text-[#7a3c1c] ring-[#7a3c1c]/20"}
-                    :purple  {:pill "bg-[#ddd6ec] text-[#2a1950]"
-                               :outlined "bg-[#ddd6ec] text-[#2a1950] ring-[#2a1950]/20"}
-                    :gray    {:pill "bg-[#cecece] text-[#0b0c0c]"
-                               :outlined "bg-[#cecece] text-[#0b0c0c] ring-[#0b0c0c]/20"}
-                    :orange  {:pill "bg-[#fde4d7] text-[#7a3c1c]"
-                               :outlined "bg-[#fde4d7] text-[#7a3c1c] ring-[#7a3c1c]/20"}
-                    :indigo  {:pill "bg-[#ddd6ec] text-[#2a1950]"
-                               :outlined "bg-[#ddd6ec] text-[#2a1950] ring-[#2a1950]/20"}}}})
-
-;; Cyberpunk Color Palette
-;; background:      #0a0a0f  - Deep void black
-;; card:            #12121a  - Card background
-;; muted:           #1c1c2e  - Elevated backgrounds
-;; border:          #2a2a3a  - Subtle borders
-;; foreground:      #e0e0e0  - Primary text
-;; mutedForeground: #6b7280  - Secondary text
-;; accent:          #00ff88  - Primary neon green
-;; accentSecondary: #ff00ff  - Magenta
-;; accentTertiary:  #00d4ff  - Cyan
-;; destructive:     #ff3366  - Error red-pink
-;;
-(def theme-cyberpunk
-  {:view {:bg "relative bg-[#0a0a0f] [background-image:linear-gradient(rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(rgba(0,255,136,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.05)_1px,transparent_1px),radial-gradient(ellipse_at_0%_0%,rgba(0,255,136,0.08)_0%,transparent_50%),radial-gradient(ellipse_at_100%_100%,rgba(255,0,255,0.05)_0%,transparent_50%)] [background-size:25px_25px,25px_25px,100px_100px,100px_100px,100%_100%,100%_100%] before:content-[''] before:fixed before:inset-0 before:pointer-events-none before:z-[9999] before:opacity-30 before:[background:repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.1)_2px,rgba(0,0,0,0.1)_4px)]"}
-
-   :card {:bg "bg-[#12121a]"
-          :border "border border-[#2a2a3a]"
-          :shadow "shadow-[0_0_10px_rgba(0,255,136,0.1)]"
-          :radius "relative [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] before:content-[''] before:absolute before:top-0 before:left-0 before:w-[17px] before:h-[2px] before:bg-[#00ff88] before:origin-top-left before:[transform:rotate(-45deg)] before:z-10 after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-[17px] after:h-[2px] after:bg-[#00ff88] after:origin-bottom-right after:[transform:rotate(-45deg)] after:z-10"
-          :ring ""}
-
-   :card-with-header {:bg "bg-[#12121a]"
-                      :border "divide-y divide-[#2a2a3a]"
-                      :shadow "shadow-[0_0_10px_rgba(0,255,136,0.1)]"
-                      :radius "relative [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] before:content-[''] before:absolute before:top-0 before:left-0 before:w-[17px] before:h-[2px] before:bg-[#00ff88] before:origin-top-left before:[transform:rotate(-45deg)] before:z-10 after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-[17px] after:h-[2px] after:bg-[#00ff88] after:origin-bottom-right after:[transform:rotate(-45deg)] after:z-10"
-                      :ring ""}
-
-   :sidebar {:bg "bg-[#0a0a0f] lg:bg-transparent"
-             :text "text-[#9ca3af]"
-             :hover "hover:bg-[#1c1c2e] hover:text-[#00ff88]"
-             :active "bg-[#1c1c2e] text-[#00ff88]"
-             :radius "rounded-none"
-             :mobile-bg "bg-[#0a0a0f]"
-             :group-text "text-[#6b7280]"}
-
-   :button {:base "inline-flex items-center justify-center text-center gap-2 shadow-none transition-all duration-150 uppercase tracking-wider font-mono [clip-path:polygon(6px_0,100%_0,100%_calc(100%-6px),calc(100%-6px)_100%,0_100%,0_6px)]"
-            :sizes {:xs "px-2 py-1.5 text-xs"
-                    :sm "px-3 py-2 text-sm"
-                    :md "px-4 py-3 text-sm"
-                    :lg "px-5 py-3.5 text-base"
-                    :xl "px-6 py-4 text-lg"
-                    :icon "p-2"}
-            :variants {:primary {:bg "bg-transparent border-2 border-[#00ff88]"
-                                 :hover "hover:bg-[#00ff88] hover:text-[#0a0a0f] hover:shadow-[0_0_20px_rgba(0,255,136,0.5)]"
-                                 :focus "focus:outline-none focus:ring-2 focus:ring-[#00ff88]"
-                                 :text "text-[#00ff88] font-medium"}
-                       :danger {:bg "bg-transparent border-2 border-[#ff3366]"
-                                :hover "hover:bg-[#ff3366] hover:text-[#0a0a0f] hover:shadow-[0_0_20px_rgba(255,51,102,0.5)]"
-                                :focus "focus:outline-none focus:ring-2 focus:ring-[#ff3366]"
-                                :text "text-[#ff3366] font-medium"}
-                       :secondary {:bg "bg-transparent border border-[#2a2a3a]"
-                                   :hover "hover:border-[#00ff88] hover:text-[#00ff88] hover:shadow-[0_0_10px_rgba(0,255,136,0.3)]"
-                                   :focus "focus:outline-none focus:ring-2 focus:ring-[#00ff88]"
-                                   :text "text-[#e0e0e0] font-medium"}
-                       :ghost {:bg "bg-transparent"
-                               :hover "hover:bg-[#00ff88]/10 hover:text-[#00ff88]"
-                               :focus "focus:outline-none"
-                               :text "text-[#6b7280] font-medium"}}}
-
-   :input {:base "block w-full h-11 border bg-transparent shadow-none focus:outline-hidden focus:ring-2 font-mono [clip-path:polygon(6px_0,100%_0,100%_calc(100%-6px),calc(100%-6px)_100%,0_100%,0_6px)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
-           :sizes {:xs "px-3 py-2 text-xs"
-                   :sm "px-3.5 py-2 text-sm"
-                   :md "px-4 py-2.5 text-sm"
-                   :lg "px-4 py-3 text-base"
-                   :xl "px-5 py-3.5 text-lg"}
-           :border "border-[#2a2a3a] focus:border-[#00ff88]"
-           :focus "focus:ring-[#00ff88]/20"
-           :bg "bg-[#12121a]"
-           :text "text-[#00ff88]"
-           :placeholder "placeholder:text-[#6b7280]"}
-
-   :checkbox {:base "relative [&+label]:mb-0 appearance-none w-4 h-4 shrink-0 cursor-pointer bg-[#12121a] border border-[#2a2a3a] transition-all [clip-path:polygon(3px_0,100%_0,100%_calc(100%-3px),calc(100%-3px)_100%,0_100%,0_3px)] hover:border-[#00ff88] hover:shadow-[0_0_8px_rgba(0,255,136,0.3)] checked:bg-[#00ff88] checked:border-[#00ff88] checked:after:content-['✓'] after:absolute after:left-1/2 after:top-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[12px] after:font-bold after:text-[#0a0a0f] after:leading-none focus:outline-none focus:ring-2 focus:ring-[#00ff88]/20"}
-
-   :toggle {:track "w-11 h-6 bg-[#1c1c2e] border border-[#2a2a3a] rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#00ff88]/30 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#6b7280] after:border after:border-[#2a2a3a] after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00ff88]/20 peer-checked:border-[#00ff88]/50 peer-checked:after:translate-x-full peer-checked:after:bg-[#00ff88] peer-checked:after:border-[#00ff88]"}
-
-   :label {:base "mb-1.5 block font-medium uppercase tracking-wider font-mono"
-           :sizes {:xs "text-xs"
-                   :sm "text-sm"
-                   :md "text-sm"
-                   :lg "text-base"
-                   :xl "text-lg"}
-           :text "text-[#6b7280]"
-           :required "text-[#ff3366]"}
-
-   :select {:base "block w-full h-11 border bg-transparent shadow-none focus:outline-hidden focus:ring-2 appearance-none font-mono [clip-path:polygon(6px_0,100%_0,100%_calc(100%-6px),calc(100%-6px)_100%,0_100%,0_6px)]"
-            :sizes {:xs "px-3 py-2 text-xs"
-                    :sm "px-3.5 py-2 text-sm"
-                    :md "px-4 py-2.5 text-sm"
-                    :lg "px-4 py-3 text-base"
-                    :xl "px-5 py-3.5 text-lg"}
-            :border "border-[#2a2a3a] focus:border-[#00ff88]"
-            :focus "focus:ring-[#00ff88]/20"
-            :bg "bg-[#12121a]"
-            :text "text-[#e0e0e0]"
-            :icon "absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-[#00ff88]"}
-
-   :table {:container "w-full overflow-x-auto border border-[#2a2a3a] shadow-[0_0_10px_rgba(0,255,136,0.1)] [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]"
-           :base "min-w-full divide-y divide-[#2a2a3a]"
-           :header {:bg "bg-[#0a0a0f]"
-                    :text "text-xs font-mono font-medium text-[#00ff88] uppercase tracking-wider"
-                    :padding "px-6 py-3"}
-           :body {:bg "bg-[#12121a]"
-                  :divider "divide-y divide-[#2a2a3a]"}
-           :row {:hover "hover:bg-[#1c1c2e]"
-                 :even "bg-[#12121a]"
-                 :odd "bg-[#0a0a0f]"}
-           :cell {:text "text-sm text-[#e0e0e0] font-mono"
-                  :padding "px-6 py-4 whitespace-nowrap"}}
-
-   :alert {:base "p-4 border relative [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] before:content-[''] before:absolute before:top-0 before:left-0 before:w-[17px] before:h-[2px] before:bg-[#00ff88] before:origin-top-left before:[transform:rotate(-45deg)] before:z-10 after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-[17px] after:h-[2px] after:bg-[#00ff88] after:origin-bottom-right after:[transform:rotate(-45deg)] after:z-10"
-           :variants {:success {:bg "bg-[#00ff88]/10"
-                                :border "border-[#00ff88]"
-                                :text "text-[#00ff88]"}
-                      :warning {:bg "bg-[#ff9500]/10"
-                                :border "border-[#ff9500]"
-                                :text "text-[#ff9500]"}
-                      :error {:bg "bg-[#ff3366]/10"
-                              :border "border-[#ff3366]"
-                              :text "text-[#ff3366]"}
-                      :info {:bg "bg-[#00d4ff]/10"
-                             :border "border-[#00d4ff]"
-                             :text "text-[#00d4ff]"}}}
-
-   :modal {:overlay "fixed inset-0 z-50 bg-black/80 transition-opacity"
-           :container "fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-           :dialog "relative bg-[#12121a] border border-[#2a2a3a] shadow-[0_0_30px_rgba(0,255,136,0.2)] overflow-hidden [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]"
-           :sizes {:sm "max-w-sm w-full"
-                   :md "max-w-md w-full"
-                   :lg "max-w-lg w-full"
-                   :xl "max-w-xl w-full"
-                   :2xl "max-w-2xl w-full"
-                   :full "max-w-full mx-4"}}
-
-   :hr {:border "border-[#2a2a3a]"
-        :light "border-[#1c1c2e]"}
-
-   :code {:bg "bg-[#12121a]"
-          :text "text-[#00ff88]"
-          :base "font-mono text-sm rounded-none p-3 overflow-x-auto whitespace-pre-wrap"}
-
-   :link {:base "text-[#00d4ff] hover:text-[#00ff88] hover:underline transition-colors"}
-
-   :stat {:bg "bg-[#12121a]"
-          :base "overflow-hidden px-4 py-5 border border-[#2a2a3a] shadow-[0_0_10px_rgba(0,255,136,0.1)] sm:p-6 relative [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] before:content-[''] before:absolute before:top-0 before:left-0 before:w-[17px] before:h-[2px] before:bg-[#00ff88] before:origin-top-left before:[transform:rotate(-45deg)] before:z-10 after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-[17px] after:h-[2px] after:bg-[#00ff88] after:origin-bottom-right after:[transform:rotate(-45deg)] after:z-10"
-          :label "truncate text-sm font-medium uppercase tracking-wider font-mono text-[#6b7280]"
-          :value "mt-1 text-3xl font-semibold tracking-tight font-mono text-[#00ff88]"}
-
-   :navbar {:bg "bg-[#0a0a0f]"
-            :text "text-[#9ca3af]"
-            :hover "hover:bg-[#1c1c2e] hover:text-[#00ff88]"
-            :active "bg-[#1c1c2e] text-[#00ff88]"
-            :radius "rounded-none"}
-
-   :heading {:text "text-[#e0e0e0]"
-             :variants {:secondary {:text "text-[#9ca3af]"}
-                        :caption {:text "text-[#6b7280]"}}}
-
-   :text {:text "text-[#e0e0e0]"
-          :variants {:secondary {:text "text-[#9ca3af]"}
-                     :caption {:text "text-[#6b7280]"}}}
-
-   :tab {:border "border-[#2a2a3a]"
-         :text "text-[#6b7280]"
-         :hover "hover:border-[#2a2a3a] hover:text-[#e0e0e0]"
-         :active {:border "border-[#00ff88]"
-                  :text "text-[#00ff88]"}
-         :icon {:active "text-[#00ff88]"
-                :inactive "text-[#6b7280]"}}
-
-   :dropdown {:menu {:bg "bg-[#12121a]"
-                     :border "ring-1 ring-[#2a2a3a]"
-                     :shadow "shadow-[0_0_20px_rgba(0,255,136,0.15)]"
-                     :divider "divide-y divide-[#2a2a3a]"}
-              :item {:base "flex items-center gap-3 px-4 py-3 text-sm font-medium font-mono transition-colors"
-                     :variants {:default {:text "text-[#e0e0e0]"
-                                          :hover "hover:bg-[#1c1c2e] hover:text-[#00ff88]"}
-                                :danger {:text "text-[#ff3366]"
-                                         :hover "hover:bg-[#ff3366]/10 hover:text-[#ff3366]"}}}}
-
-   :badge {:colors {:green  {:pill "bg-[#00ff88]/15 text-[#00ff88]"
-                             :outlined "bg-[#00ff88]/15 text-[#00ff88] ring-[#00ff88]/30"}
-                    :red    {:pill "bg-[#ff3366]/15 text-[#ff3366]"
-                             :outlined "bg-[#ff3366]/15 text-[#ff3366] ring-[#ff3366]/30"}
-                    :blue   {:pill "bg-[#00d4ff]/15 text-[#00d4ff]"
-                             :outlined "bg-[#00d4ff]/15 text-[#00d4ff] ring-[#00d4ff]/30"}
-                    :yellow {:pill "bg-[#ffcc00]/15 text-[#ffcc00]"
-                             :outlined "bg-[#ffcc00]/15 text-[#ffcc00] ring-[#ffcc00]/30"}
-                    :purple {:pill "bg-[#ff00ff]/15 text-[#ff00ff]"
-                             :outlined "bg-[#ff00ff]/15 text-[#ff00ff] ring-[#ff00ff]/30"}
-                    :gray   {:pill "bg-[#1c1c2e] text-[#9ca3af]"
-                             :outlined "bg-[#1c1c2e] text-[#9ca3af] ring-[#2a2a3a]"}
-                    :orange {:pill "bg-[#ff9500]/15 text-[#ff9500]"
-                             :outlined "bg-[#ff9500]/15 text-[#ff9500] ring-[#ff9500]/30"}
-                    :indigo {:pill "bg-[#818cf8]/15 text-[#818cf8]"
-                             :outlined "bg-[#818cf8]/15 text-[#818cf8] ring-[#818cf8]/30"}}}})
+     [:div {:class (get-theme-class :toggle :track)}]]))
