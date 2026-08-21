@@ -3,6 +3,8 @@
    [charred.api :as charred]
    [clojure.string])
   (:import
+   [java.nio.charset StandardCharsets]
+   [java.security MessageDigest]
    [java.util Base64 Base64$Encoder UUID]
    [javax.crypto Mac]
    [javax.crypto.spec SecretKeySpec]))
@@ -24,6 +26,13 @@
         (.init key-spec))
       (.doFinal (.getBytes ^java.lang.String data))
       bytes->base64))
+
+(defn constant-time-equal?
+  [a b]
+  (and a b
+       (MessageDigest/isEqual
+        (.getBytes ^String a StandardCharsets/UTF_8)
+        (.getBytes ^String b StandardCharsets/UTF_8))))
 
 (defn get-sid [req]
   (try
@@ -54,7 +63,7 @@
         signature-data (str header-b64 "." payload-b64)
         key-spec (secret-key->hmac-sha256-keyspec secret-key)
         expected-signature (hmac-sha256 key-spec signature-data)]
-    (when (= signature expected-signature)
+    (when (constant-time-equal? signature expected-signature)
       (charred/read-json
        (String. (.decode
                  ^java.util.Base64$Decoder (Base64/getUrlDecoder)
@@ -70,7 +79,7 @@
   [sid csrf-token]
   (when (and sid csrf-token)
     (let [expected-csrf (hmac-sha256 *csrf-keyspec* sid)]
-      (= csrf-token expected-csrf))))
+      (constant-time-equal? csrf-token expected-csrf))))
 
 (defn wrap-session
   [handler jwt-secret]
