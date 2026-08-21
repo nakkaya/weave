@@ -25,6 +25,8 @@
       (.doFinal (.getBytes ^java.lang.String data))
       bytes->base64))
 
+(def session-ttl-seconds 86400)
+
 (defn get-sid [req]
   (try
     (some->> (get-in req [:headers "cookie"])
@@ -33,17 +35,22 @@
     (catch Throwable _)))
 
 (defn session-cookie [sid]
-  (str "weave-sid=" sid "; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400"))
+  (str "weave-sid=" sid "; Path=/; HttpOnly; SameSite=Lax; Max-Age=" session-ttl-seconds))
 
 (defn csrf-cookie [csrf]
-  (str "weave-csrf=" csrf "; Path=/; SameSite=Lax; Max-Age=86400"))
+  (str "weave-csrf=" csrf "; Path=/; SameSite=Lax; Max-Age=" session-ttl-seconds))
 
 (def jwt-secret (atom nil))
 
 (defn create-jwt [payload secret-key]
   (let [header (charred/write-json-str {:alg "HS256" :typ "JWT"})
         encoded-header (bytes->base64 (.getBytes ^String header))
-        encoded-payload (bytes->base64 (.getBytes ^String (charred/write-json-str payload)))
+        encoded-payload (bytes->base64
+                         (.getBytes ^String
+                                    (charred/write-json-str
+                                     (assoc payload :exp
+                                            (+ (quot (System/currentTimeMillis) 1000)
+                                               session-ttl-seconds)))))
         signature-data (str encoded-header "." encoded-payload)
         key-spec (secret-key->hmac-sha256-keyspec secret-key)
         signature (hmac-sha256 key-spec signature-data)]
@@ -55,14 +62,16 @@
         key-spec (secret-key->hmac-sha256-keyspec secret-key)
         expected-signature (hmac-sha256 key-spec signature-data)]
     (when (= signature expected-signature)
-      (charred/read-json
-       (String. (.decode
-                 ^java.util.Base64$Decoder (Base64/getUrlDecoder)
-                 (.getBytes ^String payload-b64)))
-       :key-fn keyword))))
+      (let [payload (charred/read-json
+                     (String. (.decode
+                               ^java.util.Base64$Decoder (Base64/getUrlDecoder)
+                               (.getBytes ^String payload-b64)))
+                     :key-fn keyword)]
+        (when (some-> payload :exp (> (quot (System/currentTimeMillis) 1000)))
+          payload)))))
 
 (defn auth-cookie [jwt]
-  (str "weave-auth=" jwt "; Path=/; SameSite=Lax; Max-Age=86400"))
+  (str "weave-auth=" jwt "; Path=/; SameSite=Lax; Max-Age=" session-ttl-seconds))
 
 (defn verify-csrf
   "Verifies that the CSRF token is valid for the given
