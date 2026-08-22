@@ -2,8 +2,7 @@
   (:require
    [charred.api :as charred]
    [clojure.tools.logging :as log]
-   [org.httpkit.client :as http]
-   [weave.session :as session])
+   [org.httpkit.client :as http])
   (:import
    [java.security KeyFactory KeyPairGenerator SecureRandom]
    [java.security.interfaces ECPrivateKey ECPublicKey]
@@ -272,6 +271,30 @@
       (slurp body)
       body)))
 
+(defn- subscription-id
+  "The subscription key for a request's verified identity: the JWT
+   subject claim, falling back to the :id claim. Nil when the request
+   is not authenticated or the identity carries neither claim."
+  [req]
+  (let [identity (:identity req)]
+    (when identity
+      (or (:sub identity) (:id identity)))))
+
+(def ^:private forbidden-response
+  {:status 403
+   :headers {"Content-Type" "application/json"}
+   :body "{\"success\":false}"})
+
+(defn- owned-subscription?
+  "True when the endpoint belongs to the given id's subscriptions.
+   When the app does not configure get-subscriptions, deletion is
+   already scoped to the authenticated id by delete-subscription!."
+  [push-opts id endpoint]
+  (if-let [get-subscriptions (:get-subscriptions push-opts)]
+    (boolean (some #(= endpoint (:endpoint %))
+                   (get-subscriptions id)))
+    true))
+
 (defn vapid-key-handler
   [_req push-opts]
   {:status 200
@@ -280,22 +303,30 @@
 
 (defn subscribe-handler
   [req push-opts]
-  (let [body (charred/read-json (parse-body req) :key-fn keyword)
-        id (or (:id body) (session/get-sid req))
-        subscription (dissoc body :id)]
-    (when-let [save-fn (:save-subscription! push-opts)]
-      (save-fn id subscription))
-    {:status 200
-     :headers {"Content-Type" "application/json"}
-     :body "{\"success\":true}"}))
+  (let [id (subscription-id req)
+        body (charred/read-json (parse-body req) :key-fn keyword)
+        requested-id (:id body)]
+    (if (or (nil? id) (and requested-id (not= requested-id id)))
+      forbidden-response
+      (do
+        (when-let [save-fn (:save-subscription! push-opts)]
+          (save-fn id (dissoc body :id)))
+        {:status 200
+         :headers {"Content-Type" "application/json"}
+         :body "{\"success\":true}"}))))
 
 (defn unsubscribe-handler
   [req push-opts]
-  (let [{:keys [id endpoint]} (charred/read-json (parse-body req) :key-fn keyword)
-        id (or id (session/get-sid req))]
-    (when-let [delete-fn (:delete-subscription! push-opts)]
-      (when endpoint
-        (delete-fn id endpoint)))
-    {:status 200
-     :headers {"Content-Type" "application/json"}
-     :body "{\"success\":true}"}))
+  (let [id (subscription-id req)
+        body (charred/read-json (parse-body req) :key-fn keyword)
+        requested-id (:id body)
+        endpoint (:endpoint body)]
+    (if (or (nil? id) (and requested-id (not= requested-id id)))
+      forbidden-response
+      (do
+        (when-let [delete-fn (:delete-subscription! push-opts)]
+          (when (and endpoint (owned-subscription? push-opts id endpoint))
+            (delete-fn id endpoint)))
+        {:status 200
+         :headers {"Content-Type" "application/json"}
+         :body "{\"success\":true}"}))))

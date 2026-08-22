@@ -278,8 +278,9 @@ window.weave = {
         },
 
         // Subscribe to push notifications
-        // Optional id parameter to associate subscription with a user/entity
-        // If not provided, server will use session-id
+        // Subscriptions are keyed on the server by the authenticated identity.
+        // An optional id is accepted but must match the identity or the
+        // server rejects the request with 403.
         subscribe: async function(id) {
             if (!this.isSupported()) {
                 throw new Error('Push notifications not supported');
@@ -327,7 +328,8 @@ window.weave = {
         },
 
         // Unsubscribe from push notifications
-        // Optional id parameter should match what was used during subscribe
+        // The endpoint is removed only if it belongs to the authenticated
+        // identity; an optional id must match it or the server returns 403.
         unsubscribe: async function(id) {
             if (!this.isSupported()) return false;
 

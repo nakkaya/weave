@@ -158,9 +158,10 @@
     :register-text "Don't have an account?"
     :register-url "/#/register"
     :on-submit (weave/handler ^{:type :form} []
-                 (weave/set-cookie!
-                   (session/sign-in
-                     {:name (:username (:params weave/*request*)) :role "User"}))
+                 (let [username (:username (:params weave/*request*))]
+                   (weave/set-cookie!
+                     (session/sign-in
+                       {:name username :id username :role "User"})))
                  (weave/broadcast-path! "/app")
                  (weave/push-reload!))}])
 
@@ -404,7 +405,7 @@
         :class "w-full"
         :data-on:click (weave/handler [push-options]
                          (let [results (push/send!
-                                        weave/*session-id*
+                                        (get-in weave/*request* [:identity :id])
                                         {:title "Hello from Weave!"
                                          :body "This is a test push notification"
                                          :url "/"}
