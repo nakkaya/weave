@@ -485,50 +485,61 @@
         (routes request)))))
 
 (defmacro handler
-  "Create a handler that process client-side events."
+  "Create a handler that process client-side events.
+
+   Returns the datastar expression that invokes the handler, and registers
+   the handler function under a route derived from the hash of the body form
+   and the hashes of `args`.
+
+   That route hash is the handler's identity, and it is computed from `args`
+   alone. Values the body closes over lexically without appearing in `args`
+   are invisible to it, so two renders of the same call site collide on one
+   route no matter what they captured. A handler must therefore take every
+   per-user or per-request value through `args`, or read it inside the body
+   from the request or from `*signals*` - a captured value belongs to
+   whichever render registered the route last, and is served to every user
+   who triggers it."
   [args & body]
   (let [explicit-opts (or (meta args) {})
         body-hash (hash body)]
     `(let [arg-hash# (mapv hash ~args)
-           cache-key# [~body-hash arg-hash#]
-           route-hash# (Integer/toUnsignedString (hash cache-key#))
-           merged-opts# (merge *handler-options* ~explicit-opts)]
-       (if-let [cached-route# (get @#'*event-handlers* route-hash#)]
-         (:dstar-expr cached-route#)
-         (let [handler-fn#
-               (fn [req#]
-                 (let [body# (:body req#)
-                       body# (if (instance? java.io.InputStream body#)
-                               (slurp body#)
-                               body#)
-                       req# (assoc req# :body body#)]
-                   (bind-vars
-                    req#
-                    (let [auth-required?# (:auth-required? merged-opts#)]
-                      (if (and auth-required?#
-                               (not (authenticated? *request*)))
-                        {:status 403, :headers {}, :body nil}
-                        (do
-                          (when *sse-enabled*
-                            (session/record-activity!
-                             *session-id* *instance-id*))
-                          (sse/response
-                           *request*
-                           {:on-open
-                            (fn [conn#]
-                              (try
-                                (binding [*sse-gen* conn#]
-                                  ~@body)
-                                (finally
-                                  (sse/close! conn#))))})))))))
-               route# (str "/h/" route-hash#)
-               base-expr# (str "@call('" route# "', " (#'request-options merged-opts#) ")")
-               dstar-expr# (if-let [confirm-msg# (:confirm merged-opts#)]
-                             (let [escaped-msg# (clojure.string/replace confirm-msg# "'" "\\'")]
-                               (str "confirm('" escaped-msg# "') && " base-expr#))
-                             base-expr#)]
-           (#'add-route! route# route-hash# handler-fn# dstar-expr#)
-           dstar-expr#)))))
+           route-key# [~body-hash arg-hash#]
+           route-hash# (Integer/toUnsignedString (hash route-key#))
+           merged-opts# (merge *handler-options* ~explicit-opts)
+           handler-fn#
+           (fn [req#]
+             (let [body# (:body req#)
+                   body# (if (instance? java.io.InputStream body#)
+                           (slurp body#)
+                           body#)
+                   req# (assoc req# :body body#)]
+               (bind-vars
+                req#
+                (let [auth-required?# (:auth-required? merged-opts#)]
+                  (if (and auth-required?#
+                           (not (authenticated? *request*)))
+                    {:status 403, :headers {}, :body nil}
+                    (do
+                      (when *sse-enabled*
+                        (session/record-activity!
+                         *session-id* *instance-id*))
+                      (sse/response
+                       *request*
+                       {:on-open
+                        (fn [conn#]
+                          (try
+                            (binding [*sse-gen* conn#]
+                              ~@body)
+                            (finally
+                              (sse/close! conn#))))})))))))
+           route# (str "/h/" route-hash#)
+           base-expr# (str "@call('" route# "', " (#'request-options merged-opts#) ")")
+           dstar-expr# (if-let [confirm-msg# (:confirm merged-opts#)]
+                         (let [escaped-msg# (clojure.string/replace confirm-msg# "'" "\\'")]
+                           (str "confirm('" escaped-msg# "') && " base-expr#))
+                         base-expr#)]
+       (#'add-route! route# route-hash# handler-fn# dstar-expr#)
+       dstar-expr#)))
 
 (defn- sse-conn
   "Returns the current Server-Sent Events (SSE) connection.

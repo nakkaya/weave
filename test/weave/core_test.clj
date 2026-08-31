@@ -138,6 +138,38 @@
       (testing "empty maps return empty maps"
         (is (= {} (resolve-signal-fns {})))))))
 
+(defn- route-hash-of
+  "Extract the route hash from the datastar expression a handler returns."
+  [dstar-expr]
+  (second (re-find #"/h/(\d+)" dstar-expr)))
+
+(deftest handler-route-hash-ignores-lexically-captured-values-test
+  (testing "two renders of one call site share a route no matter what they close over"
+    (let [render (fn [captured] (core/handler [] (str captured)))
+          expr-a (render "user-a")
+          hash-a (route-hash-of expr-a)
+          fn-a (:handler-fn (get @@#'core/*event-handlers* hash-a))
+          expr-b (render "user-b")
+          hash-b (route-hash-of expr-b)
+          fn-b (:handler-fn (get @@#'core/*event-handlers* hash-b))]
+      (is (= expr-a expr-b))
+      (is (= hash-a hash-b))
+      (is (= 1 (count @@#'core/*event-handlers*)))
+
+      (testing "and the later render replaces the registered handler"
+        (is (some? fn-a))
+        (is (some? fn-b))
+        (is (not (identical? fn-a fn-b)))
+        (is (identical? fn-b (:handler-fn (get @@#'core/*event-handlers* hash-a))))))))
+
+(deftest handler-route-hash-separates-distinct-args-test
+  (testing "args reach the route hash, so they do not collide"
+    (let [render (fn [arg] (core/handler [arg] (str arg)))
+          expr-a (render "user-a")
+          expr-b (render "user-b")]
+      (is (not= expr-a expr-b))
+      (is (= 2 (count @@#'core/*event-handlers*))))))
+
 (defn instance-id-test-view []
   [:div
    [:h1#content "Instance ID Test"]
