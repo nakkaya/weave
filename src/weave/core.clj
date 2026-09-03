@@ -490,10 +490,10 @@
   (let [explicit-opts (or (meta args) {})
         body-hash (hash body)]
     `(let [arg-hash# (mapv hash ~args)
-           cache-key# [~body-hash arg-hash#]
-           route-hash# (Integer/toUnsignedString (hash cache-key#))
-           merged-opts# (merge *handler-options* ~explicit-opts)]
-       (if-let [cached-route# (get @#'*event-handlers* route-hash#)]
+           merged-opts# (merge *handler-options* ~explicit-opts)
+           cache-key# [~body-hash arg-hash# (hash merged-opts#)]
+           route-hash# (Integer/toUnsignedString (hash cache-key#))]
+       (if-let [cached-route# (get @@#'*event-handlers* route-hash#)]
          (:dstar-expr cached-route#)
          (let [handler-fn#
                (fn [req#]

@@ -138,6 +138,24 @@
       (testing "empty maps return empty maps"
         (is (= {} (resolve-signal-fns {})))))))
 
+(deftest handler-route-hash-separates-distinct-args-test
+  (testing "args reach the route hash, so they do not collide"
+    (let [render (fn [arg] (core/handler [arg] (str arg)))
+          expr-a (render "user-a")
+          expr-b (render "user-b")]
+      (is (not= expr-a expr-b))
+      (is (= 2 (count @@#'core/*event-handlers*))))))
+
+(deftest handler-route-hash-separates-distinct-options-test
+  (testing "handler options reach the route hash, so renders under different options do not collide"
+    (let [render (fn [opts]
+                   (binding [core/*handler-options* opts]
+                     (core/handler [] "x")))]
+      (let [expr-a (render {:auth-required? true})
+            expr-b (render {})]
+        (is (not= expr-a expr-b))
+        (is (= 2 (count @@#'core/*event-handlers*)))))))
+
 (defn instance-id-test-view []
   [:div
    [:h1#content "Instance ID Test"]
