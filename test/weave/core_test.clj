@@ -10,7 +10,9 @@
    [weave.test.browser :refer [*browser* with-browser url weave-options visible? fill click el-text new-tab tabs switch-tab has-alert? accept-alert driver-options] :as browser]
    [weave.core :as core]
    [weave.session :as session]
-   [weave.squint :as squint]))
+   [weave.squint :as squint])
+  (:import
+   [java.time ZoneId]))
 
 (defn event-handler-fixture
   "Test fixture that binds a fresh event-handlers atom for each test."
@@ -107,6 +109,25 @@
                                     :retry-max-wait-ms 45000
                                     :retry-max-count 8
                                     :request-cancellation "auto"})))))
+
+(deftest client-zone-falls-back-to-utc-test
+  (let [client-zone #'core/client-zone]
+    (testing "a zone this JVM resolves is kept"
+      (is (= "Europe/Helsinki" (client-zone "Europe/Helsinki")))
+      (is (= "UTC" (client-zone "UTC")))
+      (is (= "+03:00" (client-zone "+03:00"))))
+
+    (testing "an absent or unusable header is UTC"
+      (is (= "UTC" (client-zone nil)))
+      (is (= "UTC" (client-zone "")))
+      (is (= "UTC" (client-zone "Mars/Olympus_Mons")))
+      (is (= "UTC" (client-zone "not a zone"))))))
+
+(deftest bind-vars-binds-a-resolvable-timezone-test
+  (testing "an unresolvable x-timezone does not reach a view"
+    (is (= "UTC"
+           (core/bind-vars {:headers {"x-timezone" "Mars/Olympus_Mons"}}
+                           (.getId (ZoneId/of core/*timezone*)))))))
 
 (deftest resolve-signal-fns-test
   (testing "resolve-signal-fns resolves function values in signals"

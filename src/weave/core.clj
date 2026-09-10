@@ -22,6 +22,7 @@
    [java.awt RenderingHints]
    [java.awt.image BufferedImage]
    [java.io ByteArrayOutputStream]
+   [java.time DateTimeException ZoneId]
    [javax.imageio ImageIO]))
 
 (def ^:dynamic *view*
@@ -121,6 +122,15 @@
                            :else (assoc acc k [existing v]))))
                      {}))))))
 
+(defn- client-zone
+  "The `x-timezone` header as a timezone ID or UTC."
+  [header]
+  (or (when header
+        (try
+          (.getId (ZoneId/of header))
+          (catch DateTimeException _ nil)))
+      "UTC"))
+
 (defmacro bind-vars
   "Bind the dynamic variables *session-id*, *instance-id*,
    *app-path*, *query-params*, *timezone*, *language*, and *request*
@@ -136,7 +146,7 @@
          app-path# (get headers# "x-app-path")
          query-params-str# (get headers# "x-query-params")
          query-params# (#'parse-query-params query-params-str#)
-         timezone# (or (get headers# "x-timezone") "UTC")
+         timezone# (#'client-zone (get headers# "x-timezone"))
          language# (or (get headers# "x-language") "en")]
      (binding [*session-id* session-id#
                *instance-id* instance-id#
