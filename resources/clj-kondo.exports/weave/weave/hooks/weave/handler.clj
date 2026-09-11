@@ -53,85 +53,29 @@
 
     ;; Map destructuring {:keys [a b c]} or {x :x}
     (api/map-node? pattern)
-    (let [children (:children pattern)
-          pairs (partition 2 children)]
-      (reduce (fn [syms [k v]]
+    (reduce (fn [syms [k v]]
+              (let [directive (when (api/keyword-node? k) (api/sexpr k))]
                 (cond
-                  ;; {:keys [foo bar]}
-                  (and (api/token-node? k)
-                       (= :keys (api/sexpr k))
-                       (api/vector-node? v))
+                  ;; {:keys [a :b ns/c]}, {:ns/keys [...]}, {:strs [...]}, {:syms [...]}
+                  (#{"keys" "strs" "syms"} (some-> directive name))
                   (->> (:children v)
                        (map api/sexpr)
-                       (filter symbol?)
+                       (filter ident?)
+                       (map (comp symbol name))
                        (into syms))
 
-                  ;; {:strs [...]} or {:syms [...]}
-                  (and (api/token-node? k)
-                       (#{:strs :syms} (api/sexpr k))
-                       (api/vector-node? v))
-                  (->> (:children v)
-                       (map api/sexpr)
-                       (filter symbol?)
-                       (into syms))
+                  ;; {:as whole}
+                  (= :as directive)
+                  (into syms (extract-destructured-symbols v))
 
-                  ;; {foo :foo} or {bar "bar"} - k is the bound symbol
-                  (api/token-node? k)
-                  (let [sym (api/sexpr k)]
-                    (if (and (symbol? sym) (not= '_ sym))
-                      (conj syms sym)
-                      syms))
-
-                  ;; Nested destructuring in the key position
+                  ;; {foo :foo}, {[a b] :pair} or {{:keys [c]} :m} - k is the pattern
                   :else
-                  (into syms (extract-destructured-symbols k))))
-              #{}
-              pairs))
+                  (into syms (extract-destructured-symbols k)))))
+            #{}
+            (partition 2 (:children pattern)))
 
     ;; Other nodes
     :else #{}))
-
-(defn- extract-let-bindings
-  "Extract binding symbols from a let-style binding vector.
-   Simple approach focusing on the most common cases."
-  [bindings-vec]
-  (when (api/vector-node? bindings-vec)
-    ;; For let bindings: [pattern1 value1 pattern2 value2 ...]
-    ;; We want to extract symbols from patterns (positions 0, 2, 4, ...)
-    (let [patterns (->> (:children bindings-vec)
-                        (take-nth 2))]  ; Take every pattern, skip values
-      (reduce (fn [syms pattern]
-                (cond
-                  ;; Simple symbol: x
-                  (api/token-node? pattern)
-                  (let [sym (api/sexpr pattern)]
-                    (if (symbol? sym)
-                      (conj syms sym)
-                      syms))
-
-                  ;; Map destructuring: {:keys [a b c]}
-                  (api/map-node? pattern)
-                  ;; Simple approach: look for any vector inside the map that contains symbols
-                  ;; This is a fallback that should work for {:keys [transaction-id]}
-                  (->> (:children pattern)
-                       (filter api/vector-node?)  ; Find all vectors in the map
-                       (mapcat (fn [vec-node]      ; Extract symbols from each vector
-                                 (->> (:children vec-node)
-                                      (map api/sexpr)
-                                      (filter symbol?))))
-                       (into syms))
-
-                  ;; Vector destructuring: [a b c]
-                  (api/vector-node? pattern)
-                  (->> (:children pattern)
-                       (map api/sexpr)
-                       (filter symbol?)
-                       (into syms))
-
-                  ;; Other patterns - skip for now
-                  :else syms))
-              #{}
-              patterns))))
 
 (defn- extract-catch-binding
   "Extract the exception binding symbol from a catch form"
@@ -166,7 +110,9 @@
       (when (and (symbol? sym)
                  (not (skip-symbol? sym))
                  (not (contains? captured-syms sym))
-                 (not (contains? local-bindings sym)))
+                 (not (contains? local-bindings sym))
+                 ;; A var is not a capture; resolve returns nil for a local around the handler
+                 (not (api/resolve {:name sym})))
         [{:symbol sym :node node}]))
 
     ;; Try form - handle catch clauses specially
@@ -196,10 +142,7 @@
               (reduce (fn [[current-scope violations] [pattern value]]
                         ;; First analyze the value with current scope
                         (let [value-violations (find-uncaptured-symbols value captured-syms current-scope)
-                              ;; Then extract bindings from pattern using the working function
-                              pattern-bindings (extract-let-bindings
-                                               (api/vector-node [pattern (api/token-node 'dummy)]))
-                              new-scope (into current-scope (or pattern-bindings #{}))]
+                              new-scope (into current-scope (extract-destructured-symbols pattern))]
                           [new-scope (concat violations value-violations)]))
                       [local-bindings []]
                       binding-pairs)]
@@ -219,6 +162,13 @@
           (mapcat #(find-uncaptured-symbols % captured-syms extended-scope) body))
         ;; Handle multi-arity fn - more complex, skip for now
         (mapcat #(find-uncaptured-symbols % captured-syms local-bindings) (rest children))))
+
+    ;; as-> form - binds its name over the forms, which are values
+    (= 'as-> (form-type node))
+    (let [[_as-> expr name-node & forms] (:children node)
+          extended-scope (into local-bindings (extract-destructured-symbols name-node))]
+      (concat (find-uncaptured-symbols expr captured-syms local-bindings)
+              (mapcat #(find-uncaptured-symbols % captured-syms extended-scope) forms)))
 
     ;; List node - recurse into children, but skip function position
     (api/list-node? node)

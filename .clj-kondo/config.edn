@@ -1,5 +1,1 @@
-{:linters {:weave/missing-capture-vector {:level :error}
-           :weave/uncaptured-symbol {:level :warning}}
- :lint-as {weave.squint/clj->js clojure.core/identity}
- :hooks {:analyze-call {weave.core/handler hooks.weave.handler/weave-handler
-                        weave.squint/clj->js hooks.weave.squint/clj->js-hook}}}
+{:config-paths ["../resources/clj-kondo.exports/weave/weave"]}
